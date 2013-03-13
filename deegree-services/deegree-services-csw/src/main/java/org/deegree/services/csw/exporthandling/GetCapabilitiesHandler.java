@@ -188,6 +188,7 @@ public class GetCapabilitiesHandler extends OWSCapabilitiesXMLAdapter implements
         additionalQueryables.add( "Lineage" );
         additionalQueryables.add( "MetadataPointOfContact" );
         additionalQueryables.add( "OtherConstraints" );
+        additionalQueryables.add( "ResponsiblePartyRole" );
         additionalQueryables.add( "SpecificationTitle" );
         additionalQueryables.add( "SpecificationDate" );
         additionalQueryables.add( "SpecificationDateType" );
