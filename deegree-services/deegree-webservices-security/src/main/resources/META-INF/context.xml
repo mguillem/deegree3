@@ -1,4 +1,7 @@
 <Context>
   <distributable />
-  <Manager className="org.apache.catalina.session.PersistentManager" saveOnRestart="false"/>
+  <Manager className="org.apache.catalina.session.PersistentManager"
+    saveOnRestart="false" />
+  <Loader
+    loaderClass="org.springframework.instrument.classloading.tomcat.TomcatInstrumentableClassLoader" />
 </Context>
