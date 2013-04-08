@@ -1,3 +1,9 @@
+<!-- 
+Spring Security Configuration for CSW 2.0.2
+author <a href="mailto:erben@lat-lon.de">Alexander Erben</a>
+author <a href="mailto:stenger@lat-lon.de">Dirk Stenger</a>
+-->
+
 <beans:beans xmlns="http://www.springframework.org/schema/security"
   xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:context="http://www.springframework.org/schema/context"
@@ -12,13 +18,41 @@
 
   <http auto-config="true">
     <http-basic />
-    <intercept-url pattern="/services/csw" access="ROLE_RECORDS"/>
+    <custom-filter ref="ogcServicesFilter" after="LAST" />
   </http>
+
+  <beans:bean id="getMethodGetRecordsFilter"
+    class="org.deegree.console.security.HttpGetSimpleFilter">
+    <beans:constructor-arg type="java.lang.String"
+      value="getrecords" />
+    <beans:constructor-arg type="java.lang.String"
+      value="ROLE_RECORDS" />
+  </beans:bean>
+
+  <beans:bean id="getMethodGetRecordByIdFilter"
+    class="org.deegree.console.security.HttpGetSimpleFilter">
+    <beans:constructor-arg type="java.lang.String"
+      value="getrecordbyid" />
+    <beans:constructor-arg type="java.lang.String"
+      value="ROLE_RECORDBYID" />
+  </beans:bean>
+
+  <beans:bean id="ogcServicesFilter"
+    class="org.deegree.console.security.OGCServicesFilter">
+    <beans:constructor-arg index="0">
+      <beans:list>
+        <beans:ref bean="getMethodGetRecordsFilter" />
+        <beans:ref bean="getMethodGetRecordByIdFilter" />
+      </beans:list>
+    </beans:constructor-arg>
+  </beans:bean>
 
   <authentication-manager>
     <authentication-provider>
       <user-service>
         <user name="records" password="records" authorities="ROLE_RECORDS" />
+        <user name="recordbyid" password="recordbyid" authorities="ROLE_RECORDBYID" />
+        <user name="admin" password="admin" authorities="ROLE_ADMIN" />
       </user-service>
     </authentication-provider>
   </authentication-manager>
