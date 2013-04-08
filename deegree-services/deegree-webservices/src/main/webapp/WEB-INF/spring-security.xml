@@ -12,20 +12,13 @@
 
   <http auto-config="true">
     <http-basic />
-    <intercept-url pattern="*&REQUEST=GetRecords*" access="ROLE_RECORDS" />
-    <intercept-url pattern="*&REQUEST=GetRecordById*"
-      access="ROLE_RECORDBYID" />
-    <intercept-url pattern="*&REQUEST=GetCapabilities*"
-      access="permitAll" />
-    <intercept-url pattern="/services/csw" access="ROLE_ADMIN" />
+    <intercept-url pattern="/services/csw" access="ROLE_RECORDS"/>
   </http>
 
   <authentication-manager>
     <authentication-provider>
       <user-service>
         <user name="records" password="records" authorities="ROLE_RECORDS" />
-        <user name="recordbyid" password="recordbyid" authorities="ROLE_RECORDBYID" />
-        <user name="admin" password="admin" authorities="ROLE_ADMIN" />
       </user-service>
     </authentication-provider>
   </authentication-manager>
