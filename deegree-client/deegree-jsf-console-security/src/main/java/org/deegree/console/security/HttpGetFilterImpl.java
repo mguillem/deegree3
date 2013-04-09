@@ -13,13 +13,13 @@ import org.springframework.security.core.GrantedAuthority;
  * @author <a href="mailto:stenger@lat-lon.de">Dirk Stenger</a>
  * 
  */
-public class HttpGetSimpleFilter implements HttpGetFilter {
+public class HttpGetFilterImpl implements HttpGetFilter {
 
     private final String allowedRole;
     
     private final String matchMethod;
 
-    public HttpGetSimpleFilter( String matchMethod, String allowedRole ) {
+    public HttpGetFilterImpl( String matchMethod, String allowedRole ) {
         this.allowedRole = allowedRole;
         this.matchMethod = matchMethod;
     }
@@ -29,13 +29,12 @@ public class HttpGetSimpleFilter implements HttpGetFilter {
         String operation = retrieveFirstValueOfKey( paramMap, "request" );
         return matchMethod.equalsIgnoreCase( operation );
     }
-
+    
     @Override
     public boolean isPermitted( String requestUrl, Map<String, String[]> paramMap, Authentication authentication ) {
         if ( !canHandle( requestUrl, paramMap ) )
             return false;
         for ( GrantedAuthority auth : authentication.getAuthorities() ) {
-            System.out.println( auth.getAuthority() );
             if ( allowedRole.equals( auth.getAuthority() ) )
                 return true;
         }

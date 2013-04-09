@@ -13,7 +13,7 @@ public class HttpGetFilterTest {
     
     private static final String RECORDS_ROLE = "records";
     
-    private final HttpGetFilter recordsFilter = new HttpGetSimpleFilter(GETRECORDS_OPERATION,RECORDS_ROLE);
+    private final HttpGetFilter recordsFilter = new HttpGetFilterImpl(GETRECORDS_OPERATION,RECORDS_ROLE);
 
     @Test
     public void testCanHandle() {

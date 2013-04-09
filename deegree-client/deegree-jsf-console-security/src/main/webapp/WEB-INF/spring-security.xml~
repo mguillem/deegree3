@@ -64,12 +64,10 @@
         <beans:ref bean="postXmlMethodGetRecordByIdFilter" />
       </beans:list>
     </beans:constructor-arg>
-    <beans:constructor-arg index="2" type="boolean"
-      value="true" />
-
+    <beans:property name="authenticationManager" ref="am"/>
   </beans:bean>
 
-  <authentication-manager>
+  <authentication-manager alias="am">
     <authentication-provider>
       <user-service>
         <user name="records" password="records" authorities="ROLE_RECORDS" />
