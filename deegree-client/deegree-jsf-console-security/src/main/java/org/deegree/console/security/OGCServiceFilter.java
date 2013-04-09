@@ -2,7 +2,11 @@ package org.deegree.console.security;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +22,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import org.deegree.commons.utils.Pair;
+import org.deegree.commons.utils.kvp.KVPUtils;
 import org.deegree.commons.xml.stax.XMLInputFactoryUtils;
 import org.deegree.commons.xml.stax.XMLStreamUtils;
 import org.slf4j.Logger;
@@ -35,15 +40,18 @@ public class OGCServiceFilter implements Filter {
 
     private static final Logger LOG = getLogger( OGCServiceFilter.class );
 
-    private List<HttpGetFilter> getFilters;
+    private List<HttpKVPFilter> kvpFilter;
 
     private List<HttpPostXmlFilter> postXmlFilters;
+    
+    private static final String DEFAULT_ENCODING = "UTF-8";
+
 
     private boolean isAllowedOnNoMatch;
 
-    public OGCServiceFilter( List<HttpGetFilter> getFilters, List<HttpPostXmlFilter> postXmlFilter,
+    public OGCServiceFilter( List<HttpKVPFilter> getFilters, List<HttpPostXmlFilter> postXmlFilter,
                              boolean isAllowedOnNoMatch ) {
-        this.getFilters = getFilters;
+        this.kvpFilter = getFilters;
         this.postXmlFilters = postXmlFilter;
         this.isAllowedOnNoMatch = isAllowedOnNoMatch;
     }
@@ -62,6 +70,7 @@ public class OGCServiceFilter implements Filter {
         } catch ( XMLStreamException e ) {
             e.printStackTrace();
             LOG.error( "Could not parse request!" );
+            throw new AccessDeniedException( "Request could not be performed" );
         }
         if ( !isOneFilterMatching ) {
             handleNotOneFilterMatching( result, chain, wrapper );
@@ -93,32 +102,19 @@ public class OGCServiceFilter implements Filter {
     private Pair<Boolean, Boolean> checkPermission( HttpServletRequest wrapper )
                             throws XMLStreamException, IOException {
 
-        if ( wrapper.getMethod() == "POST" ) {
-            return handlePost( wrapper );
-        } else {
+        if ( wrapper.getMethod() == "GET" ) {
             return handleGet( wrapper );
+        } else {
+            return handlePost( wrapper );
         }
     }
 
-    private Pair<Boolean, Boolean> handleGet( HttpServletRequest wrapper ) {
-        LOG.debug( "Handling GET-KVP request" );
+    private Pair<Boolean, Boolean> handleGet( HttpServletRequest wrapper ) throws UnsupportedEncodingException {
+        LOG.debug( "Filtering HTTP-GET request" );
         String requestUrl = wrapper.getRequestURL().toString();
-        @SuppressWarnings("unchecked")
-        Map<String, String[]> paramMap = wrapper.getParameterMap();
-
-        boolean isOneFilterMatched = false;
-        boolean isRequestPermitted = true;
-
-        for ( HttpGetFilter getFilter : getFilters ) {
-            if ( getFilter.canHandle( requestUrl, paramMap ) ) {
-                isOneFilterMatched = true;
-                if ( !getFilter.isPermitted( requestUrl, paramMap,
-                                             SecurityContextHolder.getContext().getAuthentication() ) ) {
-                    isRequestPermitted = false;
-                }
-            }
-        }
-        return new Pair<Boolean, Boolean>( isOneFilterMatched, isRequestPermitted );
+        String queryString = wrapper.getQueryString();
+        Map<String, String> normalizedKVPParams = KVPUtils.getNormalizedKVPMap( queryString, DEFAULT_ENCODING );
+        return checkKVP(requestUrl, normalizedKVPParams);
     }
 
     private Pair<Boolean, Boolean> handlePost( HttpServletRequest wrapper )
@@ -130,16 +126,42 @@ public class OGCServiceFilter implements Filter {
         }
         if ( isKVP ) {
             LOG.debug( "Handling POST-KVP request" );
-            return checkPostKvp( wrapper );
+            return checkPostKVP( wrapper );
         } else {
             LOG.debug( "Handling POST-XML request" );
             return checkPostXml( wrapper );
         }
     }
 
-    private Pair<Boolean, Boolean> checkPostKvp( HttpServletRequest wrapper ) {
-        return new Pair<Boolean, Boolean>( true, true );
-        // TODO
+    private Pair<Boolean, Boolean> checkPostKVP( HttpServletRequest wrapper ) throws IOException {
+        Map<String, String> normalizedKVPParams = null;
+        String encoding = wrapper.getCharacterEncoding();
+        String queryString = readPostBodyAsString( wrapper.getInputStream());
+        String requestUrl = wrapper.getRequestURL().toString();
+        if ( encoding == null ) {
+            LOG.debug( "Request has no further encoding information. Defaulting to '" + DEFAULT_ENCODING
+                       + "'." );
+            normalizedKVPParams = KVPUtils.getNormalizedKVPMap( queryString, DEFAULT_ENCODING );
+        } else {
+            LOG.debug( "Client encoding information :" + encoding );
+            normalizedKVPParams = KVPUtils.getNormalizedKVPMap( queryString, encoding );
+        }
+        return checkKVP(requestUrl, normalizedKVPParams);
+    }
+
+    private Pair<Boolean, Boolean> checkKVP( String requestUrl, Map<String, String> normalizedKVPParams ) {
+        boolean isOneFilterMatched = false;
+        boolean isRequestPermitted = true;
+        for ( HttpKVPFilter getFilter : kvpFilter ) {
+            if ( getFilter.canHandle( requestUrl, normalizedKVPParams ) ) {
+                isOneFilterMatched = true;
+                if ( !getFilter.isPermitted( requestUrl, normalizedKVPParams,
+                                             SecurityContextHolder.getContext().getAuthentication() ) ) {
+                    isRequestPermitted = false;
+                }
+            }
+        }
+        return new Pair<Boolean, Boolean>( isOneFilterMatched, isRequestPermitted );
     }
 
     private Pair<Boolean, Boolean> checkPostXml( HttpServletRequest wrapper )
@@ -163,12 +185,24 @@ public class OGCServiceFilter implements Filter {
         return new Pair<Boolean, Boolean>( isOneFilterMatching, isPermitted );
     }
 
-    public List<HttpGetFilter> getGetFilter() {
-        return getFilters;
+    private static String readPostBodyAsString( InputStream is )
+                            throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        BufferedInputStream bis = new BufferedInputStream( is );
+        byte[] readBuffer = new byte[1024];
+        int numBytes = -1;
+        while ( ( numBytes = bis.read( readBuffer ) ) != -1 ) {
+            bos.write( readBuffer, 0, numBytes );
+        }
+        return bos.toString().trim();
+    }
+    
+    public List<HttpKVPFilter> getGetFilter() {
+        return kvpFilter;
     }
 
-    public void setGetFilter( List<HttpGetFilter> getFilters ) {
-        this.getFilters = getFilters;
+    public void setGetFilter( List<HttpKVPFilter> getFilters ) {
+        this.kvpFilter = getFilters;
     }
 
     public List<HttpPostXmlFilter> getPostXmlFilters() {

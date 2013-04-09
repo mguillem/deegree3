@@ -13,32 +13,21 @@ public class HttpGetFilterTest {
     
     private static final String RECORDS_ROLE = "records";
     
-    private final HttpGetFilter recordsFilter = new HttpGetFilterImpl(GETRECORDS_OPERATION,RECORDS_ROLE);
+    private final HttpKVPFilter recordsFilter = new HttpKVPFilterImpl(GETRECORDS_OPERATION,RECORDS_ROLE);
 
     @Test
     public void testCanHandle() {
         String requestUrl = "http://foo.bar/services/csw";
-        Map<String, String[]> paramMap = new HashMap<String, String[]>();
-        String[] params = { "GetRecords" };
-        paramMap.put( "request", params );
+        Map<String, String> paramMap = new HashMap<String, String>();
+        paramMap.put( "REQUEST", "GetRecords" );
         assertTrue( recordsFilter.canHandle( requestUrl, paramMap ) );
     }
 
     @Test
     public void testCanHandleFalseOperation() {
         String requestUrl = "http://foo.bar/services/csw";
-        Map<String, String[]> paramMap = new HashMap<String, String[]>();
-        String[] params = { "GetCapabilities" };
-        paramMap.put( "request", params );
+        Map<String, String> paramMap = new HashMap<String, String>();
+        paramMap.put( "REQUEST", "GetRecordById" );
         assertFalse( recordsFilter.canHandle( requestUrl, paramMap ) );
-    }
-
-    @Test
-    public void testCanHandleDoubleKVP() {
-        String requestUrl = "http://foo.bar/services/csw";
-        Map<String, String[]> paramMap = new HashMap<String, String[]>();
-        String[] params = { "GetRecords", "GetRecordById" };
-        paramMap.put( "request", params );
-        assertTrue( recordsFilter.canHandle( requestUrl, paramMap ) );
     }
 }

@@ -1,0 +1,56 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+  <bean id="getMethodGetRecordsFilter"
+    class="org.deegree.console.security.HttpKVPFilterImpl">
+    <constructor-arg type="java.lang.String"
+      value="getrecords" />
+    <constructor-arg type="java.lang.String"
+      value="ROLE_RECORDS" />
+  </bean>
+
+  <bean id="getMethodGetRecordByIdFilter"
+    class="org.deegree.console.security.HttpKVPFilterImpl">
+    <constructor-arg type="java.lang.String"
+      value="getrecordbyid" />
+    <constructor-arg type="java.lang.String"
+      value="ROLE_RECORDBYID" />
+  </bean>
+
+  <bean id="postXmlMethodGetRecordsFilter"
+    class="org.deegree.console.security.HttpPostXmlFilterImpl">
+    <constructor-arg type="java.lang.String"
+      value="getrecords" />
+    <constructor-arg type="java.lang.String"
+      value="ROLE_RECORDS" />
+  </bean>
+
+  <bean id="postXmlMethodGetRecordByIdFilter"
+    class="org.deegree.console.security.HttpPostXmlFilterImpl">
+    <constructor-arg type="java.lang.String"
+      value="getrecordbyid" />
+    <constructor-arg type="java.lang.String"
+      value="ROLE_RECORDBYID" />
+  </bean>
+
+  <bean id="ogcServiceFilter"
+    class="org.deegree.console.security.OGCServiceFilter">
+    <constructor-arg index="0">
+      <list>
+        <ref bean="getMethodGetRecordsFilter" />
+        <ref bean="getMethodGetRecordByIdFilter" />
+      </list>
+    </constructor-arg>
+    <constructor-arg index="1">
+      <list>
+        <ref bean="postXmlMethodGetRecordsFilter" />
+        <ref bean="postXmlMethodGetRecordByIdFilter" />
+      </list>
+    </constructor-arg>
+    <constructor-arg index="2" type="boolean"
+      value="true" />
+  </bean>
+
+</beans>

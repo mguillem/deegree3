@@ -6,10 +6,12 @@
   <context-param>
     <param-name>javax.faces.PROJECT_STAGE</param-name>
     <param-value>Development</param-value>
-    <param-name>contextConfigLocation</param-name>
+  </context-param>
+  
+  <context-param>
+  <param-name>contextConfigLocation</param-name>
     <param-value>
-      /WEB-INF/spring-security.xml
-      /WEB-INF/spring-security-datasources.xml
+      /WEB-INF/spring/*.xml
     </param-value>
   </context-param>
   
