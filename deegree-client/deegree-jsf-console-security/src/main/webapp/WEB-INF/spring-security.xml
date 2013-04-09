@@ -1,14 +1,11 @@
-<!-- 
-Spring Security Configuration for CSW 2.0.2
-author <a href="mailto:erben@lat-lon.de">Alexander Erben</a>
-author <a href="mailto:stenger@lat-lon.de">Dirk Stenger</a>
--->
+<!-- Spring Security Configuration for CSW 2.0.2 author <a href="mailto:erben@lat-lon.de">Alexander 
+	Erben</a> author <a href="mailto:stenger@lat-lon.de">Dirk Stenger</a> -->
 
 <beans:beans xmlns="http://www.springframework.org/schema/security"
-  xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:context="http://www.springframework.org/schema/context"
-  xmlns:aop="http://www.springframework.org/schema/aop"
-  xsi:schemaLocation="http://www.springframework.org/schema/beans
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
           http://www.springframework.org/schema/security
           http://www.springframework.org/schema/security/spring-security-3.1.xsd
@@ -16,45 +13,60 @@ author <a href="mailto:stenger@lat-lon.de">Dirk Stenger</a>
           http://www.springframework.org/schema/context/spring-context-3.0.xsd
           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
 
-  <http auto-config="true">
-    <http-basic />
-    <custom-filter ref="ogcServicesFilter" after="LAST" />
-  </http>
+	<http auto-config="true">
+		<http-basic />
+		<custom-filter ref="ogcServicesFilter" after="LAST" />
+	</http>
 
-  <beans:bean id="getMethodGetRecordsFilter"
-    class="org.deegree.console.security.HttpGetSimpleFilter">
-    <beans:constructor-arg type="java.lang.String"
-      value="getrecords" />
-    <beans:constructor-arg type="java.lang.String"
-      value="ROLE_RECORDS" />
-  </beans:bean>
+	<beans:bean id="getMethodGetRecordsFilter"
+		class="org.deegree.console.security.HttpGetSimpleFilter">
+		<beans:constructor-arg type="java.lang.String"
+			value="getrecords" />
+		<beans:constructor-arg type="java.lang.String"
+			value="ROLE_RECORDS" />
+	</beans:bean>
 
-  <beans:bean id="getMethodGetRecordByIdFilter"
-    class="org.deegree.console.security.HttpGetSimpleFilter">
-    <beans:constructor-arg type="java.lang.String"
-      value="getrecordbyid" />
-    <beans:constructor-arg type="java.lang.String"
-      value="ROLE_RECORDBYID" />
-  </beans:bean>
+	<beans:bean id="getMethodGetRecordByIdFilter"
+		class="org.deegree.console.security.HttpGetSimpleFilter">
+		<beans:constructor-arg type="java.lang.String"
+			value="getrecordbyid" />
+		<beans:constructor-arg type="java.lang.String"
+			value="ROLE_RECORDBYID" />
+	</beans:bean>
 
-  <beans:bean id="ogcServicesFilter"
-    class="org.deegree.console.security.OGCServicesFilter">
-    <beans:constructor-arg index="0">
-      <beans:list>
-        <beans:ref bean="getMethodGetRecordsFilter" />
-        <beans:ref bean="getMethodGetRecordByIdFilter" />
-      </beans:list>
-    </beans:constructor-arg>
-  </beans:bean>
+	<beans:bean id="ogcServicesFilter"
+		class="org.deegree.console.security.OGCServicesFilter">
+		<beans:constructor-arg index="0">
+			<beans:list>
+				<beans:ref bean="getMethodGetRecordsFilter" />
+				<beans:ref bean="getMethodGetRecordByIdFilter" />
+			</beans:list>
+		</beans:constructor-arg>
+	</beans:bean>
 
-  <authentication-manager>
-    <authentication-provider>
-      <user-service>
-        <user name="records" password="records" authorities="ROLE_RECORDS" />
-        <user name="recordbyid" password="recordbyid" authorities="ROLE_RECORDBYID" />
-        <user name="admin" password="admin" authorities="ROLE_ADMIN" />
-      </user-service>
-    </authentication-provider>
-  </authentication-manager>
+	<authentication-manager>
+	   <authentication-provider>
+		<jdbc-user-service data-source-ref="dataSource"
+		   users-by-username-query="
+		      select username, password, enabled
+		      from users where username = ?"
+		   authorities-by-username-query="
+		      select u.username, ur.authority from users u, user_roles ur
+		      where u.user_id = ur.user_id and u.username = ?"
+		/>
+	   </authentication-provider>
+	</authentication-manager>
+
+<!--
+	<authentication-manager>
+		<authentication-provider>
+			<user-service>
+				<user name="records" password="records" authorities="ROLE_RECORDS" />
+				<user name="recordbyid" password="recordbyid" authorities="ROLE_RECORDBYID" />
+				<user name="admin" password="admin" authorities="ROLE_ADMIN" />
+			</user-service>
+		</authentication-provider>
+	</authentication-manager>
+-->
 
 </beans:beans>
