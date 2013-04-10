@@ -1,4 +1,4 @@
-package org.deegree.console.security;
+package org.deegree.console.security.services;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -14,13 +14,13 @@ import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.slf4j.Logger;
 
-public class CustomHttpServletRequestWrapper extends HttpServletRequestWrapper {
+public class InputStreamHttpServletRequestWrapper extends HttpServletRequestWrapper {
 
     private final String body;
     
-    private static final Logger LOG = getLogger( CustomHttpServletRequestWrapper.class );
+    private static final Logger LOG = getLogger( InputStreamHttpServletRequestWrapper.class );
 
-    CustomHttpServletRequestWrapper( HttpServletRequest request ) {
+    InputStreamHttpServletRequestWrapper( HttpServletRequest request ) {
         super( request );
 
         StringBuilder stringBuilder = new StringBuilder();
