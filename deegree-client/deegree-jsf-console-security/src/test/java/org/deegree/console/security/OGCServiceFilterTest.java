@@ -52,6 +52,8 @@ public class OGCServiceFilterTest {
 
     private static final String GETRECORDS_POSTBODY = convertXmlFileToString( "/getRecords_PostBody.xml" );
 
+    private static final String GETRECORDS_POSTBODY_SOAP = convertXmlFileToString( "/getRecords_SoapBody.xml" );
+
     // The query strings are not complete, but sufficient to check the request parameter
     private static final String GETRECORDS_POSTBODY_KVP = "version=2.0.2&REQUEST=GetRecords";
 
@@ -106,6 +108,27 @@ public class OGCServiceFilterTest {
         req.setMethod( "POST" );
         req.setContentType( "application/xml" );
         AuthenticationUtils.authenticate( userDetailsService, GETRECORDS_USER );
+        filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
+    }
+
+    @Test
+    public void testPostXmlSoap()
+                            throws IOException, ServletException {
+        final OGCServiceFilter filter = getFilter();
+        MockInputStreamServletRequest req = new MockInputStreamServletRequest( GETRECORDS_POSTBODY_SOAP );
+        req.setMethod( "POST" );
+        req.setContentType( "application/xml" );
+        AuthenticationUtils.authenticate( userDetailsService, GETRECORDS_USER );
+        filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
+    }
+    
+    @Test(expected = AccessDeniedException.class)
+    public void testPostXmlSoapNotPermitted()
+                            throws IOException, ServletException {
+        final OGCServiceFilter filter = getFilter();
+        MockInputStreamServletRequest req = new MockInputStreamServletRequest( GETRECORDS_POSTBODY_SOAP );
+        req.setMethod( "POST" );
+        req.setContentType( "application/xml" );
         filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
     }
 

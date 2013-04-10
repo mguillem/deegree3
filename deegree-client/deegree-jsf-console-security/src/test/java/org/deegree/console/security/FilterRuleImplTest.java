@@ -58,6 +58,8 @@ public class FilterRuleImplTest {
     private static final String GETRECORDS_POSTBODY = convertXmlFileToString( "/getRecords_PostBody.xml" );
 
     private static final String GETRECORDBYID_POSTBODY = convertXmlFileToString( "/getRecordById_PostBody.xml" );
+    
+    private static final String GETRECORDS_POSTBODY_SOAP = convertXmlFileToString( "/getRecords_SoapBody.xml" );
 
     // The query strings are not complete, but sufficient to check the request parameter
     private static final String GETCAPABILITIES_POSTBODY_KVP = "version=2.0.2&REQUEST=GetCapabilities";
@@ -92,20 +94,40 @@ public class FilterRuleImplTest {
     }
 
     @Test
-    public void testCanHandle() {
+    public void testCanHandle() throws XMLStreamException {
         String requestUrl = "http://foo.bar/services/csw";
+
+        XMLStreamReader getCapabilitiesStream = getPostBody( GETCAPABILITIES_POSTBODY );
+        XMLStreamReader getRecordsStream = getPostBody( GETRECORDS_POSTBODY );
+        XMLStreamReader getRecordByIdStream = getPostBody( GETRECORDBYID_POSTBODY );
+        
+        XMLStreamReader getRecordsStreamSoap = getPostBodySoap( GETRECORDS_POSTBODY_SOAP );
+
         assertTrue( getRecordsFilterRule.canHandle( requestUrl, getRecordsParamMap ) );
         assertTrue( getCapabilitiesFilterRule.canHandle( requestUrl, getCapabilitiesParamMap ) );
         assertTrue( getRecordByIdFilterRule.canHandle( requestUrl, getRecordByIdParamMap ) );
+
+        assertTrue( getRecordsFilterRule.canHandle( requestUrl, getRecordsStream ) );
+        assertTrue( getCapabilitiesFilterRule.canHandle( requestUrl, getCapabilitiesStream ) );
+        assertTrue( getRecordByIdFilterRule.canHandle( requestUrl, getRecordByIdStream ) );
+        
+        assertTrue( getRecordsFilterRule.canHandle( requestUrl, getRecordsStreamSoap ) );
+
     }
 
     @Test
-    public void testCanHandleFalseOperation() {
+    public void testCanHandleFalseOperation() throws XMLStreamException {
         String requestUrl = "http://foo.bar/services/csw";
+        XMLStreamReader getRecordsStream = getPostBody( GETRECORDS_POSTBODY );
+        XMLStreamReader getRecordsStreamSoap = getPostBodySoap( GETRECORDS_POSTBODY_SOAP );
 
         assertFalse( getRecordsFilterRule.canHandle( requestUrl, getCapabilitiesParamMap ) );
         // The filter rule should return true for isPermitted if it cannot handle the request
         assertTrue( getRecordsFilterRule.isPermitted( requestUrl, getCapabilitiesParamMap, null ) );
+        
+        assertFalse( getCapabilitiesFilterRule.canHandle( requestUrl, getRecordsStream ) );
+        assertFalse( getCapabilitiesFilterRule.canHandle( requestUrl, getRecordsStreamSoap ) );
+
     }
 
     @Test
@@ -135,7 +157,7 @@ public class FilterRuleImplTest {
         XMLStreamReader getCapabilitiesStream = getPostBody( GETCAPABILITIES_POSTBODY );
         XMLStreamReader getRecordsStream = getPostBody( GETRECORDS_POSTBODY );
         XMLStreamReader getRecordByIdStream = getPostBody( GETRECORDBYID_POSTBODY );
-
+        
         assertTrue( getCapabilitiesFilterRule.isPermitted( requestUrl, getCapabilitiesStream,
                                                            getContext().getAuthentication() ) );
         authenticate( userDetailsService, GETRECORDS_USER );
@@ -145,6 +167,23 @@ public class FilterRuleImplTest {
         authenticate( userDetailsService, GETRECORDBYID_USER );
         assertTrue( getRecordByIdFilterRule.isPermitted( requestUrl, getRecordByIdStream,
                                                          getContext().getAuthentication() ) );
+    }
+    
+    @Test
+    public void testIsPermittedPostSoap()
+                            throws XMLStreamException {
+        String requestUrl = "http://foo.bar/services/csw";
+        authenticate( userDetailsService, GETRECORDS_USER );
+        XMLStreamReader getRecordsStream = getPostBodySoap( GETRECORDS_POSTBODY_SOAP );
+        assertTrue( getRecordsFilterRule.isPermitted( requestUrl, getRecordsStream, getContext().getAuthentication() ) );
+    }
+
+    @Test
+    public void testIsNotPermittedPostSoap()
+                            throws XMLStreamException {
+        String requestUrl = "http://foo.bar/services/csw";
+        XMLStreamReader getRecordsStream = getPostBodySoap( GETRECORDS_POSTBODY_SOAP );
+        assertFalse( getRecordsFilterRule.isPermitted( requestUrl, getRecordsStream, getContext().getAuthentication() ) );
     }
 
     @Test
@@ -161,7 +200,8 @@ public class FilterRuleImplTest {
         assertFalse( getRecordsFilterRule.isPermitted( requestUrl, getRecordByIdStream,
                                                        getContext().getAuthentication() ) );
     }
-
+    
+    
     @Test
     public void testIsPermittedPostKvp()
                             throws XMLStreamException, UnsupportedEncodingException {
@@ -204,6 +244,21 @@ public class FilterRuleImplTest {
         XMLStreamUtils.nextElement( xmlStream );
         return xmlStream;
     }
+    
+
+    
+    private XMLStreamReader getPostBodySoap( String body ) throws XMLStreamException {
+        final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream( body.getBytes() );
+        XMLStreamReader xmlStream = XMLInputFactoryUtils.newSafeInstance().createXMLStreamReader( "...",
+                                                                                                  byteArrayInputStream );
+        // Jump to first element of body
+        XMLStreamUtils.nextElement( xmlStream );
+        XMLStreamUtils.nextElement( xmlStream );
+        XMLStreamUtils.nextElement( xmlStream );
+
+        return xmlStream;
+    }
+    
 
     private Map<String, String> getKvpMap( String operation ) {
         Map<String, String> getRecordsParamMap = new HashMap<String, String>();

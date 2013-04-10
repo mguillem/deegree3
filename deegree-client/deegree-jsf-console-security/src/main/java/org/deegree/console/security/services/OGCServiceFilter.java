@@ -53,7 +53,7 @@ public class OGCServiceFilter implements Filter {
     public List<FilterRule> getFilterRules() {
         return filterRules;
     }
-    
+
     @Override
     public void init( FilterConfig filterConfig )
                             throws ServletException {
@@ -180,10 +180,16 @@ public class OGCServiceFilter implements Filter {
         boolean isOneFilterMatching = false;
         for ( FilterRule filter : filterRules ) {
             // The wrapped stream may be retrieved multiple times
-            InputStream is =  wrapper.getInputStream();
+
+            InputStream is = wrapper.getInputStream();
             XMLStreamReader xmlStream = XMLInputFactoryUtils.newSafeInstance().createXMLStreamReader( dummySystemId, is );
             // Jump to first element
             XMLStreamUtils.nextElement( xmlStream );
+
+            if ( isSOAPRequest( xmlStream ) ) {
+                XMLStreamUtils.nextElement( xmlStream );
+                XMLStreamUtils.nextElement( xmlStream );
+            } 
             if ( filter.canHandle( requestUrl, xmlStream ) ) {
                 isOneFilterMatching = true;
                 if ( !filter.isPermitted( requestUrl, xmlStream, getContext().getAuthentication() ) )
@@ -223,6 +229,13 @@ public class OGCServiceFilter implements Filter {
         public boolean isPermitted() {
             return isPermitted;
         }
+    }
+
+    private static boolean isSOAPRequest( XMLStreamReader xmlStream ) {
+        String ns = xmlStream.getNamespaceURI();
+        String localName = xmlStream.getLocalName();
+        return ( "http://schemas.xmlsoap.org/soap/envelope/".equals( ns ) || "http://www.w3.org/2003/05/soap-envelope".equals( ns ) )
+               && "Envelope".equals( localName );
     }
 
 }
