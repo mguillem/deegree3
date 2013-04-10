@@ -6,6 +6,9 @@ import static org.junit.Assert.assertTrue;
 import static org.springframework.security.core.context.SecurityContextHolder.getContext;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +16,7 @@ import java.util.Map;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.apache.commons.io.IOUtils;
 import org.deegree.commons.utils.kvp.KVPUtils;
 import org.deegree.commons.xml.stax.XMLInputFactoryUtils;
 import org.deegree.commons.xml.stax.XMLStreamUtils;
@@ -49,11 +53,11 @@ public class FilterRuleImplTest {
 
     private static final String GETRECORDBYID_USER = "getrecordbyid";
 
-    private static final String GETCAPABILITIES_POSTBODY = "<GetCapabilities xmlns=\"http://www.opengis.net/cat/csw/2.0.2\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.opengis.net/cat/csw/2.0.2 http://schemas.opengis.net/csw/2.0.2/CSW-discovery.xsd\"></GetCapabilities>";
+    private static final String GETCAPABILITIES_POSTBODY = convertXmlFileToString( "/getCapabilities_PostBody.xml" );
 
-    private static final String GETRECORDS_POSTBODY = "<csw:GetRecords xmlns:csw=\"http://www.opengis.net/cat/csw/2.0.2\" xmlns:gml=\"http://www.opengis.net/gml\" xmlns:ogc=\"http://www.opengis.net/ogc\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ows=\"http://www.opengis.net/ows\" resultType=\"results\" service=\"CSW\" version=\"2.0.2\" outputSchema=\"http://www.isotc211.org/2005/gmd\" xsi:schemaLocation=\"http://www.opengis.net/cat/csw/2.0.2                        http://schemas.opengis.net/csw/2.0.2/CSW-discovery.xsd\">  <csw:Query typeNames=\"csw:Record\">    <csw:ElementSetName typeNames=\"csw:Record\">full</csw:ElementSetName>    <csw:Constraint version=\"1.1.0\">      <ogc:Filter>        <ogc:BBOX>          <ogc:PropertyName>ows:BoundingBox</ogc:PropertyName>          <gml:Envelope>            <gml:lowerCorner>7.30 49.30</gml:lowerCorner>            <gml:upperCorner>10.70 51.70</gml:upperCorner>          </gml:Envelope>        </ogc:BBOX>      </ogc:Filter>    </csw:Constraint>  </csw:Query></csw:GetRecords>";
+    private static final String GETRECORDS_POSTBODY = convertXmlFileToString( "/getRecords_PostBody.xml" );
 
-    private static final String GETRECORDBYID_POSTBODY = "<GetRecordById xmlns=\"http://www.opengis.net/cat/csw/2.0.2\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.opengis.net/cat/csw/2.0.2 http://schemas.opengis.net/csw/2.0.2/CSW-discovery.xsd\" service=\"CSW\" version=\"2.0.2\" outputSchema=\"http://www.isotc211.org/2005/gmd\">  <Id>655e5998-a20e-66b5-c888-00005553421</Id>  <ElementSetName>full</ElementSetName></GetRecordById>";
+    private static final String GETRECORDBYID_POSTBODY = convertXmlFileToString( "/getRecordById_PostBody.xml" );
 
     // The query strings are not complete, but sufficient to check the request parameter
     private static final String GETCAPABILITIES_POSTBODY_KVP = "version=2.0.2&REQUEST=GetCapabilities";
@@ -107,9 +111,10 @@ public class FilterRuleImplTest {
     @Test
     public void testIsPermittedKVP() {
         String requestUrl = "http://foo.bar/services/csw";
-        
+
         authenticate( userDetailsService, GETRECORDBYID_USER );
-        assertTrue( getRecordByIdFilterRule.isPermitted( requestUrl, getRecordByIdParamMap, getContext().getAuthentication() ) );
+        assertTrue( getRecordByIdFilterRule.isPermitted( requestUrl, getRecordByIdParamMap,
+                                                         getContext().getAuthentication() ) );
     }
 
     @Test
@@ -204,6 +209,18 @@ public class FilterRuleImplTest {
         Map<String, String> getRecordsParamMap = new HashMap<String, String>();
         getRecordsParamMap.put( "REQUEST", operation );
         return getRecordsParamMap;
+    }
+
+    private static String convertXmlFileToString( String inputXmlFile ) {
+        try {
+            InputStream inputStream = FilterRuleImplTest.class.getResourceAsStream( inputXmlFile );
+            StringWriter stringWriter = new StringWriter();
+            IOUtils.copy( inputStream, stringWriter, "UTF-8" );
+            return stringWriter.toString();
+        } catch ( IOException e ) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 }

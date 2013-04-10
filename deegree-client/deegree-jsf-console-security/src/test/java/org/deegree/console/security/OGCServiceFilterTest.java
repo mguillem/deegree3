@@ -2,12 +2,15 @@ package org.deegree.console.security;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.deegree.console.security.services.FilterRule;
 import org.deegree.console.security.services.FilterRuleImpl;
 import org.deegree.console.security.services.OGCServiceFilter;
@@ -47,7 +50,7 @@ public class OGCServiceFilterTest {
 
     private static final String GETRECORDBYID_USER = "getrecordbyid";
 
-    private static final String GETRECORDS_POSTBODY = "<csw:GetRecords xmlns:csw=\"http://www.opengis.net/cat/csw/2.0.2\" xmlns:gml=\"http://www.opengis.net/gml\" xmlns:ogc=\"http://www.opengis.net/ogc\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ows=\"http://www.opengis.net/ows\" resultType=\"results\" service=\"CSW\" version=\"2.0.2\" outputSchema=\"http://www.isotc211.org/2005/gmd\" xsi:schemaLocation=\"http://www.opengis.net/cat/csw/2.0.2                        http://schemas.opengis.net/csw/2.0.2/CSW-discovery.xsd\">  <csw:Query typeNames=\"csw:Record\">    <csw:ElementSetName typeNames=\"csw:Record\">full</csw:ElementSetName>    <csw:Constraint version=\"1.1.0\">      <ogc:Filter>        <ogc:BBOX>          <ogc:PropertyName>ows:BoundingBox</ogc:PropertyName>          <gml:Envelope>            <gml:lowerCorner>7.30 49.30</gml:lowerCorner>            <gml:upperCorner>10.70 51.70</gml:upperCorner>          </gml:Envelope>        </ogc:BBOX>      </ogc:Filter>    </csw:Constraint>  </csw:Query></csw:GetRecords>";
+    private static final String GETRECORDS_POSTBODY = convertXmlFileToString( "/getRecords_PostBody.xml" );
 
     // The query strings are not complete, but sufficient to check the request parameter
     private static final String GETRECORDS_POSTBODY_KVP = "version=2.0.2&REQUEST=GetRecords";
@@ -64,73 +67,79 @@ public class OGCServiceFilterTest {
     public void clearSecurityContext() {
         SecurityContextHolder.clearContext();
     }
-    
+
     @Test
-    public void testGetKvp() throws IOException, ServletException {
+    public void testGetKvp()
+                            throws IOException, ServletException {
         final OGCServiceFilter filter = getFilter();
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setQueryString( "REQUEST=getCapabilities" );
         req.setMethod( "GET" );
         filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
-        
+
         req.setQueryString( "REQUEST=getRecords" );
         req.setMethod( "GET" );
         AuthenticationUtils.authenticate( userDetailsService, GETRECORDS_USER );
         filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
-        
+
         req.setQueryString( "REQUEST=getRecordById" );
         req.setMethod( "GET" );
         AuthenticationUtils.authenticate( userDetailsService, GETRECORDBYID_USER );
         filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
     }
-    
-    @Test(expected=AccessDeniedException.class)
-    public void testGetKvpNotPermitted() throws IOException, ServletException {
+
+    @Test(expected = AccessDeniedException.class)
+    public void testGetKvpNotPermitted()
+                            throws IOException, ServletException {
         final OGCServiceFilter filter = getFilter();
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setQueryString( "REQUEST=getRecordById" );
         req.setMethod( "GET" );
         filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
     }
-    
+
     @Test
-    public void testPostXml() throws IOException, ServletException {
+    public void testPostXml()
+                            throws IOException, ServletException {
         final OGCServiceFilter filter = getFilter();
-        MockInputStreamServletRequest req = new MockInputStreamServletRequest(GETRECORDS_POSTBODY);
+        MockInputStreamServletRequest req = new MockInputStreamServletRequest( GETRECORDS_POSTBODY );
         req.setMethod( "POST" );
         req.setContentType( "application/xml" );
         AuthenticationUtils.authenticate( userDetailsService, GETRECORDS_USER );
         filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
     }
-    
-    @Test(expected=AccessDeniedException.class)
-    public void testPostXmlNotPermitted() throws IOException, ServletException {
+
+    @Test(expected = AccessDeniedException.class)
+    public void testPostXmlNotPermitted()
+                            throws IOException, ServletException {
         final OGCServiceFilter filter = getFilter();
-        MockInputStreamServletRequest req = new MockInputStreamServletRequest(GETRECORDS_POSTBODY);
+        MockInputStreamServletRequest req = new MockInputStreamServletRequest( GETRECORDS_POSTBODY );
         req.setMethod( "POST" );
         req.setContentType( "application/xml" );
         filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
     }
-    
+
     @Test
-    public void testPostKvp() throws IOException, ServletException {
+    public void testPostKvp()
+                            throws IOException, ServletException {
         final OGCServiceFilter filter = getFilter();
-        MockInputStreamServletRequest req = new MockInputStreamServletRequest(GETRECORDS_POSTBODY_KVP);
+        MockInputStreamServletRequest req = new MockInputStreamServletRequest( GETRECORDS_POSTBODY_KVP );
         req.setMethod( "POST" );
         req.setContentType( "application/x-www-form-urlencoded" );
         AuthenticationUtils.authenticate( userDetailsService, GETRECORDS_USER );
         filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
     }
-    
-    @Test(expected=AccessDeniedException.class)
-    public void testPostKvpNotPermitted() throws IOException, ServletException {
+
+    @Test(expected = AccessDeniedException.class)
+    public void testPostKvpNotPermitted()
+                            throws IOException, ServletException {
         final OGCServiceFilter filter = getFilter();
-        MockInputStreamServletRequest req = new MockInputStreamServletRequest(GETRECORDS_POSTBODY_KVP);
+        MockInputStreamServletRequest req = new MockInputStreamServletRequest( GETRECORDS_POSTBODY_KVP );
         req.setMethod( "POST" );
         req.setContentType( "application/x-www-form-urlencoded" );
         filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
     }
-    
+
     private OGCServiceFilter getFilter() {
         List<FilterRule> rules = new ArrayList<FilterRule>();
         rules.add( getRecordsFilterRule );
@@ -139,15 +148,15 @@ public class OGCServiceFilterTest {
         final OGCServiceFilter filter = new OGCServiceFilter( rules, false );
         return filter;
     }
-    
+
     private class MockInputStreamServletRequest extends MockHttpServletRequest {
-        
+
         private String body;
-        
-        public MockInputStreamServletRequest (String body) {
+
+        public MockInputStreamServletRequest( String body ) {
             this.body = body;
         }
-        
+
         @Override
         public ServletInputStream getInputStream() {
             final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream( body.getBytes() );
@@ -162,5 +171,17 @@ public class OGCServiceFilterTest {
             return inputStream;
         }
     }
-    
+
+    private static String convertXmlFileToString( String inputXmlFile ) {
+        try {
+            InputStream inputStream = FilterRuleImplTest.class.getResourceAsStream( inputXmlFile );
+            StringWriter stringWriter = new StringWriter();
+            IOUtils.copy( inputStream, stringWriter, "UTF-8" );
+            return stringWriter.toString();
+        } catch ( IOException e ) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 }
