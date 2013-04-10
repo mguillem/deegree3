@@ -1,5 +1,6 @@
 package org.deegree.console.security.services;
 
+import static org.deegree.commons.utils.kvp.KVPUtils.getNormalizedKVPMap;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.security.core.context.SecurityContextHolder.getContext;
 
@@ -22,7 +23,6 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.deegree.commons.utils.kvp.KVPUtils;
 import org.deegree.commons.xml.stax.XMLInputFactoryUtils;
 import org.deegree.commons.xml.stax.XMLStreamUtils;
 import org.slf4j.Logger;
@@ -39,11 +39,11 @@ public class OGCServiceFilter implements Filter {
 
     private static final Logger LOG = getLogger( OGCServiceFilter.class );
 
-    private List<FilterRule> filterRules;
+    private final List<FilterRule> filterRules;
 
     private static final String DEFAULT_ENCODING = "UTF-8";
 
-    private boolean isAllowedOnNoMatch;
+    private final boolean isAllowedOnNoMatch;
 
     public OGCServiceFilter( List<FilterRule> filterRules, boolean isAllowedOnNoMatch ) {
         this.filterRules = filterRules;
@@ -53,11 +53,7 @@ public class OGCServiceFilter implements Filter {
     public List<FilterRule> getFilterRules() {
         return filterRules;
     }
-
-    public void setFilterRules( List<FilterRule> filterRules ) {
-        this.filterRules = filterRules;
-    }
-
+    
     @Override
     public void init( FilterConfig filterConfig )
                             throws ServletException {
@@ -114,7 +110,6 @@ public class OGCServiceFilter implements Filter {
 
     private FilterResult checkPermission( HttpServletRequest wrapper )
                             throws XMLStreamException, IOException {
-
         if ( wrapper.getMethod() == "GET" ) {
             return handleGet( wrapper );
         } else {
@@ -127,7 +122,7 @@ public class OGCServiceFilter implements Filter {
         LOG.debug( "Filtering HTTP-GET request" );
         String requestUrl = wrapper.getRequestURL().toString();
         String queryString = wrapper.getQueryString();
-        Map<String, String> normalizedKVPParams = KVPUtils.getNormalizedKVPMap( queryString, DEFAULT_ENCODING );
+        Map<String, String> normalizedKVPParams = getNormalizedKVPMap( queryString, DEFAULT_ENCODING );
         return checkKVP( requestUrl, normalizedKVPParams );
     }
 
@@ -150,15 +145,15 @@ public class OGCServiceFilter implements Filter {
     private FilterResult checkPostKVP( HttpServletRequest wrapper )
                             throws IOException {
         Map<String, String> normalizedKVPParams = null;
-        String encoding = wrapper.getCharacterEncoding();
         String queryString = readPostBodyAsString( wrapper.getInputStream() );
+        String encoding = wrapper.getCharacterEncoding();
         String requestUrl = wrapper.getRequestURL().toString();
         if ( encoding == null ) {
             LOG.debug( "Request has no further encoding information. Defaulting to '" + DEFAULT_ENCODING + "'." );
-            normalizedKVPParams = KVPUtils.getNormalizedKVPMap( queryString, DEFAULT_ENCODING );
+            normalizedKVPParams = getNormalizedKVPMap( queryString, DEFAULT_ENCODING );
         } else {
             LOG.debug( "Client encoding information :" + encoding );
-            normalizedKVPParams = KVPUtils.getNormalizedKVPMap( queryString, encoding );
+            normalizedKVPParams = getNormalizedKVPMap( queryString, encoding );
         }
         return checkKVP( requestUrl, normalizedKVPParams );
     }
@@ -169,8 +164,7 @@ public class OGCServiceFilter implements Filter {
         for ( FilterRule getFilter : filterRules ) {
             if ( getFilter.canHandle( requestUrl, normalizedKVPParams ) ) {
                 isOneFilterMatched = true;
-                if ( !getFilter.isPermitted( requestUrl, normalizedKVPParams,
-                                             getContext().getAuthentication() ) ) {
+                if ( !getFilter.isPermitted( requestUrl, normalizedKVPParams, getContext().getAuthentication() ) ) {
                     isRequestPermitted = false;
                 }
             }
@@ -180,14 +174,14 @@ public class OGCServiceFilter implements Filter {
 
     private FilterResult checkPostXml( HttpServletRequest wrapper )
                             throws XMLStreamException, IOException {
-        String dummySystemId = "HTTP Post request from " + wrapper.getRemoteAddr() + ":" + wrapper.getRemotePort();
         String requestUrl = wrapper.getRequestURL().toString();
+        String dummySystemId = "HTTP Post request from " + requestUrl;
         boolean isPermitted = true;
         boolean isOneFilterMatching = false;
         for ( FilterRule filter : filterRules ) {
             // The wrapped stream may be retrieved multiple times
-            XMLStreamReader xmlStream = XMLInputFactoryUtils.newSafeInstance().createXMLStreamReader( dummySystemId,
-                                                                                                      wrapper.getInputStream() );
+            InputStream is =  wrapper.getInputStream();
+            XMLStreamReader xmlStream = XMLInputFactoryUtils.newSafeInstance().createXMLStreamReader( dummySystemId, is );
             // Jump to first element
             XMLStreamUtils.nextElement( xmlStream );
             if ( filter.canHandle( requestUrl, xmlStream ) ) {

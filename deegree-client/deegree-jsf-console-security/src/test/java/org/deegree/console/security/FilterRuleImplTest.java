@@ -1,5 +1,6 @@
 package org.deegree.console.security;
 
+import static org.deegree.console.security.AuthenticationUtils.authenticate;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.security.core.context.SecurityContextHolder.getContext;
@@ -16,12 +17,11 @@ import org.deegree.commons.utils.kvp.KVPUtils;
 import org.deegree.commons.xml.stax.XMLInputFactoryUtils;
 import org.deegree.commons.xml.stax.XMLStreamUtils;
 import org.deegree.console.security.services.FilterRuleImpl;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -57,12 +57,11 @@ public class FilterRuleImplTest {
 
     // The query strings are not complete, but sufficient to check the request parameter
     private static final String GETCAPABILITIES_POSTBODY_KVP = "version=2.0.2&REQUEST=GetCapabilities";
-    
+
     private static final String GETRECORDS_POSTBODY_KVP = "version=2.0.2&REQUEST=GetRecords";
-    
+
     private static final String GETRECORDBYID_POSTBODY_KVP = "version=2.0.2&REQUEST=GetRecordById";
 
-    
     private final FilterRuleImpl getRecordsFilterRule = new FilterRuleImpl( GETRECORDS_OPERATION, GETRECORDS_ROLE );
 
     private final FilterRuleImpl getRecordByIdFilterRule = new FilterRuleImpl( GETRECORDBYID_OPERATION,
@@ -71,136 +70,124 @@ public class FilterRuleImplTest {
     private final FilterRuleImpl getCapabilitiesFilterRule = new FilterRuleImpl( GETCAPABILITIES_OPERATION,
                                                                                  GETCAPABILITIES_ROLE );
 
+    private final Map<String, String> getCapabilitiesMap = getPostKvpMap( GETCAPABILITIES_POSTBODY_KVP );
+
+    private final Map<String, String> getRecordsMap = getPostKvpMap( GETRECORDS_POSTBODY_KVP );
+
+    private final Map<String, String> getRecordByIdMap = getPostKvpMap( GETRECORDBYID_POSTBODY_KVP );
+
+    private final Map<String, String> getRecordsParamMap = getKvpMap( GETRECORDS_OPERATION );
+
+    private final Map<String, String> getCapabilitiesParamMap = getKvpMap( GETCAPABILITIES_OPERATION );
+
+    private final Map<String, String> getRecordByIdParamMap = getKvpMap( GETRECORDBYID_OPERATION );
+
+    @After
+    public void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     public void testCanHandle() {
         String requestUrl = "http://foo.bar/services/csw";
-
-        Map<String, String> paramMap = new HashMap<String, String>();
-        paramMap.put( "REQUEST", "GetRecords" );
-        assertTrue( getRecordsFilterRule.canHandle( requestUrl, paramMap ) );
-
-        paramMap = new HashMap<String, String>();
-        paramMap.put( "REQUEST", "GetCapabilities" );
-        assertTrue( getCapabilitiesFilterRule.canHandle( requestUrl, paramMap ) );
-
-        paramMap = new HashMap<String, String>();
-        paramMap.put( "REQUEST", "GetRecordById" );
-        assertTrue( getRecordByIdFilterRule.canHandle( requestUrl, paramMap ) );
+        assertTrue( getRecordsFilterRule.canHandle( requestUrl, getRecordsParamMap ) );
+        assertTrue( getCapabilitiesFilterRule.canHandle( requestUrl, getCapabilitiesParamMap ) );
+        assertTrue( getRecordByIdFilterRule.canHandle( requestUrl, getRecordByIdParamMap ) );
     }
 
     @Test
     public void testCanHandleFalseOperation() {
         String requestUrl = "http://foo.bar/services/csw";
-        Map<String, String> paramMap = new HashMap<String, String>();
-        paramMap.put( "REQUEST", "GetRecordById" );
-        assertFalse( getRecordsFilterRule.canHandle( requestUrl, paramMap ) );
-        // The filter rule should return true for isPermitted if it cannot handle the request
-        assertTrue( getRecordsFilterRule.isPermitted( requestUrl, paramMap, null ) );
 
-        paramMap = new HashMap<String, String>();
-        paramMap.put( "REQUEST", "GetRecords" );
-        assertFalse( getRecordByIdFilterRule.canHandle( requestUrl, paramMap ) );
-        assertTrue( getRecordByIdFilterRule.isPermitted( requestUrl, paramMap, null ) );
-        
-        paramMap = new HashMap<String, String>();
-        paramMap.put( "REQUEST", "GetCapabilities" );
-        assertFalse( getRecordsFilterRule.canHandle( requestUrl, paramMap ) );
-        assertTrue( getRecordsFilterRule.isPermitted( requestUrl, paramMap, null ) );
+        assertFalse( getRecordsFilterRule.canHandle( requestUrl, getCapabilitiesParamMap ) );
+        // The filter rule should return true for isPermitted if it cannot handle the request
+        assertTrue( getRecordsFilterRule.isPermitted( requestUrl, getCapabilitiesParamMap, null ) );
     }
 
     @Test
     public void testIsPermittedKVP() {
         String requestUrl = "http://foo.bar/services/csw";
-        Map<String, String> paramMap = new HashMap<String, String>();
-
-        paramMap = new HashMap<String, String>();
-        paramMap.put( "REQUEST", "GetCapabilities" );
-        assertTrue( getCapabilitiesFilterRule.isPermitted( requestUrl, paramMap, getContext().getAuthentication() ) );
-
-        paramMap.put( "REQUEST", "GetRecordById" );
-        authenticate( GETRECORDBYID_USER );
-        assertTrue( getRecordByIdFilterRule.isPermitted( requestUrl, paramMap, getContext().getAuthentication() ) );
-
-        paramMap = new HashMap<String, String>();
-        paramMap.put( "REQUEST", "GetRecords" );
-        authenticate( GETRECORDS_USER );
-
-        assertTrue( getRecordsFilterRule.isPermitted( requestUrl, paramMap, getContext().getAuthentication() ) );
-
+        
+        authenticate( userDetailsService, GETRECORDBYID_USER );
+        assertTrue( getRecordByIdFilterRule.isPermitted( requestUrl, getRecordByIdParamMap, getContext().getAuthentication() ) );
     }
 
     @Test
     public void testIsNotPermittedKVP() {
         String requestUrl = "http://foo.bar/services/csw";
-        Map<String, String> paramMap = new HashMap<String, String>();
 
-        paramMap = new HashMap<String, String>();
-        paramMap.put( "REQUEST", "GetRecords" );
-        assertFalse( getRecordsFilterRule.isPermitted( requestUrl, paramMap, getContext().getAuthentication() ) );
-
-        paramMap.put( "REQUEST", "GetRecordById" );
-        assertFalse( getRecordByIdFilterRule.isPermitted( requestUrl, paramMap, getContext().getAuthentication() ) );
-
-        paramMap = new HashMap<String, String>();
-        paramMap.put( "REQUEST", "GetRecordById" );
-        authenticate( GETRECORDS_USER );
-        assertFalse( getRecordByIdFilterRule.isPermitted( requestUrl, paramMap, getContext().getAuthentication() ) );
+        assertFalse( getRecordByIdFilterRule.isPermitted( requestUrl, getRecordByIdParamMap,
+                                                          getContext().getAuthentication() ) );
+        authenticate( userDetailsService, GETRECORDS_USER );
+        assertFalse( getRecordByIdFilterRule.isPermitted( requestUrl, getRecordByIdParamMap,
+                                                          getContext().getAuthentication() ) );
     }
 
     @Test
     public void testIsPermittedPostXml()
                             throws XMLStreamException {
         String requestUrl = "http://foo.bar/services/csw";
-
         XMLStreamReader getCapabilitiesStream = getPostBody( GETCAPABILITIES_POSTBODY );
+        XMLStreamReader getRecordsStream = getPostBody( GETRECORDS_POSTBODY );
+        XMLStreamReader getRecordByIdStream = getPostBody( GETRECORDBYID_POSTBODY );
+
         assertTrue( getCapabilitiesFilterRule.isPermitted( requestUrl, getCapabilitiesStream,
                                                            getContext().getAuthentication() ) );
+        authenticate( userDetailsService, GETRECORDS_USER );
 
-        XMLStreamReader getRecordsStream = getPostBody( GETRECORDS_POSTBODY );
-        authenticate( GETRECORDS_USER );
         assertTrue( getRecordsFilterRule.isPermitted( requestUrl, getRecordsStream, getContext().getAuthentication() ) );
 
-        XMLStreamReader getRecordByIdStream = getPostBody( GETRECORDBYID_POSTBODY );
-        authenticate( GETRECORDBYID_USER );
-        assertTrue( getRecordByIdFilterRule.isPermitted( requestUrl, getRecordByIdStream, getContext().getAuthentication() ) );
-
+        authenticate( userDetailsService, GETRECORDBYID_USER );
+        assertTrue( getRecordByIdFilterRule.isPermitted( requestUrl, getRecordByIdStream,
+                                                         getContext().getAuthentication() ) );
     }
-    
+
     @Test
     public void testIsNotPermittedPostXml()
                             throws XMLStreamException {
         String requestUrl = "http://foo.bar/services/csw";
 
         XMLStreamReader getRecordsStream = getPostBody( GETRECORDS_POSTBODY );
+        XMLStreamReader getRecordByIdStream = getPostBody( GETRECORDS_POSTBODY );
+
         assertFalse( getRecordsFilterRule.isPermitted( requestUrl, getRecordsStream, getContext().getAuthentication() ) );
 
-        XMLStreamReader getRecordByIdStream = getPostBody( GETRECORDS_POSTBODY );
-        authenticate( GETRECORDBYID_USER );
-        assertFalse( getRecordsFilterRule.isPermitted( requestUrl, getRecordByIdStream, getContext().getAuthentication() ) );
-
+        authenticate( userDetailsService, GETRECORDBYID_USER );
+        assertFalse( getRecordsFilterRule.isPermitted( requestUrl, getRecordByIdStream,
+                                                       getContext().getAuthentication() ) );
     }
-    
+
     @Test
     public void testIsPermittedPostKvp()
                             throws XMLStreamException, UnsupportedEncodingException {
         String requestUrl = "http://foo.bar/services/csw";
-        
-        Map<String,String> getCapabilitiesMap = getPostKvpMap( GETCAPABILITIES_POSTBODY_KVP );
+
         assertTrue( getCapabilitiesFilterRule.isPermitted( requestUrl, getCapabilitiesMap,
                                                            getContext().getAuthentication() ) );
 
-        Map<String,String> getRecordsMap = getPostKvpMap( GETRECORDS_POSTBODY_KVP );
-        authenticate( GETRECORDS_USER );
+        authenticate( userDetailsService, GETRECORDS_USER );
         assertTrue( getRecordsFilterRule.isPermitted( requestUrl, getRecordsMap, getContext().getAuthentication() ) );
 
-        Map<String,String> getRecordByIdMap = getPostKvpMap( GETRECORDBYID_POSTBODY_KVP );
-        authenticate( GETRECORDBYID_USER );
+        authenticate( userDetailsService, GETRECORDBYID_USER );
         assertTrue( getRecordByIdFilterRule.isPermitted( requestUrl, getRecordByIdMap, getContext().getAuthentication() ) );
     }
 
+    @Test
+    public void testIsPermittedPostKvpNotPermitted()
+                            throws XMLStreamException, UnsupportedEncodingException {
+        String requestUrl = "http://foo.bar/services/csw";
 
-    private Map<String,String> getPostKvpMap( String body ) throws UnsupportedEncodingException {
-        return KVPUtils.getNormalizedKVPMap( body, "UTF-8" );
+        authenticate( userDetailsService, GETRECORDBYID_USER );
+        assertFalse( getRecordsFilterRule.isPermitted( requestUrl, getRecordsMap, getContext().getAuthentication() ) );
+    }
+
+    private Map<String, String> getPostKvpMap( String body ) {
+        try {
+            return KVPUtils.getNormalizedKVPMap( body, "UTF-8" );
+        } catch ( UnsupportedEncodingException e ) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private XMLStreamReader getPostBody( String body )
@@ -213,25 +200,10 @@ public class FilterRuleImplTest {
         return xmlStream;
     }
 
-    private Authentication authenticate( String userName ) {
-
-        UserDetails userDetails = userDetailsService.loadUserByUsername( userName );
-
-        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken( userDetails,
-                                                                                             userDetails.getPassword() );
-        UsernamePasswordAuthenticationToken result = new UsernamePasswordAuthenticationToken(
-                                                                                              userDetails,
-                                                                                              token.getCredentials(),
-                                                                                              userDetails.getAuthorities() );
-        result.setDetails( token.getDetails() );
-        Authentication auth = result;
-        getContext().setAuthentication( auth );
-        auth = getContext().getAuthentication();
-        assertTrue( auth.isAuthenticated() );
-        return auth;
+    private Map<String, String> getKvpMap( String operation ) {
+        Map<String, String> getRecordsParamMap = new HashMap<String, String>();
+        getRecordsParamMap.put( "REQUEST", operation );
+        return getRecordsParamMap;
     }
 
-    public UserDetailsService getUserDetailsService() {
-        return userDetailsService;
-    }
 }

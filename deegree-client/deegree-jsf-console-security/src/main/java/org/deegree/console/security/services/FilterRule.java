@@ -6,7 +6,7 @@ import javax.xml.stream.XMLStreamReader;
 
 import org.springframework.security.core.Authentication;
 
-interface FilterRule {
+public interface FilterRule {
 
     boolean canHandle( String requestUrl, Map<String, String> paramMap );
 
