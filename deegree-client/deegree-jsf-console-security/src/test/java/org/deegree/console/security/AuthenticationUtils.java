@@ -1,6 +1,5 @@
 package org.deegree.console.security;
 
-import static org.junit.Assert.assertTrue;
 import static org.springframework.security.core.context.SecurityContextHolder.getContext;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
