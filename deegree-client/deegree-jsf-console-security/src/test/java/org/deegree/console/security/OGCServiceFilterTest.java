@@ -1,3 +1,38 @@
+/*----------------------------------------------------------------------------
+ This file is part of deegree, http://deegree.org/
+ Copyright (C) 2001-2013 by:
+ - Department of Geography, University of Bonn -
+ and
+ - lat/lon GmbH -
+
+ This library is free software; you can redistribute it and/or modify it under
+ the terms of the GNU Lesser General Public License as published by the Free
+ Software Foundation; either version 2.1 of the License, or (at your option)
+ any later version.
+ This library is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ details.
+ You should have received a copy of the GNU Lesser General Public License
+ along with this library; if not, write to the Free Software Foundation, Inc.,
+ 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+ Contact information:
+
+ lat/lon GmbH
+ Aennchenstr. 19, 53177 Bonn
+ Germany
+ http://lat-lon.de/
+
+ Department of Geography, University of Bonn
+ Prof. Dr. Klaus Greve
+ Postfach 1147, 53001 Bonn
+ Germany
+ http://www.geographie.uni-bonn.de/deegree/
+
+ e-mail: info@deegree.org
+ ----------------------------------------------------------------------------*/
+
 package org.deegree.console.security;
 
 import java.io.ByteArrayInputStream;
@@ -55,7 +90,11 @@ public class OGCServiceFilterTest {
     private static final String GETRECORDS_POSTBODY_SOAP = convertXmlFileToString( "/getRecords_SoapBody.xml" );
 
     // The query strings are not complete, but sufficient to check the request parameter
-    private static final String GETRECORDS_POSTBODY_KVP = "version=2.0.2&REQUEST=GetRecords";
+    private static final String GETRECORDS_KVP = "version=2.0.2&REQUEST=GetRecords";
+
+    private static final String GETCAPABILITIES_KVP = "REQUEST=getCapabilities";
+
+    private static final String GETRECORDBYID_KVP = "REQUEST=getRecordById";
 
     private final FilterRuleImpl getRecordsFilterRule = new FilterRuleImpl( GETRECORDS_OPERATION, GETRECORDS_ROLE );
 
@@ -75,16 +114,16 @@ public class OGCServiceFilterTest {
                             throws IOException, ServletException {
         final OGCServiceFilter filter = getFilter();
         MockHttpServletRequest req = new MockHttpServletRequest();
-        req.setQueryString( "REQUEST=getCapabilities" );
+        req.setQueryString( GETCAPABILITIES_KVP );
         req.setMethod( "GET" );
         filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
 
-        req.setQueryString( "REQUEST=getRecords" );
+        req.setQueryString( GETRECORDS_KVP );
         req.setMethod( "GET" );
         AuthenticationUtils.authenticate( userDetailsService, GETRECORDS_USER );
         filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
 
-        req.setQueryString( "REQUEST=getRecordById" );
+        req.setQueryString( GETRECORDBYID_KVP );
         req.setMethod( "GET" );
         AuthenticationUtils.authenticate( userDetailsService, GETRECORDBYID_USER );
         filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
@@ -95,7 +134,7 @@ public class OGCServiceFilterTest {
                             throws IOException, ServletException {
         final OGCServiceFilter filter = getFilter();
         MockHttpServletRequest req = new MockHttpServletRequest();
-        req.setQueryString( "REQUEST=getRecordById" );
+        req.setQueryString( GETRECORDBYID_KVP );
         req.setMethod( "GET" );
         filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );
     }
@@ -146,7 +185,7 @@ public class OGCServiceFilterTest {
     public void testPostKvp()
                             throws IOException, ServletException {
         final OGCServiceFilter filter = getFilter();
-        MockInputStreamServletRequest req = new MockInputStreamServletRequest( GETRECORDS_POSTBODY_KVP );
+        MockInputStreamServletRequest req = new MockInputStreamServletRequest( GETRECORDS_KVP );
         req.setMethod( "POST" );
         req.setContentType( "application/x-www-form-urlencoded" );
         AuthenticationUtils.authenticate( userDetailsService, GETRECORDS_USER );
@@ -157,7 +196,7 @@ public class OGCServiceFilterTest {
     public void testPostKvpNotPermitted()
                             throws IOException, ServletException {
         final OGCServiceFilter filter = getFilter();
-        MockInputStreamServletRequest req = new MockInputStreamServletRequest( GETRECORDS_POSTBODY_KVP );
+        MockInputStreamServletRequest req = new MockInputStreamServletRequest( GETRECORDS_KVP );
         req.setMethod( "POST" );
         req.setContentType( "application/x-www-form-urlencoded" );
         filter.doFilter( req, new MockHttpServletResponse(), new MockFilterChain() );

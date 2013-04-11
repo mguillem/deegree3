@@ -7,6 +7,11 @@ import javax.xml.stream.XMLStreamReader;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
+/**
+ * 
+ * @author <a href="mailto:erben@lat-lon.de">Alexander Erben</a>
+ *
+ */
 public class FilterRuleImpl implements FilterRule {
 
     private final String allowedRole;

@@ -1,3 +1,38 @@
+/*----------------------------------------------------------------------------
+ This file is part of deegree, http://deegree.org/
+ Copyright (C) 2001-2013 by:
+ - Department of Geography, University of Bonn -
+ and
+ - lat/lon GmbH -
+
+ This library is free software; you can redistribute it and/or modify it under
+ the terms of the GNU Lesser General Public License as published by the Free
+ Software Foundation; either version 2.1 of the License, or (at your option)
+ any later version.
+ This library is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ details.
+ You should have received a copy of the GNU Lesser General Public License
+ along with this library; if not, write to the Free Software Foundation, Inc.,
+ 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+ Contact information:
+
+ lat/lon GmbH
+ Aennchenstr. 19, 53177 Bonn
+ Germany
+ http://lat-lon.de/
+
+ Department of Geography, University of Bonn
+ Prof. Dr. Klaus Greve
+ Postfach 1147, 53001 Bonn
+ Germany
+ http://www.geographie.uni-bonn.de/deegree/
+
+ e-mail: info@deegree.org
+ ----------------------------------------------------------------------------*/
+
 package org.deegree.console.security.services;
 
 import static org.deegree.commons.utils.kvp.KVPUtils.getNormalizedKVPMap;
@@ -29,7 +64,7 @@ import org.slf4j.Logger;
 import org.springframework.security.access.AccessDeniedException;
 
 /**
- * Custom Filter for Spring Security for OGC Web Services
+ * Custom Filter for Spring Security filtering OGC Web Services
  * 
  * @author <a href="mailto:erben@lat-lon.de">Alexander Erben</a>
  * @author <a href="mailto:stenger@lat-lon.de">Dirk Stenger</a>
@@ -38,10 +73,10 @@ import org.springframework.security.access.AccessDeniedException;
 public class OGCServiceFilter implements Filter {
 
     private static final Logger LOG = getLogger( OGCServiceFilter.class );
+    
+    private static final String DEFAULT_ENCODING = "UTF-8";
 
     private final List<FilterRule> filterRules;
-
-    private static final String DEFAULT_ENCODING = "UTF-8";
 
     private final boolean isAllowedOnNoMatch;
 
@@ -119,7 +154,7 @@ public class OGCServiceFilter implements Filter {
 
     private FilterResult handleGet( HttpServletRequest wrapper )
                             throws UnsupportedEncodingException {
-        LOG.debug( "Filtering HTTP-GET request" );
+        LOG.debug( "Handling HTTP-GET request" );
         String requestUrl = wrapper.getRequestURL().toString();
         String queryString = wrapper.getQueryString();
         Map<String, String> normalizedKVPParams = getNormalizedKVPMap( queryString, DEFAULT_ENCODING );
@@ -134,16 +169,15 @@ public class OGCServiceFilter implements Filter {
             isKVP = wrapper.getContentType().startsWith( "application/x-www-form-urlencoded" );
         }
         if ( isKVP ) {
-            LOG.debug( "Handling POST-KVP request" );
             return checkPostKVP( wrapper );
         } else {
-            LOG.debug( "Handling POST-XML request" );
             return checkPostXml( wrapper );
         }
     }
 
     private FilterResult checkPostKVP( HttpServletRequest wrapper )
                             throws IOException {
+        LOG.debug( "Handling POST-KVP request" );
         Map<String, String> normalizedKVPParams = null;
         String queryString = readPostBodyAsString( wrapper.getInputStream() );
         String encoding = wrapper.getCharacterEncoding();
@@ -174,13 +208,13 @@ public class OGCServiceFilter implements Filter {
 
     private FilterResult checkPostXml( HttpServletRequest wrapper )
                             throws XMLStreamException, IOException {
+        LOG.debug( "Handling POST-XML request" );
         String requestUrl = wrapper.getRequestURL().toString();
         String dummySystemId = "HTTP Post request from " + requestUrl;
         boolean isPermitted = true;
         boolean isOneFilterMatching = false;
         for ( FilterRule filter : filterRules ) {
             // The wrapped stream may be retrieved multiple times
-
             InputStream is = wrapper.getInputStream();
             XMLStreamReader xmlStream = XMLInputFactoryUtils.newSafeInstance().createXMLStreamReader( dummySystemId, is );
             // Jump to first element
@@ -199,7 +233,7 @@ public class OGCServiceFilter implements Filter {
         return new FilterResult( isOneFilterMatching, isPermitted );
     }
 
-    private static String readPostBodyAsString( InputStream is )
+    private String readPostBodyAsString( InputStream is )
                             throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         BufferedInputStream bis = new BufferedInputStream( is );
@@ -209,6 +243,13 @@ public class OGCServiceFilter implements Filter {
             bos.write( readBuffer, 0, numBytes );
         }
         return bos.toString().trim();
+    }
+    
+    private boolean isSOAPRequest( XMLStreamReader xmlStream ) {
+        String ns = xmlStream.getNamespaceURI();
+        String localName = xmlStream.getLocalName();
+        return ( "http://schemas.xmlsoap.org/soap/envelope/".equals( ns ) || "http://www.w3.org/2003/05/soap-envelope".equals( ns ) )
+               && "Envelope".equals( localName );
     }
 
     private class FilterResult {
@@ -229,13 +270,6 @@ public class OGCServiceFilter implements Filter {
         public boolean isPermitted() {
             return isPermitted;
         }
-    }
-
-    private static boolean isSOAPRequest( XMLStreamReader xmlStream ) {
-        String ns = xmlStream.getNamespaceURI();
-        String localName = xmlStream.getLocalName();
-        return ( "http://schemas.xmlsoap.org/soap/envelope/".equals( ns ) || "http://www.w3.org/2003/05/soap-envelope".equals( ns ) )
-               && "Envelope".equals( localName );
     }
 
 }
