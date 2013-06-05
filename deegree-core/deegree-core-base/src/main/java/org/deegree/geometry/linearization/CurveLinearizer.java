@@ -50,7 +50,9 @@ import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.apache.commons.math.linear.SingularMatrixException;
+import org.deegree.commons.uom.Measure;
 import org.deegree.cs.coordinatesystems.ICRS;
+import org.deegree.geometry.Geometry;
 import org.deegree.geometry.GeometryFactory;
 import org.deegree.geometry.points.Points;
 import org.deegree.geometry.precision.PrecisionModel;
@@ -60,12 +62,14 @@ import org.deegree.geometry.primitive.Ring;
 import org.deegree.geometry.primitive.segments.Arc;
 import org.deegree.geometry.primitive.segments.ArcString;
 import org.deegree.geometry.primitive.segments.Circle;
+import org.deegree.geometry.primitive.segments.CircleByCenterPoint;
 import org.deegree.geometry.primitive.segments.CubicSpline;
 import org.deegree.geometry.primitive.segments.CurveSegment;
 import org.deegree.geometry.primitive.segments.LineStringSegment;
 import org.deegree.geometry.standard.points.PointsArray;
 import org.deegree.geometry.standard.points.PointsList;
 import org.deegree.geometry.standard.primitive.DefaultPoint;
+import org.deegree.geometry.standard.primitive.DefaultPolygon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,7 +106,8 @@ public class CurveLinearizer {
      * Creates a new {@link CurveLinearizer} instance.
      * 
      * @param geomFac
-     *            geometry factory to be used for creating {@link LineString}s and {@link LineStringSegments}, must not be <code>null</code>
+     *            geometry factory to be used for creating {@link LineString}s and {@link LineStringSegments}, must not
+     *            be <code>null</code>
      */
     public CurveLinearizer( GeometryFactory geomFac ) {
         this.geomFac = geomFac;
@@ -179,12 +184,15 @@ public class CurveLinearizer {
             lineSegment = linearizeArcString( (ArcString) segment, crit );
             break;
         }
+        case CIRCLE_BY_CENTER_POINT: {
+            lineSegment = linearizeCircleByCenterPoint( (CircleByCenterPoint) segment, crit );
+            break;
+        }
         case ARC_BY_BULGE:
         case ARC_BY_CENTER_POINT:
         case ARC_STRING_BY_BULGE:
         case BEZIER:
         case BSPLINE:
-        case CIRCLE_BY_CENTER_POINT:
         case CLOTHOID:
         case GEODESIC:
         case GEODESIC_STRING:
@@ -195,6 +203,67 @@ public class CurveLinearizer {
         }
         }
         return lineSegment;
+    }
+
+    /**
+     * Returns a linearized version (i.e. a {@link LineStringSegment}) of the given {@link CircleByCenterPoint}.
+     * 
+     * @param circleByCenterPoint
+     *            CircleByCenterPoint to be linearized, must not be <code>null</code>
+     * @param crit
+     *            determines the interpolation quality / number of interpolation points, must not be <code>null</code>
+     * @return linearized version of the input segment, never <code>null</code>
+     */
+    public LineStringSegment linearizeCircleByCenterPoint( CircleByCenterPoint circleByCenterPoint,
+                                                           LinearizationCriterion crit ) {
+        Point midPoint = circleByCenterPoint.getMidPoint();
+        Measure rad = circleByCenterPoint.getRadius( null );
+        Points circle;
+        if ( "urn:EPSG:uom:9001".equals( rad.getUomUri() ) 
+             && ( midPoint.getCoordinateSystem().getGeodeticDatum() != null ) ) {
+            circle = calculateBuffer( midPoint, rad, 18 );
+        } else {
+            Geometry buffer = midPoint.getBuffer( rad );
+            DefaultPolygon circleHull = (DefaultPolygon) buffer.getConvexHull();
+            circle = circleHull.getExteriorRingCoordinates();
+        }
+        //geomFac.createLineStringSegment( circle );
+        //LineStringSegment circleLineStringSegment = new DefaultLineStringSegment( circle );
+        //Polygon circlePolygon = geomFac.createPolygon( "Bla", midPoint.getCoordinateSystem(), new DefaultRing(null, null, null, circleLineStringSegment ), null);
+        return geomFac.createLineStringSegment( circle );
+    }
+
+    private Points calculateBuffer( Point midPoint, Measure rad, int numBufferPoints ) {
+        List<Point> points = new ArrayList<Point>(numBufferPoints+1);
+        double angleInDegree = 360.0 / numBufferPoints;
+        for ( int i = 0; i < numBufferPoints; i++ ) {
+
+            points.add( calculatePointOnSphere( midPoint, rad, angleInDegree * i ) );
+        }
+        points.add(points.get(0));
+        return new PointsList(points);
+    }
+
+    private Point calculatePointOnSphere( Point startPoint, Measure distance, double angleInDegree ) {
+        double distanceInMeters = distance.getValueAsDouble();
+        final double earthRadiusInMeters = 6371000.0;
+
+        double lat1 = Math.toRadians( startPoint.get0() );
+        double lon1 = Math.toRadians( startPoint.get1() );
+        double angleInRadians = Math.toRadians( angleInDegree );
+
+        // φ2 = asin( sin(φ1)*cos(d/R) + cos(φ1)*sin(d/R)*cos(θ))
+        double lat2 = Math.asin( Math.sin( lat1 ) * Math.cos( distanceInMeters / earthRadiusInMeters )
+                                 + Math.cos( lat1 ) * Math.sin( distanceInMeters / earthRadiusInMeters )
+                                 * Math.cos( angleInRadians ) );
+        // λ1 + atan2( sin(θ)*sin(d/R)*cos(φ1), cos(d/R)−sin(φ1)*sin(φ2) )
+        double lon2 = lon1
+                      + Math.atan2( Math.sin( angleInRadians ) * Math.sin( distanceInMeters / earthRadiusInMeters )
+                                                            * Math.cos( lat1 ),
+                                    Math.cos( distanceInMeters / earthRadiusInMeters ) - Math.sin( lat1 )
+                                                            * Math.sin( lat2 ) );
+
+        return new DefaultPoint( null, null, null, new double[] { Math.toDegrees( lat2 ), Math.toDegrees( lon2 ) } );
     }
 
     /**
@@ -257,7 +326,7 @@ public class CurveLinearizer {
      * Returns a linearized version (i.e. a {@link LineStringSegment}) of the given {@link ArcString}.
      * <p>
      * If one of the arc elements is collinear, it will be added as a straight segment.
-     * </p> 
+     * </p>
      * 
      * @param arcString
      *            curve segment to be linearized, must not be <code>null</code>
@@ -267,19 +336,19 @@ public class CurveLinearizer {
      */
     public LineStringSegment linearizeArcString( ArcString arcString, LinearizationCriterion crit ) {
 
-    	List<Point> points = new ArrayList<Point>();
+        List<Point> points = new ArrayList<Point>();
 
         Points srcpnts = arcString.getControlPoints();
         Point a = null;
         Point b = null;
         Point c = null;
         Points pnts = null;
-        
+
         // insert first point
         if ( srcpnts.size() > 0 ) {
-            points.add( srcpnts.get(0));
+            points.add( srcpnts.get( 0 ) );
         }
-        
+
         for ( int i = 0, j = ( srcpnts.size() - 2 ); i < j; i += 2 ) {
             a = srcpnts.get( i );
             b = srcpnts.get( i + 1 );
@@ -302,7 +371,7 @@ public class CurveLinearizer {
                 String msg = "Handling of criterion '" + crit.getClass().getName() + "' is not implemented yet.";
                 throw new IllegalArgumentException( msg );
             }
-            
+
             // add point 2..n
             for ( int m = 1, n = pnts.size(); m < n; m++ ) {
                 points.add( pnts.get( m ) );
