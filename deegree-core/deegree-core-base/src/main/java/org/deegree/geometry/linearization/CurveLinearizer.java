@@ -66,12 +66,16 @@ import org.deegree.geometry.primitive.segments.CircleByCenterPoint;
 import org.deegree.geometry.primitive.segments.CubicSpline;
 import org.deegree.geometry.primitive.segments.CurveSegment;
 import org.deegree.geometry.primitive.segments.LineStringSegment;
+import org.deegree.geometry.standard.curvesegments.DefaultLineStringSegment;
 import org.deegree.geometry.standard.points.PointsArray;
 import org.deegree.geometry.standard.points.PointsList;
 import org.deegree.geometry.standard.primitive.DefaultPoint;
 import org.deegree.geometry.standard.primitive.DefaultPolygon;
+import org.deegree.geometry.standard.primitive.DefaultRing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import sun.util.logging.resources.logging;
 
 /**
  * Provides methods for the linearization of {@link Curve}s and {@link CurveSegment}s.
@@ -219,21 +223,23 @@ public class CurveLinearizer {
         Point midPoint = circleByCenterPoint.getMidPoint();
         Measure rad = circleByCenterPoint.getRadius( null );
         Points circle;
+        // TODO the functionality in the if-block should be available for buffers, etc.
+        // The core problem seems to be that units are not evaluated as they should be in AbstractDefaultGeometry.
         if ( "urn:EPSG:uom:9001".equals( rad.getUomUri() ) 
              && ( midPoint.getCoordinateSystem().getGeodeticDatum() != null ) ) {
-            circle = calculateBuffer( midPoint, rad, 18 );
+            circle = calculateCirclePoints( midPoint, rad, 18 );
         } else {
             Geometry buffer = midPoint.getBuffer( rad );
             DefaultPolygon circleHull = (DefaultPolygon) buffer.getConvexHull();
             circle = circleHull.getExteriorRingCoordinates();
         }
-        //geomFac.createLineStringSegment( circle );
+        System.out.println(geomFac.createPolygon( null, null, new DefaultRing(null, null, null, geomFac.createLineStringSegment( circle )), null).toString());
         //LineStringSegment circleLineStringSegment = new DefaultLineStringSegment( circle );
         //Polygon circlePolygon = geomFac.createPolygon( "Bla", midPoint.getCoordinateSystem(), new DefaultRing(null, null, null, circleLineStringSegment ), null);
         return geomFac.createLineStringSegment( circle );
     }
 
-    private Points calculateBuffer( Point midPoint, Measure rad, int numBufferPoints ) {
+    private Points calculateCirclePoints( Point midPoint, Measure rad, int numBufferPoints ) {
         List<Point> points = new ArrayList<Point>(numBufferPoints+1);
         double angleInDegree = 360.0 / numBufferPoints;
         for ( int i = 0; i < numBufferPoints; i++ ) {
