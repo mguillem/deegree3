@@ -233,7 +233,7 @@ public class CurveLinearizer {
             DefaultPolygon circleHull = (DefaultPolygon) buffer.getConvexHull();
             circle = circleHull.getExteriorRingCoordinates();
         }
-        System.out.println(geomFac.createPolygon( null, null, new DefaultRing(null, null, null, geomFac.createLineStringSegment( circle )), null).toString());
+        LOG.trace("Geometry created for operation circlebycenterpoint:\n" + geomFac.createPolygon( null, null, new DefaultRing(null, null, null, geomFac.createLineStringSegment( circle )), null).toString());
         //LineStringSegment circleLineStringSegment = new DefaultLineStringSegment( circle );
         //Polygon circlePolygon = geomFac.createPolygon( "Bla", midPoint.getCoordinateSystem(), new DefaultRing(null, null, null, circleLineStringSegment ), null);
         return geomFac.createLineStringSegment( circle );
