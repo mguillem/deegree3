@@ -4,51 +4,38 @@
   <groupId>org.deegree</groupId>
   <artifactId>deegree</artifactId>
   <packaging>pom</packaging>
-  <version>3.1.2</version>
+  <version>3.1.2-d3rc</version>
   <name>deegree</name>
   <url>http://www.deegree.org</url>
 
   <scm>
-    <connection>scm:svn:http://svn.wald.intevation.org/svn/deegree/deegree3/tags/3.1.2</connection>
-    <developerConnection>scm:svn:svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1.2</developerConnection>
-    <url>http://svn.wald.intevation.org/svn/deegree/deegree3/tags/3.1.2</url>
+    <connection>scm:git:git@github.com:lat-lon/deegree3.git</connection>
+    <developerConnection>scm:git:git@github.com:lat-lon/deegree3.git</developerConnection>
+    <url>https://github.com/lat-lon/deegree3.git</url>
   </scm>
 
   <repositories>
     <repository>
-      <id>deegree-repo</id>
-      <url>http://artefacts.deegree.org/repo</url>
-      <releases>
-        <updatePolicy>never</updatePolicy>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
+      <id>latlon-repo</id>
+      <url>http://repo.lat-lon/nexus/content/groups/public/</url>
     </repository>
   </repositories>
 
   <distributionManagement>
     <repository>
-      <id>deegree-releases</id>
-      <url>http://artefacts.deegree.org/libs-releases-local</url>
+      <id>latlon-releases</id>
+      <url>http://repo.lat-lon/nexus/content/repositories/releases/</url>
     </repository>
     <snapshotRepository>
-      <id>deegree-snapshots</id>
-      <url>http://artefacts.deegree.org/libs-snapshots-local</url>
+      <id>latlon-snapshots</id>
+      <url>http://repo.lat-lon/nexus/content/repositories/snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
 
   <pluginRepositories>
     <pluginRepository>
-      <id>deegree-plugin-repo</id>
-      <url>http://artefacts.deegree.org/repo</url>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
+      <id>latlon-repo</id>
+      <url>http://repo.lat-lon/nexus/content/groups/public/</url>
     </pluginRepository>
   </pluginRepositories>
 
