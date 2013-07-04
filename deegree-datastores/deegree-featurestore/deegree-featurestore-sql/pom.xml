@@ -4,18 +4,18 @@
   <groupId>org.deegree</groupId>
   <artifactId>deegree-featurestore-sql</artifactId>
   <packaging>jar</packaging>
-  <version>3.1-pre11</version>
+  <version>3.1-pre11-rapideye</version>
   <name>deegree-featurestore-sql</name>
   <url>http://www.deegree.org</url>
   <scm>
-    <developerConnection>scm:svn:svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11/deegree-datastores/deegree-featurestore/deegree-featurestore-sql</developerConnection>
-    <url>svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11/deegree-datastores/deegree-featurestore/deegree-featurestore-sql</url>
+    <developerConnection>scm:svn:svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-datastores/deegree-featurestore/deegree-featurestore-sql</developerConnection>
+    <url>svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-datastores/deegree-featurestore/deegree-featurestore-sql</url>
   </scm>
 
   <parent>
     <groupId>org.deegree</groupId>
     <artifactId>deegree-parent</artifactId>
-    <version>3.1-pre11</version>
+    <version>3.1-pre11-rapideye</version>
     <relativePath />
   </parent>
 
@@ -69,12 +69,12 @@
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-featurestore-commons</artifactId>
-      <version>3.1-pre11</version>
+      <version>3.1-pre11-rapideye</version>
     </dependency>
     <dependency>
       <artifactId>deegree-sqldialect-postgis</artifactId>
       <groupId>org.deegree</groupId>
-      <version>3.1-pre11</version>
+      <version>3.1-pre11-rapideye</version>
     </dependency>
   </dependencies>
 
@@ -85,7 +85,7 @@
         <dependency>
           <artifactId>latlon-sqldialect-mssql</artifactId>
           <groupId>de.latlon</groupId>
-          <version>3.1-pre11</version>
+          <version>3.1-pre11-rapideye</version>
           <scope>test</scope>
         </dependency>
       </dependencies>
@@ -96,7 +96,7 @@
         <dependency>
           <artifactId>deegree-sqldialect-oracle</artifactId>
           <groupId>org.deegree</groupId>
-          <version>3.1-pre11</version>
+          <version>3.1-pre11-rapideye</version>
           <scope>test</scope>
         </dependency>
       </dependencies>
