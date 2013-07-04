@@ -4,7 +4,7 @@
   <groupId>org.deegree</groupId>
   <artifactId>deegree-core-base</artifactId>
   <packaging>jar</packaging>
-  <version>3.1-pre11-rapideye-circlebycenterpoint</version>
+  <version>3.1-pre11-rapideye</version>
   <name>deegree-core-base</name>
   <url>http://www.deegree.org</url>
   <scm>
