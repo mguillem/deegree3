@@ -50,7 +50,12 @@
     <sequence>
       <element name="DefaultLayerOptions" type="wms:LayerOptionsType" minOccurs="0" />
       <element name="ThemeId" type="string" minOccurs="0" maxOccurs="unbounded" />
+      <element name="FeaturePortrayalService" type="wms:FeaturePortrayalServiceType" minOccurs="0" />
     </sequence>
+  </complexType>
+  
+  <complexType name="FeaturePortrayalServiceType">
+	<attribute name="isSupported" type="boolean" use="required" />
   </complexType>
 
   <complexType name="FeatureInfoFormatsType">
