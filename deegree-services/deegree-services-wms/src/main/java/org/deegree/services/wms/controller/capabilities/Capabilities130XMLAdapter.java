@@ -157,6 +157,16 @@ public class Capabilities130XMLAdapter {
             }
         }
     }
+    
+    private void writeUserDefinedConfiguration( XMLStreamWriter writer ) throws XMLStreamException {
+        writer.writeStartElement( SLDNS, "UserDefinedSymbolization" );
+        writer.writeAttribute( "SupportSLD", "true" );
+        writer.writeAttribute( "UserLayer", "true" );
+        writer.writeAttribute( "UserStyle", "true" );
+        String isFpsEnabled = controller.isFpsEnabled() ? "true" : "false";
+        writer.writeAttribute( "RemoteWFS", isFpsEnabled );
+        writer.writeEndElement();
+    }
 
     private void writeCapability( XMLStreamWriter writer )
                             throws XMLStreamException {
@@ -170,6 +180,7 @@ public class Capabilities130XMLAdapter {
         writer.writeEndElement();
 
         writeExtendedCapabilities( writer );
+        writeUserDefinedConfiguration( writer );
 
         writeThemes( writer, service.getThemes() );
 

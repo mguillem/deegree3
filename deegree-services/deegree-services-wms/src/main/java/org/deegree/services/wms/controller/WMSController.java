@@ -161,6 +161,8 @@ public class WMSController extends AbstractOWS {
 
     private String metadataURLTemplate;
 
+    private boolean isFpsEnabled;
+
     public WMSController( ResourceMetadata<OWS> metadata, Workspace workspace, Object jaxbConfig ) {
         super( metadata, workspace, jaxbConfig );
         featureInfoManager = new FeatureInfoManager( true );
@@ -222,15 +224,15 @@ public class WMSController extends AbstractOWS {
     @Override
     public void init( DeegreeServicesMetadataType serviceMetadata, DeegreeServiceControllerType mainConfig,
                       Object controllerConf ) {
-    
+
         identification = convertFromJAXB( serviceMetadata.getServiceIdentification() );
         provider = convertFromJAXB( serviceMetadata.getServiceProvider() );
-    
+
         NamespaceBindings nsContext = new NamespaceBindings();
         nsContext.addNamespace( "wms", "http://www.deegree.org/services/wms" );
-    
+
         DeegreeWMS conf = (DeegreeWMS) controllerConf;
-    
+
         if ( conf.getExtendedCapabilities() != null ) {
             this.extendedCaps = new HashMap<String, List<OMElement>>();
             List<OMElement> caps = new ArrayList<OMElement>( conf.getExtendedCapabilities().size() );
@@ -246,7 +248,7 @@ public class WMSController extends AbstractOWS {
                 caps.add( new XMLAdapter( xmlStream ).getRootElement() );
             }
         }
-    
+
         try {
             // put in the default formats
             supportedImageFormats.add( "image/png" );
@@ -256,7 +258,7 @@ public class WMSController extends AbstractOWS {
             supportedImageFormats.add( "image/jpeg" );
             supportedImageFormats.add( "image/tiff" );
             supportedImageFormats.add( "image/x-ms-bmp" );
-    
+
             if ( conf.getFeatureInfoFormats() != null ) {
                 for ( GetFeatureInfoFormat t : conf.getFeatureInfoFormats().getGetFeatureInfoFormat() ) {
                     if ( t.getFile() != null ) {
@@ -271,15 +273,15 @@ public class WMSController extends AbstractOWS {
                     }
                 }
             }
-    
+
             featureInfoManager.finalizeConfiguration();
-    
+
             // if ( pi.getImageFormat() != null ) {
             // for ( ImageFormat f : pi.getImageFormat() ) {
             // instantiateSerializer( imageSerializers, f.getFormat(), f.getClazz(), ImageSerializer.class );
             // }
             // }
-    
+
             final org.deegree.services.jaxb.wms.DeegreeWMS.SupportedVersions versions = conf.getSupportedVersions();
             if ( versions == null ) {
                 ArrayList<String> vs = new ArrayList<String>();
@@ -289,7 +291,7 @@ public class WMSController extends AbstractOWS {
             } else {
                 validateAndSetOfferedVersions( versions.getVersion() );
             }
-    
+
             for ( Version v : offeredVersions ) {
                 if ( v.equals( VERSION_111 ) ) {
                     controllers.put( VERSION_111, new WMSController111() );
@@ -298,29 +300,32 @@ public class WMSController extends AbstractOWS {
                     controllers.put( VERSION_130, new WMSController130() );
                 }
             }
-    
+
             Iterator<Version> iter = controllers.keySet().iterator();
             while ( iter.hasNext() ) {
                 highestVersion = iter.next();
             }
-    
+
             ServiceConfigurationType sc = conf.getServiceConfiguration();
             service = new MapService( sc, workspace );
-    
+
+            if ( sc.getFeaturePortrayalService() != null )
+                isFpsEnabled = sc.getFeaturePortrayalService().isIsSupported();
+
             // after the service knows what layers are available:
             handleMetadata( conf.getMetadataURLTemplate(), conf.getMetadataStoreId() );
-    
+
             String configId = getMetadata().getIdentifier().getId();
             metadataProvider = workspace.getResource( OWSMetadataProviderProvider.class, configId + "_metadata" );
         } catch ( Exception e ) {
             throw new ResourceInitException( e.getMessage(), e );
         }
-    
+
     }
 
     @Override
     public XMLExceptionSerializer getExceptionSerializer( Version requestVersion ) {
-    
+
         WMSControllerBase controller = requestVersion == null ? null : controllers.get( requestVersion );
         if ( controller == null ) {
             Iterator<WMSControllerBase> iterator = controllers.values().iterator();
@@ -341,13 +346,13 @@ public class WMSController extends AbstractOWS {
     public void sendImage( BufferedImage img, HttpResponseBuffer response, String format )
                             throws OWSException, IOException {
         response.setContentType( format );
-    
+
         ImageSerializer serializer = imageSerializers.get( format );
         if ( serializer != null ) {
             serializer.serialize( img, response.getOutputStream() );
             return;
         }
-    
+
         format = format.substring( format.indexOf( "/" ) + 1 );
         if ( format.equals( "x-ms-bmp" ) ) {
             format = "bmp";
@@ -722,7 +727,7 @@ public class WMSController extends AbstractOWS {
                               ServiceProvider provider, Map<String, String> customParameters, WMSController controller,
                               OWSMetadataProvider metadata )
                                 throws OWSException, IOException;
-    
+
         /**
          * @param map
          * @param req
@@ -734,7 +739,7 @@ public class WMSController extends AbstractOWS {
         void handleException( Map<String, String> map, WMSRequestType req, OWSException e, HttpResponseBuffer response,
                               WMSController controller )
                                 throws ServletException;
-    
+
         /**
          * @param ex
          * @param response
@@ -742,13 +747,17 @@ public class WMSController extends AbstractOWS {
          */
         void sendException( OWSException ex, HttpResponseBuffer response, WMSController controller )
                                 throws ServletException;
-    
+
         /**
          * @param name
          * @throws OWSException
          */
         void throwSRSException( String name )
                                 throws OWSException;
+    }
+
+    public boolean isFpsEnabled() {
+        return isFpsEnabled;
     }
 
 }
