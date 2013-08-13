@@ -107,7 +107,7 @@ public class MapService {
      */
     public int updateSequence = 0; // TODO how to restore this after restart?
 
-    private List<Theme> themes;
+    private List<Theme> themes = new ArrayList<Theme>();
 
     private HashMap<String, org.deegree.layer.Layer> newLayers;
 
@@ -128,7 +128,6 @@ public class MapService {
         defaultLayerOptions = builder.buildMapOptions();
 
         if ( conf != null && conf.getThemeId() != null && !conf.getThemeId().isEmpty() ) {
-            themes = new ArrayList<Theme>();
             newLayers = new HashMap<String, org.deegree.layer.Layer>();
             themeMap = new HashMap<String, Theme>();
             for ( String id : conf.getThemeId() ) {
