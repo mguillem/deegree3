@@ -65,6 +65,7 @@ import org.deegree.layer.LayerData;
 import org.deegree.layer.LayerQuery;
 import org.deegree.layer.LayerRef;
 import org.deegree.protocol.wms.filter.ScaleFunction;
+import org.deegree.protocol.wms.ops.FeaturePortrayalGetMap;
 import org.deegree.protocol.wms.ops.GetFeatureInfoSchema;
 import org.deegree.protocol.wms.ops.GetLegendGraphic;
 import org.deegree.rendering.r2d.context.MapOptions;
@@ -227,6 +228,17 @@ public class MapService {
         }
 
         ScaleFunction.getCurrentScaleValue().remove();
+    }
+
+    public void getFeaturePortayalMap( FeaturePortrayalGetMap featurePortrayalGetMapRequest, RenderContext renderContext ) {
+        /*
+         * TODO Implement this method to support SLD Feature Portrayal Service GetMap requests
+         * 
+         * 1.retrieve GML from remote WFS
+         * 
+         * 2. render GML as described in the SLD in the passed RenderContext
+         */
+        LOG.info( "Feature Portrayal Service GetMap requests are not yet supported!" );
     }
 
     private LayerQuery buildQuery( StyleRef style, LayerRef lr, MapOptionsMaps options, List<MapOptions> mapOptions,

@@ -36,6 +36,7 @@
 
 package org.deegree.services.wms.controller;
 
+import static java.awt.Color.WHITE;
 import static javax.imageio.ImageIO.write;
 import static org.deegree.commons.ows.exception.OWSException.OPERATION_NOT_SUPPORTED;
 import static org.deegree.commons.tom.ows.Version.parseVersion;
@@ -50,6 +51,7 @@ import static org.deegree.services.i18n.Messages.get;
 import static org.deegree.services.metadata.MetadataUtils.convertFromJAXB;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -95,8 +97,10 @@ import org.deegree.protocol.ows.getcapabilities.GetCapabilities;
 import org.deegree.protocol.wms.WMSConstants.WMSRequestType;
 import org.deegree.protocol.wms.WMSException.InvalidDimensionValue;
 import org.deegree.protocol.wms.WMSException.MissingDimensionValue;
+import org.deegree.protocol.wms.ops.FeaturePortrayalGetMap;
 import org.deegree.protocol.wms.ops.GetFeatureInfoSchema;
 import org.deegree.protocol.wms.ops.GetLegendGraphic;
+import org.deegree.protocol.wms.ops.WmsRequestBuilder;
 import org.deegree.rendering.r2d.context.DefaultRenderContext;
 import org.deegree.rendering.r2d.context.RenderContext;
 import org.deegree.rendering.r2d.context.RenderingInfo;
@@ -448,20 +452,49 @@ public class WMSController extends AbstractOWS {
 
     protected void getMap( Map<String, String> map, HttpResponseBuffer response, Version version )
                             throws OWSException, IOException, MissingDimensionValue, InvalidDimensionValue {
-        org.deegree.protocol.wms.ops.GetMap gm2 = new org.deegree.protocol.wms.ops.GetMap( map, version,
-                                                                                           service.getExtensions() );
+        if ( isFeaturePortrayalServiceGetMapRequestAndSupported( map ) ) {
+            WmsRequestBuilder requestBuilder = new WmsRequestBuilder();
+            FeaturePortrayalGetMap featurePortrayalGetMapRequest = requestBuilder.buildFeaturePortrayalGetMapRequest( map,
+                                                                                                                      version );
+            // TODO: check if this parameters could be part of the request!
+            double pixelSize = 0.00028;
+            boolean transparent = true;
+            Color bgColor = WHITE;
+            RenderingInfo info = new RenderingInfo( featurePortrayalGetMapRequest.getFormat(),
+                                                    featurePortrayalGetMapRequest.getWidth(),
+                                                    featurePortrayalGetMapRequest.getHeight(), transparent, bgColor,
+                                                    featurePortrayalGetMapRequest.getBbox(), pixelSize, map );
+            RenderContext renderContext = createRenderContext( response, info );
+            service.getFeaturePortayalMap( featurePortrayalGetMapRequest, renderContext );
+        } else {
+            org.deegree.protocol.wms.ops.GetMap gm2 = new org.deegree.protocol.wms.ops.GetMap( map, version,
+                                                                                               service.getExtensions() );
 
-        checkGetMap( version, gm2 );
+            checkGetMap( version, gm2 );
 
-        RenderingInfo info = new RenderingInfo( gm2.getFormat(), gm2.getWidth(), gm2.getHeight(), gm2.getTransparent(),
-                                                gm2.getBgColor(), gm2.getBoundingBox(), gm2.getPixelSize(), map );
+            RenderingInfo info = new RenderingInfo( gm2.getFormat(), gm2.getWidth(), gm2.getHeight(),
+                                                    gm2.getTransparent(), gm2.getBgColor(), gm2.getBoundingBox(),
+                                                    gm2.getPixelSize(), map );
+            RenderContext ctx = createRenderContext( response, info );
+            LinkedList<String> headers = new LinkedList<String>();
+            service.getMap( gm2, headers, ctx );
+            response.setContentType( gm2.getFormat() );
+            ctx.close();
+            addHeaders( response, headers );
+        }
+    }
+
+    private RenderContext createRenderContext( HttpResponseBuffer response, RenderingInfo info )
+                            throws IOException {
         RenderContext ctx = new DefaultRenderContext( info );
         ctx.setOutput( response.getOutputStream() );
-        LinkedList<String> headers = new LinkedList<String>();
-        service.getMap( gm2, headers, ctx );
-        response.setContentType( gm2.getFormat() );
-        ctx.close();
-        addHeaders( response, headers );
+        return ctx;
+    }
+
+    private boolean isFeaturePortrayalServiceGetMapRequestAndSupported( Map<String, String> map ) {
+        boolean containsType = map.containsKey( "REMOTE_OWS_TYPE" );
+        boolean containsUrl = map.containsKey( "REMOTE_OWS_URL" );
+        return containsType && containsUrl && isFpsEnabled();
     }
 
     private static void addHeaders( HttpResponseBuffer response, LinkedList<String> headers ) {

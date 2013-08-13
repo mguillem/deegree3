@@ -102,7 +102,7 @@ public class WmsRequestBuilder {
 
     private void checkVersion( Version version )
                             throws OWSException {
-        if ( VERSION_130 != version ) {
+        if ( !VERSION_130.equals( version ) ) {
             throw new OWSException(
                                     "GetMap requests for Feature Portrayal Service are supported only for WMS version 1.3.0",
                                     INVALID_PARAMETER_VALUE );
