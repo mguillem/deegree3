@@ -453,35 +453,45 @@ public class WMSController extends AbstractOWS {
     protected void getMap( Map<String, String> map, HttpResponseBuffer response, Version version )
                             throws OWSException, IOException, MissingDimensionValue, InvalidDimensionValue {
         if ( isFeaturePortrayalServiceGetMapRequestAndSupported( map ) ) {
-            WmsRequestBuilder requestBuilder = new WmsRequestBuilder();
-            FeaturePortrayalGetMap featurePortrayalGetMapRequest = requestBuilder.buildFeaturePortrayalGetMapRequest( map,
-                                                                                                                      version );
-            // TODO: check if this parameters could be part of the request!
-            double pixelSize = 0.00028;
-            boolean transparent = true;
-            Color bgColor = WHITE;
-            RenderingInfo info = new RenderingInfo( featurePortrayalGetMapRequest.getFormat(),
-                                                    featurePortrayalGetMapRequest.getWidth(),
-                                                    featurePortrayalGetMapRequest.getHeight(), transparent, bgColor,
-                                                    featurePortrayalGetMapRequest.getBbox(), pixelSize, map );
-            RenderContext renderContext = createRenderContext( response, info );
-            service.getFeaturePortayalMap( featurePortrayalGetMapRequest, renderContext );
+            handleFeaturePortrayalGetMapRequest( map, response, version );
         } else {
-            org.deegree.protocol.wms.ops.GetMap gm2 = new org.deegree.protocol.wms.ops.GetMap( map, version,
-                                                                                               service.getExtensions() );
-
-            checkGetMap( version, gm2 );
-
-            RenderingInfo info = new RenderingInfo( gm2.getFormat(), gm2.getWidth(), gm2.getHeight(),
-                                                    gm2.getTransparent(), gm2.getBgColor(), gm2.getBoundingBox(),
-                                                    gm2.getPixelSize(), map );
-            RenderContext ctx = createRenderContext( response, info );
-            LinkedList<String> headers = new LinkedList<String>();
-            service.getMap( gm2, headers, ctx );
-            response.setContentType( gm2.getFormat() );
-            ctx.close();
-            addHeaders( response, headers );
+            handleGetMapRequest( map, response, version );
         }
+    }
+
+    private void handleFeaturePortrayalGetMapRequest( Map<String, String> map, HttpResponseBuffer response,
+                                                      Version version )
+                            throws OWSException, IOException {
+        WmsRequestBuilder requestBuilder = new WmsRequestBuilder();
+        FeaturePortrayalGetMap featurePortrayalGetMapRequest = requestBuilder.buildFeaturePortrayalGetMapRequest( map,
+                                                                                                                  version );
+        // TODO: check if this parameters could be part of the request!
+        double pixelSize = 0.00028;
+        boolean transparent = true;
+        Color bgColor = WHITE;
+        RenderingInfo info = new RenderingInfo( featurePortrayalGetMapRequest.getFormat(),
+                                                featurePortrayalGetMapRequest.getWidth(),
+                                                featurePortrayalGetMapRequest.getHeight(), transparent, bgColor,
+                                                featurePortrayalGetMapRequest.getBbox(), pixelSize, map );
+        RenderContext renderContext = createRenderContext( response, info );
+        service.getFeaturePortayalMap( featurePortrayalGetMapRequest, renderContext );
+    }
+
+    private void handleGetMapRequest( Map<String, String> map, HttpResponseBuffer response, Version version )
+                            throws OWSException, IOException {
+        org.deegree.protocol.wms.ops.GetMap gm2 = new org.deegree.protocol.wms.ops.GetMap( map, version,
+                                                                                           service.getExtensions() );
+
+        checkGetMap( version, gm2 );
+
+        RenderingInfo info = new RenderingInfo( gm2.getFormat(), gm2.getWidth(), gm2.getHeight(), gm2.getTransparent(),
+                                                gm2.getBgColor(), gm2.getBoundingBox(), gm2.getPixelSize(), map );
+        RenderContext ctx = createRenderContext( response, info );
+        LinkedList<String> headers = new LinkedList<String>();
+        service.getMap( gm2, headers, ctx );
+        response.setContentType( gm2.getFormat() );
+        ctx.close();
+        addHeaders( response, headers );
     }
 
     private RenderContext createRenderContext( HttpResponseBuffer response, RenderingInfo info )
