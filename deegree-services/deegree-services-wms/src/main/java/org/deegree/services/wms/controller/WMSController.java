@@ -138,142 +138,37 @@ public class WMSController extends AbstractOWS {
 
     private static final Logger LOG = getLogger( WMSController.class );
 
-    private final HashMap<String, ImageSerializer> imageSerializers = new HashMap<String, ImageSerializer>();
+    private final Map<String, ImageSerializer> imageSerializers = new HashMap<String, ImageSerializer>();
 
     /** The list of supported image formats. */
-    public final LinkedList<String> supportedImageFormats = new LinkedList<String>();
+    private final List<String> supportedImageFormats = new ArrayList<String>();
 
-    protected MapService service;
+    private Map<Version, WMSControllerBase> controllers = new TreeMap<Version, WMSControllerBase>();
 
-    protected ServiceIdentification identification;
+    private ServiceIdentification identification;
 
-    protected ServiceProvider provider;
+    private ServiceProvider provider;
 
-    protected TreeMap<Version, WMSControllerBase> controllers = new TreeMap<Version, WMSControllerBase>();
-
-    private Version highestVersion;
+    private MapService service;
 
     private Map<String, List<OMElement>> extendedCaps;
 
-    private String metadataURLTemplate;
-
     private FeatureInfoManager featureInfoManager;
 
+    private Version highestVersion;
+
     private OWSMetadataProvider metadataProvider;
+
+    private String metadataURLTemplate;
 
     public WMSController( ResourceMetadata<OWS> metadata, Workspace workspace, Object jaxbConfig ) {
         super( metadata, workspace, jaxbConfig );
         featureInfoManager = new FeatureInfoManager( true );
     }
 
-    /**
-     * @return the underlying map service
-     */
-    public MapService getMapService() {
-        return service;
-    }
-
-    private void handleMetadata( String metadataURLTemplate, String storeid ) {
-        this.metadataURLTemplate = metadataURLTemplate;
-    }
-
     @Override
-    public void init( DeegreeServicesMetadataType serviceMetadata, DeegreeServiceControllerType mainConfig,
-                      Object controllerConf ) {
-
-        identification = convertFromJAXB( serviceMetadata.getServiceIdentification() );
-        provider = convertFromJAXB( serviceMetadata.getServiceProvider() );
-
-        NamespaceBindings nsContext = new NamespaceBindings();
-        nsContext.addNamespace( "wms", "http://www.deegree.org/services/wms" );
-
-        DeegreeWMS conf = (DeegreeWMS) controllerConf;
-
-        if ( conf.getExtendedCapabilities() != null ) {
-            this.extendedCaps = new HashMap<String, List<OMElement>>();
-            List<OMElement> caps = new ArrayList<OMElement>( conf.getExtendedCapabilities().size() );
-            extendedCaps.put( "default", caps );
-            for ( ExtendedCapabilities extendedCapsConf : conf.getExtendedCapabilities() ) {
-                DOMSource domSource = new DOMSource( extendedCapsConf.getAny() );
-                XMLStreamReader xmlStream;
-                try {
-                    xmlStream = XMLInputFactory.newInstance().createXMLStreamReader( domSource );
-                } catch ( Exception t ) {
-                    throw new ResourceInitException( "Error extracting extended capabilities: " + t.getMessage(), t );
-                }
-                caps.add( new XMLAdapter( xmlStream ).getRootElement() );
-            }
-        }
-
-        try {
-            // put in the default formats
-            supportedImageFormats.add( "image/png" );
-            supportedImageFormats.add( "image/png; subtype=8bit" );
-            supportedImageFormats.add( "image/png; mode=8bit" );
-            supportedImageFormats.add( "image/gif" );
-            supportedImageFormats.add( "image/jpeg" );
-            supportedImageFormats.add( "image/tiff" );
-            supportedImageFormats.add( "image/x-ms-bmp" );
-
-            if ( conf.getFeatureInfoFormats() != null ) {
-                for ( GetFeatureInfoFormat t : conf.getFeatureInfoFormats().getGetFeatureInfoFormat() ) {
-                    if ( t.getFile() != null ) {
-                        featureInfoManager.addOrReplaceFormat( t.getFormat(),
-                                                               metadata.getLocation().resolveToFile( t.getFile() ).toString() );
-                    } else {
-                        XSLTFile xsltFile = t.getXSLTFile();
-                        GMLVersion version = GMLVersion.valueOf( xsltFile.getGmlVersion().toString() );
-                        featureInfoManager.addOrReplaceXsltFormat( t.getFormat(),
-                                                                   metadata.getLocation().resolveToUrl( xsltFile.getValue() ),
-                                                                   version, workspace );
-                    }
-                }
-            }
-
-            featureInfoManager.finalizeConfiguration();
-
-            // if ( pi.getImageFormat() != null ) {
-            // for ( ImageFormat f : pi.getImageFormat() ) {
-            // instantiateSerializer( imageSerializers, f.getFormat(), f.getClazz(), ImageSerializer.class );
-            // }
-            // }
-
-            final org.deegree.services.jaxb.wms.DeegreeWMS.SupportedVersions versions = conf.getSupportedVersions();
-            if ( versions == null ) {
-                ArrayList<String> vs = new ArrayList<String>();
-                vs.add( "1.1.1" );
-                vs.add( "1.3.0" );
-                validateAndSetOfferedVersions( vs );
-            } else {
-                validateAndSetOfferedVersions( versions.getVersion() );
-            }
-
-            for ( Version v : offeredVersions ) {
-                if ( v.equals( VERSION_111 ) ) {
-                    controllers.put( VERSION_111, new WMSController111() );
-                }
-                if ( v.equals( VERSION_130 ) ) {
-                    controllers.put( VERSION_130, new WMSController130() );
-                }
-            }
-
-            Iterator<Version> iter = controllers.keySet().iterator();
-            while ( iter.hasNext() ) {
-                highestVersion = iter.next();
-            }
-
-            ServiceConfigurationType sc = conf.getServiceConfiguration();
-            service = new MapService( sc, workspace );
-
-            // after the service knows what layers are available:
-            handleMetadata( conf.getMetadataURLTemplate(), conf.getMetadataStoreId() );
-
-            String configId = getMetadata().getIdentifier().getId();
-            metadataProvider = workspace.getResource( OWSMetadataProviderProvider.class, configId + "_metadata" );
-        } catch ( Exception e ) {
-            throw new ResourceInitException( e.getMessage(), e );
-        }
-
+    public void destroy() {
+        // nothing to do
     }
 
     @Override
@@ -317,52 +212,257 @@ public class WMSController extends AbstractOWS {
         }
     }
 
-    private void handleRequest( WMSRequestType req, HttpResponseBuffer response, Map<String, String> map,
-                                Version version )
-                            throws IOException, OWSException {
+    @Override
+    public void doXML( XMLStreamReader xmlStream, HttpServletRequest request, HttpResponseBuffer response,
+                       List<FileItem> multiParts )
+                            throws ServletException, IOException {
+        throw new UnsupportedOperationException( "XML request handling is currently not supported for the wms" );
+    }
+
+    @Override
+    public void init( DeegreeServicesMetadataType serviceMetadata, DeegreeServiceControllerType mainConfig,
+                      Object controllerConf ) {
+    
+        identification = convertFromJAXB( serviceMetadata.getServiceIdentification() );
+        provider = convertFromJAXB( serviceMetadata.getServiceProvider() );
+    
+        NamespaceBindings nsContext = new NamespaceBindings();
+        nsContext.addNamespace( "wms", "http://www.deegree.org/services/wms" );
+    
+        DeegreeWMS conf = (DeegreeWMS) controllerConf;
+    
+        if ( conf.getExtendedCapabilities() != null ) {
+            this.extendedCaps = new HashMap<String, List<OMElement>>();
+            List<OMElement> caps = new ArrayList<OMElement>( conf.getExtendedCapabilities().size() );
+            extendedCaps.put( "default", caps );
+            for ( ExtendedCapabilities extendedCapsConf : conf.getExtendedCapabilities() ) {
+                DOMSource domSource = new DOMSource( extendedCapsConf.getAny() );
+                XMLStreamReader xmlStream;
+                try {
+                    xmlStream = XMLInputFactory.newInstance().createXMLStreamReader( domSource );
+                } catch ( Exception t ) {
+                    throw new ResourceInitException( "Error extracting extended capabilities: " + t.getMessage(), t );
+                }
+                caps.add( new XMLAdapter( xmlStream ).getRootElement() );
+            }
+        }
+    
         try {
-            switch ( req ) {
-            case GetCapabilities:
-            case capabilities:
-                break;
-            default:
-                if ( controllers.get( version ) == null ) {
-                    throw new OWSException( get( "WMS.VERSION_UNSUPPORTED", version ),
-                                            OWSException.INVALID_PARAMETER_VALUE );
+            // put in the default formats
+            supportedImageFormats.add( "image/png" );
+            supportedImageFormats.add( "image/png; subtype=8bit" );
+            supportedImageFormats.add( "image/png; mode=8bit" );
+            supportedImageFormats.add( "image/gif" );
+            supportedImageFormats.add( "image/jpeg" );
+            supportedImageFormats.add( "image/tiff" );
+            supportedImageFormats.add( "image/x-ms-bmp" );
+    
+            if ( conf.getFeatureInfoFormats() != null ) {
+                for ( GetFeatureInfoFormat t : conf.getFeatureInfoFormats().getGetFeatureInfoFormat() ) {
+                    if ( t.getFile() != null ) {
+                        featureInfoManager.addOrReplaceFormat( t.getFormat(),
+                                                               metadata.getLocation().resolveToFile( t.getFile() ).toString() );
+                    } else {
+                        XSLTFile xsltFile = t.getXSLTFile();
+                        GMLVersion version = GMLVersion.valueOf( xsltFile.getGmlVersion().toString() );
+                        featureInfoManager.addOrReplaceXsltFormat( t.getFormat(),
+                                                                   metadata.getLocation().resolveToUrl( xsltFile.getValue() ),
+                                                                   version, workspace );
+                    }
                 }
             }
-
-            switch ( req ) {
-            case DescribeLayer:
-                throw new OWSException( get( "WMS.OPERATION_NOT_SUPPORTED_IMPLEMENTATION", req.name() ),
-                                        OPERATION_NOT_SUPPORTED );
-            case capabilities:
-            case GetCapabilities:
-                getCapabilities( map, response );
-                break;
-            case GetFeatureInfo:
-                getFeatureInfo( map, response, version );
-                break;
-            case GetMap:
-            case map:
-                getMap( map, response, version );
-                break;
-            case GetFeatureInfoSchema:
-                getFeatureInfoSchema( map, response );
-                break;
-            case GetLegendGraphic:
-                getLegendGraphic( map, response );
-                break;
-            case DTD:
-                getDtd( response );
-                break;
+    
+            featureInfoManager.finalizeConfiguration();
+    
+            // if ( pi.getImageFormat() != null ) {
+            // for ( ImageFormat f : pi.getImageFormat() ) {
+            // instantiateSerializer( imageSerializers, f.getFormat(), f.getClazz(), ImageSerializer.class );
+            // }
+            // }
+    
+            final org.deegree.services.jaxb.wms.DeegreeWMS.SupportedVersions versions = conf.getSupportedVersions();
+            if ( versions == null ) {
+                ArrayList<String> vs = new ArrayList<String>();
+                vs.add( "1.1.1" );
+                vs.add( "1.3.0" );
+                validateAndSetOfferedVersions( vs );
+            } else {
+                validateAndSetOfferedVersions( versions.getVersion() );
             }
-        } catch ( MissingDimensionValue e ) {
-            LOG.trace( "Stack trace:", e );
-            throw new OWSException( get( "WMS.DIMENSION_VALUE_MISSING", e.name ), "MissingDimensionValue" );
-        } catch ( InvalidDimensionValue e ) {
-            LOG.trace( "Stack trace:", e );
-            throw new OWSException( get( "WMS.DIMENSION_VALUE_INVALID", e.value, e.name ), "InvalidDimensionValue" );
+    
+            for ( Version v : offeredVersions ) {
+                if ( v.equals( VERSION_111 ) ) {
+                    controllers.put( VERSION_111, new WMSController111() );
+                }
+                if ( v.equals( VERSION_130 ) ) {
+                    controllers.put( VERSION_130, new WMSController130() );
+                }
+            }
+    
+            Iterator<Version> iter = controllers.keySet().iterator();
+            while ( iter.hasNext() ) {
+                highestVersion = iter.next();
+            }
+    
+            ServiceConfigurationType sc = conf.getServiceConfiguration();
+            service = new MapService( sc, workspace );
+    
+            // after the service knows what layers are available:
+            handleMetadata( conf.getMetadataURLTemplate(), conf.getMetadataStoreId() );
+    
+            String configId = getMetadata().getIdentifier().getId();
+            metadataProvider = workspace.getResource( OWSMetadataProviderProvider.class, configId + "_metadata" );
+        } catch ( Exception e ) {
+            throw new ResourceInitException( e.getMessage(), e );
+        }
+    
+    }
+
+    @Override
+    public XMLExceptionSerializer getExceptionSerializer( Version requestVersion ) {
+    
+        WMSControllerBase controller = requestVersion == null ? null : controllers.get( requestVersion );
+        if ( controller == null ) {
+            Iterator<WMSControllerBase> iterator = controllers.values().iterator();
+            while ( iterator.hasNext() ) {
+                controller = iterator.next();
+            }
+        }
+        return controller.exceptionSerializer;
+    }
+
+    /**
+     * @param img
+     * @param response
+     * @param format
+     * @throws OWSException
+     * @throws IOException
+     */
+    public void sendImage( BufferedImage img, HttpResponseBuffer response, String format )
+                            throws OWSException, IOException {
+        response.setContentType( format );
+    
+        ImageSerializer serializer = imageSerializers.get( format );
+        if ( serializer != null ) {
+            serializer.serialize( img, response.getOutputStream() );
+            return;
+        }
+    
+        format = format.substring( format.indexOf( "/" ) + 1 );
+        if ( format.equals( "x-ms-bmp" ) ) {
+            format = "bmp";
+        }
+        if ( format.equals( "png; subtype=8bit" ) || format.equals( "png; mode=8bit" ) ) {
+            format = "png";
+        }
+        LOG.debug( "Sending in format " + format );
+        if ( !write( img, format, response.getOutputStream() ) ) {
+            throw new OWSException( get( "WMS.CANNOT_ENCODE_IMAGE", format ), OWSException.NO_APPLICABLE_CODE );
+        }
+    }
+
+    public List<String> getSupportedImageFormats() {
+        return supportedImageFormats;
+    }
+
+    public List<OMElement> getExtendedCapabilities( String version ) {
+        Map<String, List<OMElement>> extendedCaps;
+        if ( metadataProvider != null ) {
+            extendedCaps = metadataProvider.getExtendedCapabilities();
+        } else {
+            extendedCaps = this.extendedCaps;
+        }
+
+        List<OMElement> list = extendedCaps.get( version );
+        if ( list == null ) {
+            list = extendedCaps.get( "default" );
+        }
+        return list;
+    }
+
+    public FeatureInfoManager getFeatureInfoManager() {
+        return featureInfoManager;
+    }
+
+    /**
+     * @return the underlying map service
+     */
+    public MapService getMapService() {
+        return service;
+    }
+
+    public String getMetadataURLTemplate() {
+        // TODO handle this properly in init(), needs service level dependency management
+        if ( metadataURLTemplate == null ) {
+            OwsManager mgr = workspace.getResourceManager( OwsManager.class );
+            Map<String, List<OWS>> ctrls = mgr.getAll();
+            for ( List<OWS> lists : ctrls.values() ) {
+                for ( OWS o : lists ) {
+                    ImplementationMetadata<?> md = ( (OWSProvider) o.getMetadata().getProvider() ).getImplementationMetadata();
+                    for ( String s : md.getImplementedServiceName() ) {
+                        if ( s.equalsIgnoreCase( "csw" )
+                             && md.getImplementedVersions().contains( new Version( 2, 0, 2 ) ) ) {
+                            this.metadataURLTemplate = ""; // special case to use requested address
+                        }
+                    }
+                }
+            }
+        }
+        return metadataURLTemplate;
+    }
+
+    protected void getCapabilities( Map<String, String> map, HttpResponseBuffer response )
+                            throws OWSException, IOException {
+
+        String version = map.get( "VERSION" );
+        // not putting it into the bean, why should I? It's used just a few lines below...
+
+        String updateSequence = map.get( "UPDATESEQUENCE" );
+        if ( version == null ) {
+            version = map.get( "WMTVER" );
+        }
+        GetCapabilities req = new GetCapabilities( version );
+
+        Version myVersion = negotiateVersion( req );
+
+        String getUrl = OGCFrontController.getHttpGetURL();
+        String postUrl = OGCFrontController.getHttpPostURL();
+
+        if ( metadataProvider != null ) {
+            controllers.get( myVersion ).getCapabilities( getUrl, postUrl, updateSequence, service, response,
+                                                          metadataProvider.getServiceIdentification(),
+                                                          metadataProvider.getServiceProvider(), map, this,
+                                                          metadataProvider );
+        } else {
+            controllers.get( myVersion ).getCapabilities( getUrl, postUrl, updateSequence, service, response,
+                                                          identification, provider, map, this, null );
+        }
+
+        response.flushBuffer(); // TODO remove this to enable validation, enable validation on a DTD basis...
+    }
+
+    protected void getMap( Map<String, String> map, HttpResponseBuffer response, Version version )
+                            throws OWSException, IOException, MissingDimensionValue, InvalidDimensionValue {
+        org.deegree.protocol.wms.ops.GetMap gm2 = new org.deegree.protocol.wms.ops.GetMap( map, version,
+                                                                                           service.getExtensions() );
+
+        checkGetMap( version, gm2 );
+
+        RenderingInfo info = new RenderingInfo( gm2.getFormat(), gm2.getWidth(), gm2.getHeight(), gm2.getTransparent(),
+                                                gm2.getBgColor(), gm2.getBoundingBox(), gm2.getPixelSize(), map );
+        RenderContext ctx = new DefaultRenderContext( info );
+        ctx.setOutput( response.getOutputStream() );
+        LinkedList<String> headers = new LinkedList<String>();
+        service.getMap( gm2, headers, ctx );
+        response.setContentType( gm2.getFormat() );
+        ctx.close();
+        addHeaders( response, headers );
+    }
+
+    private static void addHeaders( HttpResponseBuffer response, LinkedList<String> headers ) {
+        while ( !headers.isEmpty() ) {
+            String s = headers.poll();
+            response.addHeader( "Warning", s );
         }
     }
 
@@ -389,15 +489,66 @@ public class WMSController extends AbstractOWS {
         }
     }
 
-    private void getLegendGraphic( Map<String, String> map, HttpResponseBuffer response )
-                            throws OWSException, IOException {
-        GetLegendGraphic glg = new GetLegendGraphic( map );
-
-        if ( !supportedImageFormats.contains( glg.getFormat() ) ) {
-            throw new OWSException( get( "WMS.UNSUPPORTED_IMAGE_FORMAT", glg.getFormat() ), OWSException.INVALID_FORMAT );
+    private void checkGetFeatureInfo( Version version, org.deegree.protocol.wms.ops.GetFeatureInfo gfi )
+                            throws OWSException {
+        if ( gfi.getInfoFormat() != null && !gfi.getInfoFormat().equals( "" )
+             && !featureInfoManager.getSupportedFormats().contains( gfi.getInfoFormat() ) ) {
+            throw new OWSException( get( "WMS.INVALID_INFO_FORMAT", gfi.getInfoFormat() ), OWSException.INVALID_FORMAT );
         }
-        BufferedImage img = service.getLegend( glg );
-        sendImage( img, response, glg.getFormat() );
+        for ( LayerRef lr : gfi.getQueryLayers() ) {
+            if ( !service.hasTheme( lr.getName() ) ) {
+                throw new OWSException( "The layer with name " + lr.getName() + " is not defined.", "LayerNotDefined",
+                                        "layers" );
+            }
+        }
+        for ( StyleRef sr : gfi.getStyles() ) {
+            // TODO check style availability
+        }
+        try {
+            if ( gfi.getCoordinateSystem() == null ) {
+                // this can happen if some AUTO SRS id was invalid
+                controllers.get( version ).throwSRSException( "automatic" );
+            }
+            ICRS crs = gfi.getCoordinateSystem();
+            if ( crs instanceof CRSRef ) {
+                ( (CRSRef) crs ).getReferencedObject();
+            }
+        } catch ( ReferenceResolvingException e ) {
+            // only throw an exception if a truly invalid srs is found
+            // this makes it possible to request srs that are not advertised, which may be useful
+            controllers.get( version ).throwSRSException( gfi.getCoordinateSystem().getAlias() );
+        }
+    }
+
+    private void checkGetMap( Version version, org.deegree.protocol.wms.ops.GetMap gm )
+                            throws OWSException {
+        if ( !supportedImageFormats.contains( gm.getFormat() ) ) {
+            throw new OWSException( get( "WMS.UNSUPPORTED_IMAGE_FORMAT", gm.getFormat() ), OWSException.INVALID_FORMAT );
+        }
+        for ( LayerRef lr : gm.getLayers() ) {
+            if ( !service.hasTheme( lr.getName() ) ) {
+                throw new OWSException( "The layer with name " + lr.getName() + " is not defined.", "LayerNotDefined",
+                                        "layers" );
+            }
+        }
+        for ( StyleRef sr : gm.getStyles() ) {
+            // TODO check style availability here instead of the layer
+        }
+        try {
+            // check for existence/validity
+            if ( gm.getCoordinateSystem() == null ) {
+                // this can happen if some AUTO SRS id was invalid
+                controllers.get( version ).throwSRSException( "automatic" );
+            }
+            ICRS crs = gm.getCoordinateSystem();
+            if ( crs instanceof CRSRef ) {
+                ( (CRSRef) crs ).getReferencedObject();
+            }
+        } catch ( ReferenceResolvingException e ) {
+            // only throw an exception if a truly invalid srs is found
+            // this makes it possible to request srs that are not advertised, which may be useful
+            controllers.get( version ).throwSRSException( gm.getCoordinateSystem().getAlias() );
+        }
     }
 
     private void getFeatureInfo( Map<String, String> map, HttpResponseBuffer response, Version version )
@@ -480,210 +631,68 @@ public class WMSController extends AbstractOWS {
         }
     }
 
-    private static void addHeaders( HttpResponseBuffer response, LinkedList<String> headers ) {
-        while ( !headers.isEmpty() ) {
-            String s = headers.poll();
-            response.addHeader( "Warning", s );
-        }
-    }
-
-    protected void getMap( Map<String, String> map, HttpResponseBuffer response, Version version )
-                            throws OWSException, IOException, MissingDimensionValue, InvalidDimensionValue {
-        org.deegree.protocol.wms.ops.GetMap gm2 = new org.deegree.protocol.wms.ops.GetMap( map, version,
-                                                                                           service.getExtensions() );
-
-        checkGetMap( version, gm2 );
-
-        RenderingInfo info = new RenderingInfo( gm2.getFormat(), gm2.getWidth(), gm2.getHeight(), gm2.getTransparent(),
-                                                gm2.getBgColor(), gm2.getBoundingBox(), gm2.getPixelSize(), map );
-        RenderContext ctx = new DefaultRenderContext( info );
-        ctx.setOutput( response.getOutputStream() );
-        LinkedList<String> headers = new LinkedList<String>();
-        service.getMap( gm2, headers, ctx );
-        response.setContentType( gm2.getFormat() );
-        ctx.close();
-        addHeaders( response, headers );
-    }
-
-    private void checkGetFeatureInfo( Version version, org.deegree.protocol.wms.ops.GetFeatureInfo gfi )
-                            throws OWSException {
-        if ( gfi.getInfoFormat() != null && !gfi.getInfoFormat().equals( "" )
-             && !featureInfoManager.getSupportedFormats().contains( gfi.getInfoFormat() ) ) {
-            throw new OWSException( get( "WMS.INVALID_INFO_FORMAT", gfi.getInfoFormat() ), OWSException.INVALID_FORMAT );
-        }
-        for ( LayerRef lr : gfi.getQueryLayers() ) {
-            if ( !service.hasTheme( lr.getName() ) ) {
-                throw new OWSException( "The layer with name " + lr.getName() + " is not defined.", "LayerNotDefined",
-                                        "layers" );
-            }
-        }
-        for ( StyleRef sr : gfi.getStyles() ) {
-            // TODO check style availability
-        }
-        try {
-            if ( gfi.getCoordinateSystem() == null ) {
-                // this can happen if some AUTO SRS id was invalid
-                controllers.get( version ).throwSRSException( "automatic" );
-            }
-            ICRS crs = gfi.getCoordinateSystem();
-            if ( crs instanceof CRSRef ) {
-                ( (CRSRef) crs ).getReferencedObject();
-            }
-        } catch ( ReferenceResolvingException e ) {
-            // only throw an exception if a truly invalid srs is found
-            // this makes it possible to request srs that are not advertised, which may be useful
-            controllers.get( version ).throwSRSException( gfi.getCoordinateSystem().getAlias() );
-        }
-    }
-
-    private void checkGetMap( Version version, org.deegree.protocol.wms.ops.GetMap gm )
-                            throws OWSException {
-        if ( !supportedImageFormats.contains( gm.getFormat() ) ) {
-            throw new OWSException( get( "WMS.UNSUPPORTED_IMAGE_FORMAT", gm.getFormat() ), OWSException.INVALID_FORMAT );
-        }
-        for ( LayerRef lr : gm.getLayers() ) {
-            if ( !service.hasTheme( lr.getName() ) ) {
-                throw new OWSException( "The layer with name " + lr.getName() + " is not defined.", "LayerNotDefined",
-                                        "layers" );
-            }
-        }
-        for ( StyleRef sr : gm.getStyles() ) {
-            // TODO check style availability here instead of the layer
-        }
-        try {
-            // check for existence/validity
-            if ( gm.getCoordinateSystem() == null ) {
-                // this can happen if some AUTO SRS id was invalid
-                controllers.get( version ).throwSRSException( "automatic" );
-            }
-            ICRS crs = gm.getCoordinateSystem();
-            if ( crs instanceof CRSRef ) {
-                ( (CRSRef) crs ).getReferencedObject();
-            }
-        } catch ( ReferenceResolvingException e ) {
-            // only throw an exception if a truly invalid srs is found
-            // this makes it possible to request srs that are not advertised, which may be useful
-            controllers.get( version ).throwSRSException( gm.getCoordinateSystem().getAlias() );
-        }
-    }
-
-    protected void getCapabilities( Map<String, String> map, HttpResponseBuffer response )
+    private void getLegendGraphic( Map<String, String> map, HttpResponseBuffer response )
                             throws OWSException, IOException {
+        GetLegendGraphic glg = new GetLegendGraphic( map );
 
-        String version = map.get( "VERSION" );
-        // not putting it into the bean, why should I? It's used just a few lines below...
-
-        String updateSequence = map.get( "UPDATESEQUENCE" );
-        if ( version == null ) {
-            version = map.get( "WMTVER" );
+        if ( !supportedImageFormats.contains( glg.getFormat() ) ) {
+            throw new OWSException( get( "WMS.UNSUPPORTED_IMAGE_FORMAT", glg.getFormat() ), OWSException.INVALID_FORMAT );
         }
-        GetCapabilities req = new GetCapabilities( version );
-
-        Version myVersion = negotiateVersion( req );
-
-        String getUrl = OGCFrontController.getHttpGetURL();
-        String postUrl = OGCFrontController.getHttpPostURL();
-
-        if ( metadataProvider != null ) {
-            controllers.get( myVersion ).getCapabilities( getUrl, postUrl, updateSequence, service, response,
-                                                          metadataProvider.getServiceIdentification(),
-                                                          metadataProvider.getServiceProvider(), map, this,
-                                                          metadataProvider );
-        } else {
-            controllers.get( myVersion ).getCapabilities( getUrl, postUrl, updateSequence, service, response,
-                                                          identification, provider, map, this, null );
-        }
-
-        response.flushBuffer(); // TODO remove this to enable validation, enable validation on a DTD basis...
+        BufferedImage img = service.getLegend( glg );
+        sendImage( img, response, glg.getFormat() );
     }
 
-    @Override
-    public void doXML( XMLStreamReader xmlStream, HttpServletRequest request, HttpResponseBuffer response,
-                       List<FileItem> multiParts )
-                            throws ServletException, IOException {
-        throw new UnsupportedOperationException( "XML request handling is currently not supported for the wms" );
+    private void handleMetadata( String metadataURLTemplate, String storeid ) {
+        this.metadataURLTemplate = metadataURLTemplate;
     }
 
-    /**
-     * @param img
-     * @param response
-     * @param format
-     * @throws OWSException
-     * @throws IOException
-     */
-    public void sendImage( BufferedImage img, HttpResponseBuffer response, String format )
-                            throws OWSException, IOException {
-        response.setContentType( format );
-
-        ImageSerializer serializer = imageSerializers.get( format );
-        if ( serializer != null ) {
-            serializer.serialize( img, response.getOutputStream() );
-            return;
-        }
-
-        format = format.substring( format.indexOf( "/" ) + 1 );
-        if ( format.equals( "x-ms-bmp" ) ) {
-            format = "bmp";
-        }
-        if ( format.equals( "png; subtype=8bit" ) || format.equals( "png; mode=8bit" ) ) {
-            format = "png";
-        }
-        LOG.debug( "Sending in format " + format );
-        if ( !write( img, format, response.getOutputStream() ) ) {
-            throw new OWSException( get( "WMS.CANNOT_ENCODE_IMAGE", format ), OWSException.NO_APPLICABLE_CODE );
-        }
-    }
-
-    @Override
-    public XMLExceptionSerializer getExceptionSerializer( Version requestVersion ) {
-
-        WMSControllerBase controller = requestVersion == null ? null : controllers.get( requestVersion );
-        if ( controller == null ) {
-            Iterator<WMSControllerBase> iterator = controllers.values().iterator();
-            while ( iterator.hasNext() ) {
-                controller = iterator.next();
-            }
-        }
-        return controller.exceptionSerializer;
-    }
-
-    public List<OMElement> getExtendedCapabilities( String version ) {
-        Map<String, List<OMElement>> extendedCaps;
-        if ( metadataProvider != null ) {
-            extendedCaps = metadataProvider.getExtendedCapabilities();
-        } else {
-            extendedCaps = this.extendedCaps;
-        }
-
-        List<OMElement> list = extendedCaps.get( version );
-        if ( list == null ) {
-            list = extendedCaps.get( "default" );
-        }
-        return list;
-    }
-
-    public String getMetadataURLTemplate() {
-        // TODO handle this properly in init(), needs service level dependency management
-        if ( metadataURLTemplate == null ) {
-            OwsManager mgr = workspace.getResourceManager( OwsManager.class );
-            Map<String, List<OWS>> ctrls = mgr.getAll();
-            for ( List<OWS> lists : ctrls.values() ) {
-                for ( OWS o : lists ) {
-                    ImplementationMetadata<?> md = ( (OWSProvider) o.getMetadata().getProvider() ).getImplementationMetadata();
-                    for ( String s : md.getImplementedServiceName() ) {
-                        if ( s.equalsIgnoreCase( "csw" )
-                             && md.getImplementedVersions().contains( new Version( 2, 0, 2 ) ) ) {
-                            this.metadataURLTemplate = ""; // special case to use requested address
-                        }
-                    }
+    private void handleRequest( WMSRequestType req, HttpResponseBuffer response, Map<String, String> map,
+                                Version version )
+                            throws IOException, OWSException {
+        try {
+            switch ( req ) {
+            case GetCapabilities:
+            case capabilities:
+                break;
+            default:
+                if ( controllers.get( version ) == null ) {
+                    throw new OWSException( get( "WMS.VERSION_UNSUPPORTED", version ),
+                                            OWSException.INVALID_PARAMETER_VALUE );
                 }
             }
-        }
-        return metadataURLTemplate;
-    }
 
-    public FeatureInfoManager getFeatureInfoManager() {
-        return featureInfoManager;
+            switch ( req ) {
+            case DescribeLayer:
+                throw new OWSException( get( "WMS.OPERATION_NOT_SUPPORTED_IMPLEMENTATION", req.name() ),
+                                        OPERATION_NOT_SUPPORTED );
+            case capabilities:
+            case GetCapabilities:
+                getCapabilities( map, response );
+                break;
+            case GetFeatureInfo:
+                getFeatureInfo( map, response, version );
+                break;
+            case GetMap:
+            case map:
+                getMap( map, response, version );
+                break;
+            case GetFeatureInfoSchema:
+                getFeatureInfoSchema( map, response );
+                break;
+            case GetLegendGraphic:
+                getLegendGraphic( map, response );
+                break;
+            case DTD:
+                getDtd( response );
+                break;
+            }
+        } catch ( MissingDimensionValue e ) {
+            LOG.trace( "Stack trace:", e );
+            throw new OWSException( get( "WMS.DIMENSION_VALUE_MISSING", e.name ), "MissingDimensionValue" );
+        } catch ( InvalidDimensionValue e ) {
+            LOG.trace( "Stack trace:", e );
+            throw new OWSException( get( "WMS.DIMENSION_VALUE_INVALID", e.value, e.name ), "InvalidDimensionValue" );
+        }
     }
 
     /**
@@ -695,26 +704,6 @@ public class WMSController extends AbstractOWS {
      * @version $Revision$, $Date$
      */
     public interface Controller {
-        /**
-         * @param map
-         * @param req
-         * @param e
-         * @param response
-         * @param controller
-         * @throws ServletException
-         */
-        void handleException( Map<String, String> map, WMSRequestType req, OWSException e, HttpResponseBuffer response,
-                              WMSController controller )
-                                throws ServletException;
-
-        /**
-         * @param ex
-         * @param response
-         * @throws ServletException
-         */
-        void sendException( OWSException ex, HttpResponseBuffer response, WMSController controller )
-                                throws ServletException;
-
         /**
          * @param getUrl
          * @param postUrl
@@ -733,18 +722,33 @@ public class WMSController extends AbstractOWS {
                               ServiceProvider provider, Map<String, String> customParameters, WMSController controller,
                               OWSMetadataProvider metadata )
                                 throws OWSException, IOException;
-
+    
+        /**
+         * @param map
+         * @param req
+         * @param e
+         * @param response
+         * @param controller
+         * @throws ServletException
+         */
+        void handleException( Map<String, String> map, WMSRequestType req, OWSException e, HttpResponseBuffer response,
+                              WMSController controller )
+                                throws ServletException;
+    
+        /**
+         * @param ex
+         * @param response
+         * @throws ServletException
+         */
+        void sendException( OWSException ex, HttpResponseBuffer response, WMSController controller )
+                                throws ServletException;
+    
         /**
          * @param name
          * @throws OWSException
          */
         void throwSRSException( String name )
                                 throws OWSException;
-    }
-
-    @Override
-    public void destroy() {
-        // nothing to do
     }
 
 }
