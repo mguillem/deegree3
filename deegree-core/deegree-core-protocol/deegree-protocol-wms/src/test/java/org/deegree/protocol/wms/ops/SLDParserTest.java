@@ -94,7 +94,7 @@ public class SLDParserTest {
     public void testParseSimpleSldWithOnlyOneNamedLayer()
                             throws Exception {
         RequestBase gm = mock( RequestBase.class );
-        XMLStreamReader in = readSimpleSld();
+        XMLStreamReader in = readSldWithOneNamedLayerWithOneUserStyle();
         Triple<LinkedList<LayerRef>, LinkedList<StyleRef>, LinkedList<OperatorFilter>> parsedSld = parse( in, gm );
 
         LinkedList<LayerRef> layers = parsedSld.first;
@@ -181,9 +181,9 @@ public class SLDParserTest {
         assertThat( filters.get( 1 ), nullValue() );
     }
 
-    private XMLStreamReader readSimpleSld()
+    private XMLStreamReader readSldWithOneNamedLayerWithOneUserStyle()
                             throws XMLStreamException, FactoryConfigurationError {
-        return readSld( "sld-simple.xml" );
+        return readSld( "sld-oneNamedLayerOneUserStyle.xml" );
     }
 
     private XMLStreamReader readSldWithOneNamedLayerWithOneUserStyleAndFilter()
