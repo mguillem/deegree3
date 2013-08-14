@@ -70,6 +70,27 @@ import org.junit.Test;
 public class SLDParserTest {
 
     @Test
+    public void testParseSimpleSldWithNamedStyle()
+                            throws Exception {
+        RequestBase gm = mock( RequestBase.class );
+        XMLStreamReader in = readSldWithOneNamedLayerWithOneNamedStyle();
+        Triple<LinkedList<LayerRef>, LinkedList<StyleRef>, LinkedList<OperatorFilter>> parsedSld = parse( in, gm );
+
+        LinkedList<LayerRef> layers = parsedSld.first;
+        assertThat( layers.size(), is( 1 ) );
+        assertThat( layers.get( 0 ).getName(), is( "OCEANSEA_1M:Foundation" ) );
+
+        LinkedList<StyleRef> styles = parsedSld.second;
+        assertThat( styles.size(), is( 1 ) );
+        assertThat( styles.get( 0 ).getName(), is( "GEOSYM" ) );
+        assertThat( styles.get( 0 ).getStyle(), nullValue() );
+
+        LinkedList<OperatorFilter> filters = parsedSld.third;
+        assertThat( filters.size(), is( 1 ) );
+        assertThat( filters.get( 0 ), nullValue() );
+    }
+
+    @Test
     public void testParseSimpleSldWithOnlyOneNamedLayer()
                             throws Exception {
         RequestBase gm = mock( RequestBase.class );
@@ -178,6 +199,11 @@ public class SLDParserTest {
     private XMLStreamReader readSldWithTwoNamedLayers()
                             throws XMLStreamException, FactoryConfigurationError {
         return readSld( "sld-twoNamedLayers.xml" );
+    }
+
+    private XMLStreamReader readSldWithOneNamedLayerWithOneNamedStyle()
+                            throws XMLStreamException, FactoryConfigurationError {
+        return readSld( "sld-oneNamedLayerWithNamedStyle.xml" );
     }
 
     private XMLStreamReader readSld( String name )
