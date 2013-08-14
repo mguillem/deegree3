@@ -100,8 +100,7 @@ public class SLDParser {
     public static Triple<LinkedList<LayerRef>, LinkedList<StyleRef>, LinkedList<OperatorFilter>> parse( XMLStreamReader in,
                                                                                                         RequestBase gm )
                             throws XMLStreamException, OWSException, ParseException {
-        while ( !in.isStartElement() || in.getLocalName() == null
-                || !( in.getLocalName().equals( "NamedLayer" ) || in.getLocalName().equals( "UserLayer" ) ) ) {
+        while ( !in.isStartElement() || in.getLocalName() == null || !( isNamedLayer( in ) || isUserLayer( in ) ) ) {
             in.nextTag();
         }
 
@@ -109,156 +108,14 @@ public class SLDParser {
         LinkedList<StyleRef> styles = new LinkedList<StyleRef>();
         LinkedList<OperatorFilter> filters = new LinkedList<OperatorFilter>();
 
-        while ( in.getLocalName().equals( "NamedLayer" ) || in.getLocalName().equals( "UserLayer" ) ) {
-            if ( in.getLocalName().equals( "NamedLayer" ) ) {
-                in.nextTag();
-
-                in.require( START_ELEMENT, null, "Name" );
-                String layerName = in.getElementText();
-
-                in.nextTag();
-
-                LOG.debug( "Extracted layer '{}' from SLD.", layerName );
-
-                // skip description
-                if ( in.getLocalName().equals( "Description" ) ) {
-                    skipElement( in );
-                }
-
-                OperatorFilter operatorFilter = null;
-                if ( in.getLocalName().equals( "LayerFeatureConstraints" ) ) {
-
-                    while ( !( in.isEndElement() && in.getLocalName().equals( "LayerFeatureConstraints" ) ) ) {
-                        in.nextTag();
-
-                        while ( !( in.isEndElement() && in.getLocalName().equals( "FeatureTypeConstraint" ) ) ) {
-                            in.nextTag();
-
-                            // skip feature type name, it is useless in this context (or is it?) TODO
-                            if ( in.getLocalName().equals( "FeatureTypeName" ) ) {
-                                in.getElementText();
-                                in.nextTag();
-                            }
-
-                            if ( in.getLocalName().equals( "Filter" ) ) {
-                                Filter filter = Filter110XMLDecoder.parse( in );
-                                if ( filter instanceof OperatorFilter ) {
-                                    operatorFilter = (OperatorFilter) filter;
-                                } else if ( filter instanceof IdFilter ) {
-                                    IdFilter idFilter = (IdFilter) filter;
-                                    List<ResourceId> ids = idFilter.getSelectedIds();
-
-                                    NamespaceBindings nsContext = new NamespaceBindings();
-                                    nsContext.addNamespace( "gml", GMLNS );
-                                    ValueReference idReference = new ValueReference( "@gml:id", nsContext );
-
-                                    int idCount = ids.size(), i = 0;
-                                    Operator[] operators = new Operator[idCount];
-                                    for ( ResourceId id : ids ) {
-                                        operators[i++] = new PropertyIsEqualTo(
-                                                                                idReference,
-                                                                                new Literal<PrimitiveValue>(
-                                                                                                             id.getRid() ),
-                                                                                Boolean.TRUE, MatchAction.ONE );
-                                    }
-
-                                    if ( idCount == 1 ) {
-                                        operatorFilter = new OperatorFilter( operators[0] );
-                                    } else {
-                                        operatorFilter = new OperatorFilter( new Or( operators ) );
-                                    }
-                                }
-                            }
-
-                            if ( in.getLocalName().equals( "Extent" ) ) {
-                                in.nextTag();
-
-                                in.require( START_ELEMENT, null, "Name" );
-                                String name = in.getElementText().toUpperCase();
-                                in.nextTag();
-                                in.require( START_ELEMENT, null, "Value" );
-                                String value = in.getElementText();
-                                in.nextTag();
-                                in.require( END_ELEMENT, null, "Extent" );
-
-                                List<?> list = parseDimensionValues( value, name.toLowerCase() );
-                                if ( name.toUpperCase().equals( "TIME" ) ) {
-                                    gm.addDimensionValue( "time", (List<?>) parseTyped( list, true ) );
-                                } else {
-                                    List<?> values = (List<?>) parseTyped( list, false );
-                                    gm.addDimensionValue( name, values );
-                                }
-
-                            }
-                        }
-                        in.nextTag();
-                    }
-
-                    in.nextTag();
-                }
-
-                if ( in.getLocalName().equals( "NamedStyle" ) ) {
-                    in.nextTag();
-                    String name = in.getElementText();
-                    layers.add( new LayerRef( layerName ) );
-                    styles.add( new StyleRef( name ) );
-                    filters.add( operatorFilter );
-
-                    in.nextTag(); // out of name
-                    in.nextTag(); // out of named style
-                }
-
-                if ( in.getLocalName().equals( "UserStyle" ) ) {
-
-                    while ( !( in.isEndElement() && in.getLocalName().equals( "UserStyle" ) ) ) {
-                        in.nextTag();
-
-                        // TODO skipped
-                        if ( in.getLocalName().equals( "Name" ) ) {
-                            in.getElementText();
-                        }
-
-                        // TODO skipped
-                        if ( in.getLocalName().equals( "Description" ) ) {
-                            skipElement( in );
-                        }
-
-                        // TODO skipped
-                        if ( in.getLocalName().equals( "Title" ) ) {
-                            in.getElementText();
-                        }
-
-                        // TODO skipped
-                        if ( in.getLocalName().equals( "Abstract" ) ) {
-                            in.getElementText();
-                        }
-
-                        // TODO skipped
-                        if ( in.getLocalName().equals( "IsDefault" ) ) {
-                            in.getElementText();
-                        }
-
-                        if ( in.getLocalName().equals( "FeatureTypeStyle" )
-                             || in.getLocalName().equals( "CoverageStyle" )
-                             || in.getLocalName().equals( "OnlineResource" ) ) {
-                            Style style = SymbologyParser.INSTANCE.parseFeatureTypeOrCoverageStyle( in );
-                            layers.add( new LayerRef( layerName ) );
-                            styles.add( new StyleRef( style ) );
-                            filters.add( operatorFilter );
-                        }
-                    }
-
-                    in.nextTag();
-
-                }
-
-                in.nextTag();
+        while ( isNamedLayer( in ) || isUserLayer( in ) ) {
+            if ( isNamedLayer( in ) ) {
+                parseNamedLayer( in, gm, layers, styles, filters );
             } else {
                 throw new OWSException( "UserLayer requests are currently not supported.",
                                         OWSException.NO_APPLICABLE_CODE );
             }
         }
-
         return new Triple<LinkedList<LayerRef>, LinkedList<StyleRef>, LinkedList<OperatorFilter>>( layers, styles,
                                                                                                    filters );
     }
@@ -273,26 +130,23 @@ public class SLDParser {
     public static Pair<LinkedList<Filter>, LinkedList<StyleRef>> getStyles( XMLStreamReader in, String layerName,
                                                                             Map<String, String> styleNames )
                             throws XMLStreamException {
-        while ( !in.isStartElement() || in.getLocalName() == null
-                || !( in.getLocalName().equals( "NamedLayer" ) || in.getLocalName().equals( "UserLayer" ) ) ) {
+        while ( !in.isStartElement() || in.getLocalName() == null || !( isNamedLayer( in ) || isUserLayer( in ) ) ) {
             in.nextTag();
         }
 
         LinkedList<StyleRef> styles = new LinkedList<StyleRef>();
         LinkedList<Filter> filters = new LinkedList<Filter>();
 
-        while ( in.hasNext() && ( in.getLocalName().equals( "NamedLayer" ) && !in.isEndElement() )
-                || in.getLocalName().equals( "UserLayer" ) ) {
-            if ( in.getLocalName().equals( "UserLayer" ) ) {
+        while ( in.hasNext() && ( isNamedLayer( in ) && !in.isEndElement() ) || isUserLayer( in ) ) {
+            if ( isUserLayer( in ) ) {
                 skipElement( in );
             }
-            if ( in.getLocalName().equals( "NamedLayer" ) ) {
+            if ( isNamedLayer( in ) ) {
                 in.nextTag();
 
-                in.require( START_ELEMENT, null, "Name" );
-                String name = in.getElementText();
+                String name = parseRequiredLayerName( in );
                 if ( !name.equals( layerName ) ) {
-                    while ( !( in.isEndElement() && in.getLocalName().equals( "NamedLayer" ) ) ) {
+                    while ( !( in.isEndElement() && isNamedLayer( in ) ) ) {
                         in.next();
                     }
                     in.nextTag();
@@ -300,30 +154,23 @@ public class SLDParser {
                 }
                 in.nextTag();
 
-                // skip description
-                if ( in.getLocalName().equals( "Description" ) ) {
-                    skipElement( in );
-                }
+                skip( in, "Description" );
 
-                if ( in.getLocalName().equals( "LayerFeatureConstraints" ) ) {
+                if ( isLayerFeatureConstraints( in ) ) {
 
-                    while ( !( in.isEndElement() && in.getLocalName().equals( "LayerFeatureConstraints" ) ) ) {
+                    while ( !( in.isEndElement() && isLayerFeatureConstraints( in ) ) ) {
                         in.nextTag();
 
-                        while ( !( in.isEndElement() && in.getLocalName().equals( "FeatureTypeConstraint" ) ) ) {
+                        while ( !( in.isEndElement() && isFeatureTypeConstraint( in ) ) ) {
                             in.nextTag();
 
-                            // TODO use this
-                            if ( in.getLocalName().equals( "FeatureTypeName" ) ) {
-                                in.getElementText();
-                                in.nextTag();
-                            }
+                            skipFeatureTypeName( in );
 
-                            if ( in.getLocalName().equals( "Filter" ) ) {
+                            if ( isFilter( in ) ) {
                                 filters.add( Filter110XMLDecoder.parse( in ) );
                             }
 
-                            if ( in.getLocalName().equals( "Extent" ) ) {
+                            if ( isExtent( in ) ) {
                                 // skip extent, does not make sense to parse it here
                                 skipElement( in );
                             }
@@ -334,16 +181,16 @@ public class SLDParser {
                     in.nextTag();
                 }
 
-                if ( in.getLocalName().equals( "NamedStyle" ) ) {
+                if ( isNamedStyle( in ) ) {
                     // does not make sense to reference a named style when configuring it...
                     skipElement( in );
                 }
 
                 String styleName = null;
 
-                while ( in.hasNext() && in.getLocalName().equals( "UserStyle" ) ) {
+                while ( in.hasNext() && isUserStyle( in ) ) {
 
-                    while ( in.hasNext() && !( in.isEndElement() && in.getLocalName().equals( "UserStyle" ) ) ) {
+                    while ( in.hasNext() && !( in.isEndElement() && isUserStyle( in ) ) ) {
 
                         in.nextTag();
 
@@ -354,10 +201,7 @@ public class SLDParser {
                             }
                         }
 
-                        // TODO skipped
-                        if ( in.getLocalName().equals( "Description" ) ) {
-                            skipElement( in );
-                        }
+                        skip( in, "Description" );
 
                         // TODO skipped
                         if ( in.getLocalName().equals( "Title" ) ) {
@@ -374,9 +218,7 @@ public class SLDParser {
                             in.getElementText();
                         }
 
-                        if ( in.getLocalName().equals( "FeatureTypeStyle" )
-                             || in.getLocalName().equals( "CoverageStyle" )
-                             || in.getLocalName().equals( "OnlineResource" ) ) {
+                        if ( isFeatureTypeStyle( in ) || isCoverageStyle( in ) || isOnlineResource( in ) ) {
                             Style style = SymbologyParser.INSTANCE.parseFeatureTypeOrCoverageStyle( in );
                             if ( styleNames.get( styleName ) != null ) {
                                 style.setName( styleNames.get( styleName ) );
@@ -393,6 +235,197 @@ public class SLDParser {
         }
 
         return new Pair<LinkedList<Filter>, LinkedList<StyleRef>>( filters, styles );
+    }
+
+    private static void parseNamedLayer( XMLStreamReader in, RequestBase gm, LinkedList<LayerRef> layers,
+                                         LinkedList<StyleRef> styles, LinkedList<OperatorFilter> filters )
+                            throws XMLStreamException, OWSException, ParseException {
+        in.nextTag();
+
+        String layerName = parseRequiredLayerName( in );
+        in.nextTag();
+
+        LOG.debug( "Extracted layer '{}' from SLD.", layerName );
+        skip( in, "Description" );
+
+        OperatorFilter operatorFilter = null;
+        if ( isLayerFeatureConstraints( in ) ) {
+            while ( !( in.isEndElement() && isLayerFeatureConstraints( in ) ) ) {
+                in.nextTag();
+                while ( !( in.isEndElement() && isFeatureTypeConstraint( in ) ) ) {
+                    in.nextTag();
+                    skipFeatureTypeName( in );
+                    if ( isFilter( in ) ) {
+                        operatorFilter = parseFilter( in, operatorFilter );
+                    }
+                    if ( isExtent( in ) ) {
+                        parseExtentAndAddDimensions( in, gm );
+                    }
+                }
+                in.nextTag();
+            }
+            in.nextTag();
+        }
+        if ( isNamedStyle( in ) ) {
+            parseAndAddNamedStyle( in, layers, styles, filters, layerName, operatorFilter );
+        }
+        if ( isUserStyle( in ) ) {
+            parseAndAddUserStyle( in, layers, styles, filters, layerName, operatorFilter );
+        }
+        in.nextTag();
+    }
+
+    private static void parseExtentAndAddDimensions( XMLStreamReader in, RequestBase gm )
+                            throws XMLStreamException, OWSException, ParseException {
+        in.nextTag();
+
+        in.require( START_ELEMENT, null, "Name" );
+        String name = in.getElementText().toUpperCase();
+        in.nextTag();
+        in.require( START_ELEMENT, null, "Value" );
+        String value = in.getElementText();
+        in.nextTag();
+        in.require( END_ELEMENT, null, "Extent" );
+
+        List<?> list = parseDimensionValues( value, name.toLowerCase() );
+        if ( name.toUpperCase().equals( "TIME" ) ) {
+            gm.addDimensionValue( "time", (List<?>) parseTyped( list, true ) );
+        } else {
+            List<?> values = (List<?>) parseTyped( list, false );
+            gm.addDimensionValue( name, values );
+        }
+    }
+
+    private static OperatorFilter parseFilter( XMLStreamReader in, OperatorFilter operatorFilter )
+                            throws XMLStreamException {
+        Filter filter = Filter110XMLDecoder.parse( in );
+        if ( filter instanceof OperatorFilter ) {
+            operatorFilter = (OperatorFilter) filter;
+        } else if ( filter instanceof IdFilter ) {
+            IdFilter idFilter = (IdFilter) filter;
+            List<ResourceId> ids = idFilter.getSelectedIds();
+
+            NamespaceBindings nsContext = new NamespaceBindings();
+            nsContext.addNamespace( "gml", GMLNS );
+            ValueReference idReference = new ValueReference( "@gml:id", nsContext );
+
+            int idCount = ids.size(), i = 0;
+            Operator[] operators = new Operator[idCount];
+            for ( ResourceId id : ids ) {
+                operators[i++] = new PropertyIsEqualTo( idReference, new Literal<PrimitiveValue>( id.getRid() ),
+                                                        Boolean.TRUE, MatchAction.ONE );
+            }
+
+            if ( idCount == 1 ) {
+                operatorFilter = new OperatorFilter( operators[0] );
+            } else {
+                operatorFilter = new OperatorFilter( new Or( operators ) );
+            }
+        }
+        return operatorFilter;
+    }
+
+    private static void parseAndAddUserStyle( XMLStreamReader in, LinkedList<LayerRef> layers,
+                                              LinkedList<StyleRef> styles, LinkedList<OperatorFilter> filters,
+                                              String layerName, OperatorFilter operatorFilter )
+                            throws XMLStreamException {
+        while ( !( in.isEndElement() && isUserStyle( in ) ) ) {
+            in.nextTag();
+
+            skip( in, "Name" );
+            skip( in, "Description" );
+            skip( in, "Title" );
+            skip( in, "Abstract" );
+            skip( in, "IsDefault" );
+
+            if ( isFeatureTypeStyle( in ) || isCoverageStyle( in ) || isOnlineResource( in ) ) {
+                Style style = SymbologyParser.INSTANCE.parseFeatureTypeOrCoverageStyle( in );
+                layers.add( new LayerRef( layerName ) );
+                styles.add( new StyleRef( style ) );
+                filters.add( operatorFilter );
+            }
+        }
+        in.nextTag();
+    }
+
+    private static void parseAndAddNamedStyle( XMLStreamReader in, LinkedList<LayerRef> layers,
+                                               LinkedList<StyleRef> styles, LinkedList<OperatorFilter> filters,
+                                               String layerName, OperatorFilter operatorFilter )
+                            throws XMLStreamException {
+        in.nextTag();
+        String name = in.getElementText();
+        layers.add( new LayerRef( layerName ) );
+        styles.add( new StyleRef( name ) );
+        filters.add( operatorFilter );
+
+        in.nextTag(); // out of name
+        in.nextTag(); // out of named style
+    }
+
+    private static String parseRequiredLayerName( XMLStreamReader in )
+                            throws XMLStreamException {
+        in.require( START_ELEMENT, null, "Name" );
+        return in.getElementText();
+    }
+
+    private static boolean isUserLayer( XMLStreamReader in ) {
+        return in.getLocalName().equals( "UserLayer" );
+    }
+
+    private static boolean isNamedLayer( XMLStreamReader in ) {
+        return in.getLocalName().equals( "NamedLayer" );
+    }
+
+    private static boolean isUserStyle( XMLStreamReader in ) {
+        return in.getLocalName().equals( "UserStyle" );
+    }
+
+    private static boolean isNamedStyle( XMLStreamReader in ) {
+        return in.getLocalName().equals( "NamedStyle" );
+    }
+
+    private static boolean isExtent( XMLStreamReader in ) {
+        return in.getLocalName().equals( "Extent" );
+    }
+
+    private static boolean isFilter( XMLStreamReader in ) {
+        return in.getLocalName().equals( "Filter" );
+    }
+
+    private static boolean isFeatureTypeConstraint( XMLStreamReader in ) {
+        return in.getLocalName().equals( "FeatureTypeConstraint" );
+    }
+
+    private static boolean isLayerFeatureConstraints( XMLStreamReader in ) {
+        return in.getLocalName().equals( "LayerFeatureConstraints" );
+    }
+
+    private static boolean isOnlineResource( XMLStreamReader in ) {
+        return in.getLocalName().equals( "OnlineResource" );
+    }
+
+    private static boolean isCoverageStyle( XMLStreamReader in ) {
+        return in.getLocalName().equals( "CoverageStyle" );
+    }
+
+    private static boolean isFeatureTypeStyle( XMLStreamReader in ) {
+        return in.getLocalName().equals( "FeatureTypeStyle" );
+    }
+
+    private static void skipFeatureTypeName( XMLStreamReader in )
+                            throws XMLStreamException {
+        // skip feature type name, it is useless in this context (or is it?) TODO
+        if ( in.getLocalName().equals( "FeatureTypeName" ) ) {
+            in.getElementText();
+            in.nextTag();
+        }
+    }
+
+    private static void skip( XMLStreamReader in, String name )
+                            throws XMLStreamException {
+        if ( in.getLocalName().equals( name ) ) {
+            skipElement( in );
+        }
     }
 
 }
