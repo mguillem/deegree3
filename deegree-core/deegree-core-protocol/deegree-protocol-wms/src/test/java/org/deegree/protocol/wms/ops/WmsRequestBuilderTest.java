@@ -40,7 +40,10 @@ import static java.util.Collections.emptyMap;
 import static org.deegree.protocol.wms.WMSConstants.VERSION_130;
 import static org.deegree.protocol.wms.ops.FeaturePortrayalGetMap.DEFAULT_FORMAT;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 
 import java.net.URL;
 import java.util.HashMap;
@@ -59,6 +62,7 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
  * @author <a href="mailto:goltz@lat-lon.de">Lyn Goltz</a>
@@ -83,13 +87,19 @@ public class WmsRequestBuilderTest {
 
     private static final String VALID_CRS = "EPSG:4326";
 
+    private static final String VALID_SLD_BODY = "%3C%3Fxml+version%3D%221.0%22+encoding%3D%22UTF-8%22%3F%3E%3CStyledLayerDescriptor+version%3D%221.1.0%22%3E%3CNamedLayer%3E%3CName%3ERivers%3C%2FName%3E%3CNamedStyle%3E%3CName%3ECenterLine%3C%2FName%3E%3C%2FNamedStyle%3E%3C%2FNamedLayer%3E%3CNamedLayer%3E%3CName%3ERoads%3C%2FName%3E%3CNamedStyle%3E%3CName%3ECenterLine%3C%2FName%3E%3C%2FNamedStyle%3E%3C%2FNamedLayer%3E%3CNamedLayer%3E%3CName%3EHouses%3C%2FName%3E%3CNamedStyle%3E%3CName%3EOutline%3C%2FName%3E%3C%2FNamedStyle%3E%3C%2FNamedLayer%3E%3C%2FStyledLayerDescriptor%3E";
+
     private static WmsRequestBuilder wmsRequestBuilder;
 
     private static URL VALID_SLD_REF;
 
     @BeforeClass
     public static void initWmsRequestBuilder() {
-        wmsRequestBuilder = new WmsRequestBuilder();
+        SLDParser sldParser = Mockito.mock( SLDParser.class );
+//        when( sldParser.parseFromExternalReference( anyString() ) ).thenReturn( new StyleRef( "TEST" ) );
+//        when( sldParser.parseFromString( anyString() ) ).thenReturn( new StyleRef( "TEST" ) );
+
+        wmsRequestBuilder = new WmsRequestBuilder( sldParser );
         VALID_SLD_REF = WmsRequestBuilderTest.class.getResource( "example-sld.xml" );
     }
 
@@ -162,6 +172,21 @@ public class WmsRequestBuilderTest {
                             throws Exception {
         Map<String, String> map = createFpsGetMapParameterMapWithoutBbox();
         wmsRequestBuilder.buildFeaturePortrayalGetMapRequest( map, VERSION_130 );
+    }
+
+    @Test(expected = OWSException.class)
+    public void testBuildFeaturePortrayalGetMapRequestWithSldAndSldBodyShouldFail()
+                            throws Exception {
+        Map<String, String> map = createFpsGetMapParameterMapWithSldAndSldBody();
+        wmsRequestBuilder.buildFeaturePortrayalGetMapRequest( map, VERSION_130 );
+    }
+
+    @Test
+    public void testBuildFeaturePortrayalGetMapRequestWithSldBody()
+                            throws Exception {
+        Map<String, String> map = createValidFpsGetMapParameterMapWithSldBody();
+        FeaturePortrayalGetMap request = wmsRequestBuilder.buildFeaturePortrayalGetMapRequest( map, VERSION_130 );
+        assertThat( request.getStyle(), notNullValue() );
     }
 
     @Test
@@ -239,6 +264,19 @@ public class WmsRequestBuilderTest {
     private Map<String, String> createFpsGetMapParameterMapWithoutBbox() {
         Map<String, String> parameterMap = createValidFpsGetMapParameterMap();
         parameterMap.remove( "BBOX" );
+        return parameterMap;
+    }
+
+    private Map<String, String> createFpsGetMapParameterMapWithSldAndSldBody() {
+        Map<String, String> parameterMap = createValidFpsGetMapParameterMap();
+        parameterMap.put( "SLD_BODY", VALID_SLD_BODY );
+        return parameterMap;
+    }
+
+    private Map<String, String> createValidFpsGetMapParameterMapWithSldBody() {
+        Map<String, String> parameterMap = createValidFpsGetMapParameterMap();
+        parameterMap.remove( "SLD" );
+        parameterMap.put( "SLD_BODY", VALID_SLD_BODY );
         return parameterMap;
     }
 

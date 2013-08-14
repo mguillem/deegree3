@@ -67,6 +67,12 @@ public class WmsRequestBuilder {
 
     private static GeometryFactory geometryFactory = new GeometryFactory();
 
+    private SLDParser sldParser;
+
+    public WmsRequestBuilder( SLDParser sldParser ) {
+        this.sldParser = sldParser;
+    }
+
     /**
      * Creates a {@link FeaturePortrayalGetMap} out of the passed parameters.
      * 
@@ -133,11 +139,17 @@ public class WmsRequestBuilder {
     private StyleRef parseSld( Map<String, String> parameterMap )
                             throws OWSException {
         String sld = parameterMap.get( "SLD" );
-        if ( sld == null ) {
-            throw new OWSException( "Mandatory parameter SLD is missing", MISSING_PARAMETER_VALUE );
+        String sldBody = parameterMap.get( "SLD_BODY" );
+        if ( sld != null && sldBody != null ) {
+            throw new OWSException( "SLD and SLD_Body are set. Must be one of it!", MISSING_PARAMETER_VALUE );
         }
-        // TODO: SLDParser.parse( in, gm );
-        return new StyleRef( "TODO" );
+        if ( sld != null ) {
+//            return sldParser.parseFromExternalReference( sld );
+        }
+        if ( sldBody != null ) {
+//            return sldParser.parseFromString( sldBody );
+        }
+        throw new OWSException( "Either SLD or SLD_BODY must be set!", MISSING_PARAMETER_VALUE );
     }
 
     private ICRS parseCrs( Map<String, String> parameterMap )
