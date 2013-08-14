@@ -33,7 +33,7 @@
 
  e-mail: info@deegree.org
  ----------------------------------------------------------------------------*/
-package org.deegree.protocol.wms.ops;
+package org.deegree.protocol.wms.sld;
 
 import org.deegree.filter.OperatorFilter;
 import org.deegree.layer.LayerRef;
