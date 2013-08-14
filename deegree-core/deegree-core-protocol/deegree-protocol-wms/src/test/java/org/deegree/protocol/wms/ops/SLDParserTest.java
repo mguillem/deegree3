@@ -58,6 +58,7 @@ import org.deegree.filter.Operator;
 import org.deegree.filter.OperatorFilter;
 import org.deegree.filter.comparison.PropertyIsLessThanOrEqualTo;
 import org.deegree.layer.LayerRef;
+import org.deegree.protocol.wms.sld.SldParser;
 import org.deegree.style.StyleRef;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -227,7 +228,7 @@ public class SLDParserTest {
 
     private XMLStreamReader readSld( String name )
                             throws XMLStreamException, FactoryConfigurationError {
-        InputStream sldInputStream = SLDParser.class.getResourceAsStream( name );
+        InputStream sldInputStream = SldParser.class.getResourceAsStream( name );
         return XMLInputFactory.newInstance().createXMLStreamReader( sldInputStream );
     }
 
