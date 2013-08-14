@@ -39,13 +39,13 @@ import static javax.xml.stream.XMLStreamConstants.END_ELEMENT;
 import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
 import static org.deegree.commons.xml.CommonNamespaces.GMLNS;
 import static org.deegree.commons.xml.stax.XMLStreamUtils.skipElement;
-import static org.deegree.layer.dims.Dimension.parseTyped;
-import static org.deegree.protocol.wms.ops.GetMap.parseDimensionValues;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -65,7 +65,6 @@ import org.deegree.filter.expression.ValueReference;
 import org.deegree.filter.logical.Or;
 import org.deegree.filter.xml.Filter110XMLDecoder;
 import org.deegree.layer.LayerRef;
-import org.deegree.protocol.wms.ops.RequestBase;
 import org.deegree.style.StyleRef;
 import org.deegree.style.se.parser.SymbologyParser;
 import org.deegree.style.se.unevaluated.Style;
@@ -88,8 +87,6 @@ public class SldParser {
      * 
      * @param sldToParse
      *            never <code>null</code>
-     * @param gm
-     *            never <code>null</code>
      * @return the parsed layer, style and filter information, for each NamedLayer one {@link SldNamedLayer} instance.
      * @throws XMLStreamException
      *             if a exception occurred during parsing the sld
@@ -97,14 +94,14 @@ public class SldParser {
      *             if the SLD contains a UserLayer
      * @throws ParseException
      */
-    public List<SldNamedLayer> parseSld( XMLStreamReader sldToParse, RequestBase gm )
+    public List<SldNamedLayer> parseSld( XMLStreamReader sldToParse )
                             throws XMLStreamException, OWSException, ParseException {
         List<SldNamedLayer> sldNamedLayers = new ArrayList<SldNamedLayer>();
 
         fastForwardUntilLayers( sldToParse );
         while ( isNamedLayer( sldToParse ) || isUserLayer( sldToParse ) ) {
             if ( isNamedLayer( sldToParse ) ) {
-                List<SldNamedLayer> parsedLayer = parseNamedLayer( sldToParse, gm );
+                List<SldNamedLayer> parsedLayer = parseNamedLayer( sldToParse );
                 sldNamedLayers.addAll( parsedLayer );
             } else {
                 throw new OWSException( "UserLayer requests are currently not supported.",
@@ -121,7 +118,7 @@ public class SldParser {
         }
     }
 
-    private List<SldNamedLayer> parseNamedLayer( XMLStreamReader in, RequestBase gm )
+    private List<SldNamedLayer> parseNamedLayer( XMLStreamReader in )
                             throws XMLStreamException, OWSException, ParseException {
         List<SldNamedLayer> sldNamedLayers = new ArrayList<SldNamedLayer>();
 
@@ -134,6 +131,7 @@ public class SldParser {
         skip( in, "Description" );
 
         OperatorFilter operatorFilter = null;
+        Map<String, String> extents = new HashMap<String, String>();
         if ( isLayerFeatureConstraints( in ) ) {
             while ( !( in.isEndElement() && isLayerFeatureConstraints( in ) ) ) {
                 in.nextTag();
@@ -144,7 +142,7 @@ public class SldParser {
                         operatorFilter = parseFilter( in, operatorFilter );
                     }
                     if ( isExtent( in ) ) {
-                        parseExtentAndAddDimensions( in, gm );
+                        parseExtentAndAddDimensions( in, extents );
                     }
                 }
                 in.nextTag();
@@ -152,16 +150,16 @@ public class SldParser {
             in.nextTag();
         }
         if ( isNamedStyle( in ) ) {
-            sldNamedLayers.add( parseNamedStyle( in, layerName, operatorFilter ) );
+            sldNamedLayers.add( parseNamedStyle( in, layerName, operatorFilter, extents ) );
         }
         if ( isUserStyle( in ) ) {
-            sldNamedLayers.addAll( parseUserStyle( in, layerName, operatorFilter ) );
+            sldNamedLayers.addAll( parseUserStyle( in, layerName, operatorFilter, extents ) );
         }
         in.nextTag();
         return sldNamedLayers;
     }
 
-    private void parseExtentAndAddDimensions( XMLStreamReader in, RequestBase gm )
+    private void parseExtentAndAddDimensions( XMLStreamReader in, Map<String, String> extents )
                             throws XMLStreamException, OWSException, ParseException {
         in.nextTag();
 
@@ -173,13 +171,7 @@ public class SldParser {
         in.nextTag();
         in.require( END_ELEMENT, null, "Extent" );
 
-        List<?> list = parseDimensionValues( value, name.toLowerCase() );
-        if ( name.toUpperCase().equals( "TIME" ) ) {
-            gm.addDimensionValue( "time", (List<?>) parseTyped( list, true ) );
-        } else {
-            List<?> values = (List<?>) parseTyped( list, false );
-            gm.addDimensionValue( name, values );
-        }
+        extents.put( name, value );
     }
 
     private OperatorFilter parseFilter( XMLStreamReader in, OperatorFilter operatorFilter )
@@ -211,7 +203,8 @@ public class SldParser {
         return operatorFilter;
     }
 
-    private List<SldNamedLayer> parseUserStyle( XMLStreamReader in, String layerName, OperatorFilter operatorFilter )
+    private List<SldNamedLayer> parseUserStyle( XMLStreamReader in, String layerName, OperatorFilter operatorFilter,
+                                                Map<String, String> extents )
                             throws XMLStreamException {
         List<SldNamedLayer> sldNamedLayers = new ArrayList<SldNamedLayer>();
         while ( !( in.isEndElement() && isUserStyle( in ) ) ) {
@@ -227,21 +220,22 @@ public class SldParser {
                 Style style = SymbologyParser.INSTANCE.parseFeatureTypeOrCoverageStyle( in );
                 LayerRef layerRef = new LayerRef( layerName );
                 StyleRef styleRef = new StyleRef( style );
-                sldNamedLayers.add( new SldNamedLayer( layerRef, styleRef, operatorFilter ) );
+                sldNamedLayers.add( new SldNamedLayer( layerRef, styleRef, operatorFilter, extents ) );
             }
         }
         in.nextTag();
         return sldNamedLayers;
     }
 
-    private SldNamedLayer parseNamedStyle( XMLStreamReader in, String layerName, OperatorFilter operatorFilter )
+    private SldNamedLayer parseNamedStyle( XMLStreamReader in, String layerName, OperatorFilter operatorFilter,
+                                           Map<String, String> extents )
                             throws XMLStreamException {
         in.nextTag();
         String styleName = in.getElementText();
         in.nextTag(); // out of name
         in.nextTag(); // out of named style
 
-        return new SldNamedLayer( new LayerRef( layerName ), new StyleRef( styleName ), operatorFilter );
+        return new SldNamedLayer( new LayerRef( layerName ), new StyleRef( styleName ), operatorFilter, extents );
     }
 
     private String parseRequiredLayerName( XMLStreamReader in )

@@ -4,13 +4,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLInputFactory;
@@ -20,7 +17,6 @@ import javax.xml.stream.XMLStreamReader;
 import org.deegree.filter.Operator;
 import org.deegree.filter.OperatorFilter;
 import org.deegree.filter.comparison.PropertyIsLessThanOrEqualTo;
-import org.deegree.protocol.wms.ops.RequestBase;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -39,9 +35,8 @@ public class SldParserTest {
     @Test
     public void testParseSimpleSldWithNamedStyle()
                             throws Exception {
-        RequestBase gm = mock( RequestBase.class );
         XMLStreamReader in = readSldWithOneNamedLayerWithOneNamedStyle();
-        List<SldNamedLayer> parsedSld = sldParser.parseSld( in, gm );
+        List<SldNamedLayer> parsedSld = sldParser.parseSld( in );
 
         assertThat( parsedSld.size(), is( 1 ) );
         SldNamedLayer layer = parsedSld.get( 0 );
@@ -55,9 +50,8 @@ public class SldParserTest {
     @Test
     public void testParseSimpleSldWithOnlyOneNamedLayer()
                             throws Exception {
-        RequestBase gm = mock( RequestBase.class );
         XMLStreamReader in = readSldWithOneNamedLayerWithOneUserStyle();
-        List<SldNamedLayer> parsedSld = sldParser.parseSld( in, gm );
+        List<SldNamedLayer> parsedSld = sldParser.parseSld( in );
 
         assertThat( parsedSld.size(), is( 1 ) );
         SldNamedLayer layer = parsedSld.get( 0 );
@@ -74,9 +68,8 @@ public class SldParserTest {
     @Test
     public void testParseSldWithOneUserStyle()
                             throws Exception {
-        RequestBase gm = mock( RequestBase.class );
         XMLStreamReader in = readSldWithOneNamedLayerWithOneUserStyleAndFilter();
-        List<SldNamedLayer> parsedSld = sldParser.parseSld( in, gm );
+        List<SldNamedLayer> parsedSld = sldParser.parseSld( in );
 
         assertThat( parsedSld.size(), is( 1 ) );
         SldNamedLayer layer = parsedSld.get( 0 );
@@ -92,9 +85,8 @@ public class SldParserTest {
     @Test
     public void testParseSldWithTwoUserStyles()
                             throws Exception {
-        RequestBase gm = mock( RequestBase.class );
         XMLStreamReader in = readSldWithOneNamedLayerWithTwoUserStyles();
-        List<SldNamedLayer> parsedSld = sldParser.parseSld( in, gm );
+        List<SldNamedLayer> parsedSld = sldParser.parseSld( in );
 
         assertThat( parsedSld.size(), is( 1 ) );
         SldNamedLayer layer = parsedSld.get( 0 );
@@ -113,20 +105,22 @@ public class SldParserTest {
     @Test
     public void testParseSldWithExtent()
                             throws Exception {
-        RequestBase gm = mock( RequestBase.class );
         XMLStreamReader in = readSldWithOneNamedLayerWithOneUserStyleAndExtent();
-        sldParser.parseSld( in, gm );
+        List<SldNamedLayer> parsedSld = sldParser.parseSld( in );
 
-        verify( gm ).addDimensionValue( argThat( is( "DIM1" ) ), anyList() );
-        verify( gm ).addDimensionValue( argThat( is( "DIM2" ) ), anyList() );
+        assertThat( parsedSld.size(), is( 1 ) );
+        SldNamedLayer layer = parsedSld.get( 0 );
+
+        Map<String, String> extents = layer.getExtents();
+        assertThat( extents, hasItem( "DIM1", "TEST" ) );
+        assertThat( extents, hasItem( "DIM2", "98" ) );
     }
 
     @Test
     public void testParseSldWithTwoNamedLayers()
                             throws Exception {
-        RequestBase gm = mock( RequestBase.class );
         XMLStreamReader in = readSldWithTwoNamedLayers();
-        List<SldNamedLayer> parsedSld = sldParser.parseSld( in, gm );
+        List<SldNamedLayer> parsedSld = sldParser.parseSld( in );
 
         assertThat( parsedSld.size(), is( 2 ) );
         SldNamedLayer layerFirst = parsedSld.get( 0 );
@@ -192,6 +186,25 @@ public class SldParserTest {
             @Override
             public void describeTo( Description description ) {
                 description.appendText( "Must be an instance of " + expectedClass );
+            }
+        };
+    }
+
+    private Matcher<Map<String, String>> hasItem( final String expectedKey, final String expectedValue ) {
+        return new BaseMatcher<Map<String, String>>() {
+
+            @Override
+            public boolean matches( Object item ) {
+                @SuppressWarnings("unchecked")
+                Map<String, String> actualMap = (Map<String, String>) item;
+                if ( actualMap.containsKey( expectedKey ) )
+                    return actualMap.get( expectedKey ).equals( expectedValue );
+                return false;
+            }
+
+            @Override
+            public void describeTo( Description description ) {
+                description.appendText( "Map must contain an entry " + expectedKey + ":" + expectedValue );
             }
         };
     }

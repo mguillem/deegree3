@@ -35,6 +35,9 @@
  ----------------------------------------------------------------------------*/
 package org.deegree.protocol.wms.sld;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.deegree.filter.OperatorFilter;
 import org.deegree.layer.LayerRef;
 import org.deegree.style.StyleRef;
@@ -55,6 +58,8 @@ public class SldNamedLayer {
 
     private final OperatorFilter filter;
 
+    private final Map<String, String> extents;
+
     /**
      * @param layer
      *            contains the name of the named layer, never <code>null</code>
@@ -62,11 +67,17 @@ public class SldNamedLayer {
      *            never <code>null</code>
      * @param filter
      *            may be <code>null</code> if no filter is specified
+     * @param extents
+     *            may be <code>null</code>
      */
-    public SldNamedLayer( LayerRef layer, StyleRef style, OperatorFilter filter ) {
+    public SldNamedLayer( LayerRef layer, StyleRef style, OperatorFilter filter, Map<String, String> extents ) {
         this.layer = layer;
         this.style = style;
         this.filter = filter;
+        if ( extents != null )
+            this.extents = extents;
+        else
+            this.extents = new HashMap<String, String>();
     }
 
     /**
@@ -88,6 +99,13 @@ public class SldNamedLayer {
      */
     public OperatorFilter getFilter() {
         return filter;
+    }
+
+    /**
+     * @return parsed extents, may be empty but never <code>null</code>
+     */
+    public Map<String, String> getExtents() {
+        return extents;
     }
 
 }

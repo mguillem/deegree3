@@ -37,11 +37,14 @@ package org.deegree.protocol.wms.ops;
 
 import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
 import static org.deegree.commons.xml.stax.XMLStreamUtils.skipElement;
+import static org.deegree.layer.dims.Dimension.parseTyped;
+import static org.deegree.protocol.wms.ops.GetMap.parseDimensionValues;
 
 import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -63,12 +66,15 @@ import org.deegree.style.se.unevaluated.Style;
 /**
  * <code>SLDParser</code>
  * 
+ * Use org.deegree.protocol.wms.sld.SldParser instead
+ * 
  * @author <a href="mailto:schmitz@lat-lon.de">Andreas Schmitz</a>
  * @author last edited by: $Author: aschmitz $
  * 
  * @version $Revision: 31785 $, $Date: 2011-09-06 20:21:16 +0200 (Tue, 06 Sep 2011) $
  */
 @LoggingNotes(debug = "logs which named layers were extracted from SLD")
+@Deprecated
 public class SLDParser {
 
     /**
@@ -93,12 +99,25 @@ public class SLDParser {
         LinkedList<OperatorFilter> filters = new LinkedList<OperatorFilter>();
 
         SldParser sldParser = new SldParser();
-        List<SldNamedLayer> sldNamedLayers = sldParser.parseSld( in, gm );
+        List<SldNamedLayer> sldNamedLayers = sldParser.parseSld( in );
         for ( SldNamedLayer sldNamedLayer : sldNamedLayers ) {
             layers.add( sldNamedLayer.getLayer() );
             styles.add( sldNamedLayer.getStyle() );
             filters.add( sldNamedLayer.getFilter() );
+            Map<String, String> extents = sldNamedLayer.getExtents();
+            for ( Entry<String, String> extent : extents.entrySet() ) {
+                String name = extent.getKey();
+                String value = extent.getValue();
+                List<?> list = parseDimensionValues( value, name.toLowerCase() );
+                if ( name.toUpperCase().equals( "TIME" ) ) {
+                    gm.addDimensionValue( "time", (List<?>) parseTyped( list, true ) );
+                } else {
+                    List<?> values = (List<?>) parseTyped( list, false );
+                    gm.addDimensionValue( name, values );
+                }
+            }
         }
+
         return new Triple<LinkedList<LayerRef>, LinkedList<StyleRef>, LinkedList<OperatorFilter>>( layers, styles,
                                                                                                    filters );
     }
