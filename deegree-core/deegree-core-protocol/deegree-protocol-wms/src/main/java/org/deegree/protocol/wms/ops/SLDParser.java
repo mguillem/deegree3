@@ -88,14 +88,28 @@ public class SLDParser {
 
     private static final Logger LOG = getLogger( SLDParser.class );
 
-    public static List<SldNamedLayer> parseSld( XMLStreamReader in, RequestBase gm )
+    /**
+     * Parses layer, style and filter information. Currently only NamedLayer, not UserLayers are parsed.
+     * 
+     * @param sldToParse
+     *            never <code>null</code>
+     * @param gm
+     *            never <code>null</code>
+     * @return the parsed layer, style and filter information, for each NamedLayer one {@link SldNamedLayer} instance.
+     * @throws XMLStreamException
+     *             if a exception occurred during parsing the sld
+     * @throws OWSException
+     *             if the SLD contains a UserLayer
+     * @throws ParseException
+     */
+    public static List<SldNamedLayer> parseSld( XMLStreamReader sldToParse, RequestBase gm )
                             throws XMLStreamException, OWSException, ParseException {
         List<SldNamedLayer> sldNamedLayers = new ArrayList<SldNamedLayer>();
 
-        fastForwardUntilLayers( in );
-        while ( isNamedLayer( in ) || isUserLayer( in ) ) {
-            if ( isNamedLayer( in ) ) {
-                List<SldNamedLayer> parsedLayer = parseNamedLayer( in, gm );
+        fastForwardUntilLayers( sldToParse );
+        while ( isNamedLayer( sldToParse ) || isUserLayer( sldToParse ) ) {
+            if ( isNamedLayer( sldToParse ) ) {
+                List<SldNamedLayer> parsedLayer = parseNamedLayer( sldToParse, gm );
                 sldNamedLayers.addAll( parsedLayer );
             } else {
                 throw new OWSException( "UserLayer requests are currently not supported.",
@@ -106,7 +120,7 @@ public class SLDParser {
     }
 
     /**
-     * Don'use this mehthod, it will be removed in further versions of deegree! Use
+     * Don'use this method, it will be removed in further versions of deegree! Use
      * org.deegree.protocol.wms.ops.SLDParser.parseSld(XMLStreamReader, RequestBase) instead!
      * 
      * @param in
