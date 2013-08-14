@@ -40,7 +40,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.io.InputStream;
 import java.util.LinkedList;
@@ -157,6 +160,17 @@ public class SLDParserTest {
     }
 
     @Test
+    public void testParseSldWithExtent()
+                            throws Exception {
+        RequestBase gm = mock( RequestBase.class );
+        XMLStreamReader in = readSldWithOneNamedLayerWithOneUserStyleAndExtent();
+        parse( in, gm );
+
+        verify( gm ).addDimensionValue( argThat( is( "DIM1" ) ), anyList() );
+        verify( gm ).addDimensionValue( argThat( is( "DIM2" ) ), anyList() );
+    }
+
+    @Test
     public void testParseSldWithTwoNamedLayers()
                             throws Exception {
         RequestBase gm = mock( RequestBase.class );
@@ -204,6 +218,11 @@ public class SLDParserTest {
     private XMLStreamReader readSldWithOneNamedLayerWithOneNamedStyle()
                             throws XMLStreamException, FactoryConfigurationError {
         return readSld( "sld-oneNamedLayerWithNamedStyle.xml" );
+    }
+
+    private XMLStreamReader readSldWithOneNamedLayerWithOneUserStyleAndExtent()
+                            throws XMLStreamException, FactoryConfigurationError {
+        return readSld( "sld-oneNamedLayerWithExtent.xml" );
     }
 
     private XMLStreamReader readSld( String name )
