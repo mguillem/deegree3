@@ -39,15 +39,18 @@ import static java.lang.Double.parseDouble;
 import static java.lang.Integer.parseInt;
 import static org.deegree.commons.ows.exception.OWSException.INVALID_PARAMETER_VALUE;
 import static org.deegree.commons.ows.exception.OWSException.MISSING_PARAMETER_VALUE;
+import static org.deegree.commons.ows.exception.OWSException.NO_APPLICABLE_CODE;
 import static org.deegree.protocol.wms.WMSConstants.VERSION_130;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 import org.deegree.commons.ows.exception.OWSException;
 import org.deegree.commons.tom.ows.Version;
@@ -56,6 +59,9 @@ import org.deegree.cs.exceptions.UnknownCRSException;
 import org.deegree.cs.persistence.CRSManager;
 import org.deegree.geometry.Envelope;
 import org.deegree.geometry.GeometryFactory;
+import org.deegree.protocol.ows.exception.OWSExceptionReport;
+import org.deegree.protocol.ows.http.OwsHttpClient;
+import org.deegree.protocol.ows.http.OwsHttpResponse;
 import org.deegree.protocol.wms.sld.SldNamedLayer;
 import org.deegree.protocol.wms.sld.SldParser;
 import org.slf4j.Logger;
@@ -75,10 +81,13 @@ public class WmsRequestBuilder {
 
     private static GeometryFactory geometryFactory = new GeometryFactory();
 
-    private SldParser sldParser;
+    private final SldParser sldParser;
 
-    public WmsRequestBuilder( SldParser sldParser ) {
+    private final OwsHttpClient httpClient;
+
+    public WmsRequestBuilder( SldParser sldParser, OwsHttpClient httpClient ) {
         this.sldParser = sldParser;
+        this.httpClient = httpClient;
     }
 
     /**
@@ -152,17 +161,44 @@ public class WmsRequestBuilder {
             throw new OWSException( "SLD and SLD_Body are set. Must be one of it!", MISSING_PARAMETER_VALUE );
         }
         if ( sld != null ) {
-            // return sldParser.parseFromExternalReference( sld );
+            return parseSldFromExternalReference( sld );
         }
         if ( sldBody != null ) {
-            try {
-                return sldParser.parseSld( sldBody );
-            } catch ( XMLStreamException e ) {
-                LOG.info( "Could not parse SLD_BODY parameter value {} as SLD: {}", sldBody, e.getMessage() );
-                throw new OWSException( "SLD_BODY could not be parsed as SLD!", MISSING_PARAMETER_VALUE );
-            }
+            return parseSldBody( sldBody );
         }
         throw new OWSException( "Either SLD or SLD_BODY must be set!", MISSING_PARAMETER_VALUE );
+    }
+
+    private List<SldNamedLayer> parseSldFromExternalReference( String urlToSld )
+                            throws OWSException {
+        XMLStreamReader sldXmlStream = null;
+        try {
+            URL sldUrl = new URL( urlToSld );
+            OwsHttpResponse sldResponse = httpClient.doGet( sldUrl, null, null );
+            sldXmlStream = sldResponse.getAsXMLStream();
+            return sldParser.parseSld( sldXmlStream );
+        } catch ( MalformedURLException e ) {
+            throw new OWSException( "Url to exterenal reference is not a valid url!.", NO_APPLICABLE_CODE );
+        } catch ( IOException e ) {
+            throw new OWSException( "Sld from exterenal reference could ot be resolved!.", NO_APPLICABLE_CODE );
+        } catch ( OWSExceptionReport e ) {
+            throw new OWSException( e.getMessage(), NO_APPLICABLE_CODE );
+        } catch ( XMLStreamException e ) {
+            LOG.info( "Could not parse referenced SLD from parameter SLD {}: {}", urlToSld, e.getMessage() );
+            throw new OWSException( "SLD_BODY could not be parsed as SLD!", MISSING_PARAMETER_VALUE );
+        } finally {
+            closeQuietly( sldXmlStream );
+        }
+    }
+
+    private List<SldNamedLayer> parseSldBody( String sldBody )
+                            throws OWSException {
+        try {
+            return sldParser.parseSld( sldBody );
+        } catch ( XMLStreamException e ) {
+            LOG.info( "Could not parse SLD_BODY parameter value {} as SLD: {}", sldBody, e.getMessage() );
+            throw new OWSException( "SLD_BODY could not be parsed as SLD!", MISSING_PARAMETER_VALUE );
+        }
     }
 
     private ICRS parseCrs( Map<String, String> parameterMap )
@@ -215,6 +251,14 @@ public class WmsRequestBuilder {
             throw new OWSException( "Value of parmeter '" + key + "' must be an integer value, but is " + valueAsString
                                     + "!", INVALID_PARAMETER_VALUE );
         }
+    }
+
+    private void closeQuietly( XMLStreamReader xmlStreamReader ) {
+        if ( xmlStreamReader != null )
+            try {
+                xmlStreamReader.close();
+            } catch ( XMLStreamException e ) {
+            }
     }
 
 }

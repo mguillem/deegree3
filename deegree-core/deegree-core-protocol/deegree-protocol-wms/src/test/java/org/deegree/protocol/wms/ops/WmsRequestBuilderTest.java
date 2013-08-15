@@ -42,17 +42,24 @@ import static org.deegree.protocol.wms.ops.FeaturePortrayalGetMap.DEFAULT_FORMAT
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 import org.deegree.commons.ows.exception.OWSException;
 import org.deegree.commons.tom.ows.Version;
@@ -61,6 +68,9 @@ import org.deegree.cs.exceptions.UnknownCRSException;
 import org.deegree.cs.persistence.CRSManager;
 import org.deegree.geometry.Envelope;
 import org.deegree.geometry.GeometryFactory;
+import org.deegree.protocol.ows.exception.OWSExceptionReport;
+import org.deegree.protocol.ows.http.OwsHttpClient;
+import org.deegree.protocol.ows.http.OwsHttpResponse;
 import org.deegree.protocol.wms.sld.SldNamedLayer;
 import org.deegree.protocol.wms.sld.SldParser;
 import org.hamcrest.BaseMatcher;
@@ -68,7 +78,6 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 /**
  * @author <a href="mailto:goltz@lat-lon.de">Lyn Goltz</a>
@@ -78,6 +87,8 @@ import org.mockito.Mockito;
  * @version $Revision: $, $Date: $
  */
 public class WmsRequestBuilderTest {
+
+    private static final String URL_TO_SLD = "http://fantasy.de/sld/reference";
 
     private static final String VALID_WFS_URL = "http://Fanothersite.com/WFS";
 
@@ -97,15 +108,13 @@ public class WmsRequestBuilderTest {
 
     private static WmsRequestBuilder wmsRequestBuilder;
 
-    private static URL VALID_SLD_REF;
-
     @BeforeClass
     public static void initWmsRequestBuilder()
-                            throws XMLStreamException, OWSException {
+                            throws Exception {
         SldParser sldParser = mockSldParser();
+        OwsHttpClient httpClient = mocḱOwsHttpClient();
 
-        wmsRequestBuilder = new WmsRequestBuilder( sldParser );
-        VALID_SLD_REF = WmsRequestBuilderTest.class.getResource( "example-sld.xml" );
+        wmsRequestBuilder = new WmsRequestBuilder( sldParser, httpClient );
     }
 
     @Test(expected = OWSException.class)
@@ -222,10 +231,26 @@ public class WmsRequestBuilderTest {
                             throws XMLStreamException, OWSException {
         SldParser sldParser = mock( SldParser.class );
         List<SldNamedLayer> style = new ArrayList<SldNamedLayer>();
-        style.add( Mockito.mock( SldNamedLayer.class ) );
-        when( sldParser.parseFromExternalReference( anyString() ) ).thenReturn( style );
+        style.add( mock( SldNamedLayer.class ) );
+        when( sldParser.parseSld( (XMLStreamReader) anyObject() ) ).thenReturn( style );
         when( sldParser.parseSld( anyString() ) ).thenReturn( style );
         return sldParser;
+    }
+
+    private static OwsHttpClient mocḱOwsHttpClient()
+                            throws OWSExceptionReport, XMLStreamException, FactoryConfigurationError, IOException,
+                            MalformedURLException {
+        OwsHttpClient httpClient = mock( OwsHttpClient.class );
+        OwsHttpResponse httpResponse = mock( OwsHttpResponse.class );
+        when( httpResponse.getAsXMLStream() ).thenReturn( readSldWithOneNamedLayerWithOneUserStyle() );
+        when( httpClient.doGet( new URL( URL_TO_SLD ), null, null ) ).thenReturn( httpResponse );
+        return httpClient;
+    }
+
+    private static XMLStreamReader readSldWithOneNamedLayerWithOneUserStyle()
+                            throws XMLStreamException, FactoryConfigurationError {
+        InputStream sldInputStream = SldParser.class.getResourceAsStream( "sld-oneNamedLayerOneUserStyle.xml" );
+        return XMLInputFactory.newInstance().createXMLStreamReader( sldInputStream );
     }
 
     private Map<String, String> createFpsGetMapParameterMapWithInvalidRemoteWfsType() {
@@ -305,7 +330,7 @@ public class WmsRequestBuilderTest {
         Map<String, String> map = new HashMap<String, String>();
         map.put( "CRS", VALID_CRS );
         map.put( "BBOX", VALID_BBOX );
-        map.put( "SLD", VALID_SLD_REF.toExternalForm() );
+        map.put( "SLD", URL_TO_SLD );
         map.put( "WIDTH", Integer.toString( VALID_WIDTH ) );
         map.put( "HEIGHT", Integer.toString( VALID_HEIGHT ) );
         map.put( "FORMAT", VALID_FORMAT );
