@@ -38,19 +38,18 @@ package org.deegree.protocol.wms.sld;
 import static javax.xml.stream.XMLStreamConstants.END_ELEMENT;
 import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
 import static org.apache.commons.io.IOUtils.closeQuietly;
+import static org.deegree.commons.ows.exception.OWSException.NO_APPLICABLE_CODE;
 import static org.deegree.commons.xml.CommonNamespaces.GMLNS;
 import static org.deegree.commons.xml.stax.XMLStreamUtils.skipElement;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -109,20 +108,10 @@ public class SldParser {
                 List<SldNamedLayer> parsedLayer = parseNamedLayer( sldToParse );
                 sldNamedLayers.addAll( parsedLayer );
             } else {
-                throw new OWSException( "UserLayer requests are currently not supported.",
-                                        OWSException.NO_APPLICABLE_CODE );
+                throw new OWSException( "UserLayer requests are currently not supported.", NO_APPLICABLE_CODE );
             }
         }
         return sldNamedLayers;
-    }
-
-    /**
-     * @param urlToSld
-     * @return
-     */
-    public List<SldNamedLayer> parseFromExternalReference( String urlToSld ) {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     /**
@@ -134,10 +123,8 @@ public class SldParser {
      *         never <code>null</code>
      * @throws XMLStreamException
      *             if a exception occurred during parsing the sld
-     * @throws FactoryConfigurationError
      * @throws OWSException
      *             if the SLD contains a UserLayer
-     * @throws ParseException
      */
     public List<SldNamedLayer> parseSld( String sldToParse )
                             throws XMLStreamException, OWSException {
