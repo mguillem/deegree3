@@ -43,11 +43,16 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import javax.xml.stream.XMLStreamException;
 
 import org.deegree.commons.ows.exception.OWSException;
 import org.deegree.commons.tom.ows.Version;
@@ -56,7 +61,8 @@ import org.deegree.cs.exceptions.UnknownCRSException;
 import org.deegree.cs.persistence.CRSManager;
 import org.deegree.geometry.Envelope;
 import org.deegree.geometry.GeometryFactory;
-import org.deegree.style.StyleRef;
+import org.deegree.protocol.wms.sld.SldNamedLayer;
+import org.deegree.protocol.wms.sld.SldParser;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -94,10 +100,9 @@ public class WmsRequestBuilderTest {
     private static URL VALID_SLD_REF;
 
     @BeforeClass
-    public static void initWmsRequestBuilder() {
-        SLDParser sldParser = Mockito.mock( SLDParser.class );
-//        when( sldParser.parseFromExternalReference( anyString() ) ).thenReturn( new StyleRef( "TEST" ) );
-//        when( sldParser.parseFromString( anyString() ) ).thenReturn( new StyleRef( "TEST" ) );
+    public static void initWmsRequestBuilder()
+                            throws XMLStreamException, OWSException {
+        SldParser sldParser = mockSldParser();
 
         wmsRequestBuilder = new WmsRequestBuilder( sldParser );
         VALID_SLD_REF = WmsRequestBuilderTest.class.getResource( "example-sld.xml" );
@@ -201,7 +206,7 @@ public class WmsRequestBuilderTest {
         assertThat( getMapRequest.getRemoteWfsUrl(), is( new URL( VALID_WFS_URL ) ) );
         assertThat( getMapRequest.getBbox(), isEnvelope( VALID_BBOX, VALID_CRS ) );
         assertThat( getMapRequest.getCrs(), isCrs( VALID_CRS ) );
-        // assertThat( getMapRequest.getStyle(), isValidStyleFromRef() );
+        assertThat( getMapRequest.getStyle(), notNullValue() );
     }
 
     @Test
@@ -211,6 +216,16 @@ public class WmsRequestBuilderTest {
         FeaturePortrayalGetMap getMapRequest = wmsRequestBuilder.buildFeaturePortrayalGetMapRequest( parameterMap,
                                                                                                      VERSION_130 );
         assertThat( getMapRequest.getFormat(), is( DEFAULT_FORMAT ) );
+    }
+
+    private static SldParser mockSldParser()
+                            throws XMLStreamException, OWSException {
+        SldParser sldParser = mock( SldParser.class );
+        List<SldNamedLayer> style = new ArrayList<SldNamedLayer>();
+        style.add( Mockito.mock( SldNamedLayer.class ) );
+        when( sldParser.parseFromExternalReference( anyString() ) ).thenReturn( style );
+        when( sldParser.parseSld( anyString() ) ).thenReturn( style );
+        return sldParser;
     }
 
     private Map<String, String> createFpsGetMapParameterMapWithInvalidRemoteWfsType() {
@@ -343,23 +358,6 @@ public class WmsRequestBuilderTest {
                 description.appendText( "Expected name of the CRS is '" + expectedCrsName + "'" );
             }
 
-        };
-    }
-
-    private Matcher<StyleRef> isValidStyleFromRef() {
-        return new BaseMatcher<StyleRef>() {
-
-            @Override
-            public boolean matches( Object item ) {
-                StyleRef styleRef = (StyleRef) item;
-                // TODO: Is GEOSYM the correct name of the parsed sld?
-                return "GEOSYM".equals( styleRef.getName() );
-            }
-
-            @Override
-            public void describeTo( Description description ) {
-                description.appendText( "Name of the parsed SLD nmust be 'GEOSYM'" );
-            }
         };
     }
 

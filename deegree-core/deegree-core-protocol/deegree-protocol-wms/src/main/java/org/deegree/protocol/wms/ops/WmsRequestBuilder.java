@@ -40,10 +40,14 @@ import static java.lang.Integer.parseInt;
 import static org.deegree.commons.ows.exception.OWSException.INVALID_PARAMETER_VALUE;
 import static org.deegree.commons.ows.exception.OWSException.MISSING_PARAMETER_VALUE;
 import static org.deegree.protocol.wms.WMSConstants.VERSION_130;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
+
+import javax.xml.stream.XMLStreamException;
 
 import org.deegree.commons.ows.exception.OWSException;
 import org.deegree.commons.tom.ows.Version;
@@ -52,7 +56,9 @@ import org.deegree.cs.exceptions.UnknownCRSException;
 import org.deegree.cs.persistence.CRSManager;
 import org.deegree.geometry.Envelope;
 import org.deegree.geometry.GeometryFactory;
-import org.deegree.style.StyleRef;
+import org.deegree.protocol.wms.sld.SldNamedLayer;
+import org.deegree.protocol.wms.sld.SldParser;
+import org.slf4j.Logger;
 
 /**
  * Builder for WMS requests. Currently only GetMap requests for Feature Portrayal Services is suppotred.
@@ -65,11 +71,13 @@ import org.deegree.style.StyleRef;
  */
 public class WmsRequestBuilder {
 
+    private static final Logger LOG = getLogger( WmsRequestBuilder.class );
+
     private static GeometryFactory geometryFactory = new GeometryFactory();
 
-    private SLDParser sldParser;
+    private SldParser sldParser;
 
-    public WmsRequestBuilder( SLDParser sldParser ) {
+    public WmsRequestBuilder( SldParser sldParser ) {
         this.sldParser = sldParser;
     }
 
@@ -96,7 +104,7 @@ public class WmsRequestBuilder {
         String format = parameterMap.get( "FORMAT" );
         int height = parseIntValue( parameterMap, "HEIGHT" );
         int width = parseIntValue( parameterMap, "WIDTH" );
-        StyleRef style = parseSld( parameterMap );
+        List<SldNamedLayer> style = parseSld( parameterMap );
         ICRS crs = parseCrs( parameterMap );
         Envelope bbox = parseBbox( parameterMap, crs );
         try {
@@ -136,7 +144,7 @@ public class WmsRequestBuilder {
         }
     }
 
-    private StyleRef parseSld( Map<String, String> parameterMap )
+    private List<SldNamedLayer> parseSld( Map<String, String> parameterMap )
                             throws OWSException {
         String sld = parameterMap.get( "SLD" );
         String sldBody = parameterMap.get( "SLD_BODY" );
@@ -144,10 +152,15 @@ public class WmsRequestBuilder {
             throw new OWSException( "SLD and SLD_Body are set. Must be one of it!", MISSING_PARAMETER_VALUE );
         }
         if ( sld != null ) {
-//            return sldParser.parseFromExternalReference( sld );
+            // return sldParser.parseFromExternalReference( sld );
         }
         if ( sldBody != null ) {
-//            return sldParser.parseFromString( sldBody );
+            try {
+                return sldParser.parseSld( sldBody );
+            } catch ( XMLStreamException e ) {
+                LOG.info( "Could not parse SLD_BODY parameter value {} as SLD: {}", sldBody, e.getMessage() );
+                throw new OWSException( "SLD_BODY could not be parsed as SLD!", MISSING_PARAMETER_VALUE );
+            }
         }
         throw new OWSException( "Either SLD or SLD_BODY must be set!", MISSING_PARAMETER_VALUE );
     }

@@ -37,10 +37,11 @@ package org.deegree.protocol.wms.ops;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 import org.deegree.cs.coordinatesystems.ICRS;
 import org.deegree.geometry.Envelope;
-import org.deegree.style.StyleRef;
+import org.deegree.protocol.wms.sld.SldNamedLayer;
 
 /**
  * Encapsulates a GetMap request for Feature Portrayal Services described in the "Styled Layer Descriptor profile of the
@@ -60,7 +61,7 @@ public class FeaturePortrayalGetMap {
 
     private final Envelope bbox;
 
-    private final StyleRef style;
+    private final List<SldNamedLayer> style;
 
     private final int width;
 
@@ -88,7 +89,7 @@ public class FeaturePortrayalGetMap {
      * @throws IllegalArgumentException
      *             if one of the passed parameters is not valid
      */
-    FeaturePortrayalGetMap( ICRS crs, Envelope bbox, StyleRef style, int width, int height, String format,
+    FeaturePortrayalGetMap( ICRS crs, Envelope bbox, List<SldNamedLayer> style, int width, int height, String format,
                             URL remoteWfsUrl ) throws MalformedURLException {
         checkParameters( style, width, height, remoteWfsUrl );
         this.crs = crs;
@@ -121,7 +122,7 @@ public class FeaturePortrayalGetMap {
     /**
      * @return the style, never <code>null</code>
      */
-    public StyleRef getStyle() {
+    public List<SldNamedLayer> getStyle() {
         return style;
     }
 
@@ -153,8 +154,8 @@ public class FeaturePortrayalGetMap {
         return remoteWfsUrl;
     }
 
-    private void checkParameters( StyleRef style, int width, int height, URL remoteWfsUrl ) {
-        if ( style == null )
+    private void checkParameters( List<SldNamedLayer> style, int width, int height, URL remoteWfsUrl ) {
+        if ( style == null || style.isEmpty() )
             throw new IllegalArgumentException( "SLD must not be null" );
         if ( width <= 0 )
             throw new IllegalArgumentException( "Width must be greater than 0" );

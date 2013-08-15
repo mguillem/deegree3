@@ -5,7 +5,10 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +17,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.apache.commons.io.IOUtils;
 import org.deegree.filter.Operator;
 import org.deegree.filter.OperatorFilter;
 import org.deegree.filter.comparison.PropertyIsLessThanOrEqualTo;
@@ -138,9 +142,33 @@ public class SldParserTest {
         assertThat( layerSecond.getFilter(), nullValue() );
     }
 
+    @Test
+    public void testParseFromStringSimpleSldWithOnlyOneNamedLayer()
+                            throws Exception {
+        String sld = readSldWithOneNamedLayerWithOneUserStyleAsString();
+        List<SldNamedLayer> parsedSld = sldParser.parseSld( sld );
+
+        assertThat( parsedSld.size(), is( 1 ) );
+        SldNamedLayer layer = parsedSld.get( 0 );
+
+        assertThat( layer.getLayer().getName(), is( "OCEANSEA_1M:Foundation" ) );
+
+        // First se:FeatureTypeStyle does not have a name
+        assertThat( layer.getStyle().getName(), nullValue() );
+        assertThat( layer.getStyle().getStyle(), notNullValue() );
+
+        assertThat( layer.getFilter(), nullValue() );
+    }
+
     private XMLStreamReader readSldWithOneNamedLayerWithOneUserStyle()
                             throws XMLStreamException, FactoryConfigurationError {
         return readSld( "sld-oneNamedLayerOneUserStyle.xml" );
+    }
+
+    private String readSldWithOneNamedLayerWithOneUserStyleAsString()
+                            throws XMLStreamException, FactoryConfigurationError {
+        InputStream sldInputStream = SldParser.class.getResourceAsStream( "sld-oneNamedLayerOneUserStyle.xml" );
+        return convertInputStreamToString( sldInputStream );
     }
 
     private XMLStreamReader readSldWithOneNamedLayerWithOneUserStyleAndFilter()
@@ -172,6 +200,25 @@ public class SldParserTest {
                             throws XMLStreamException, FactoryConfigurationError {
         InputStream sldInputStream = SldParser.class.getResourceAsStream( name );
         return XMLInputFactory.newInstance().createXMLStreamReader( sldInputStream );
+    }
+
+    private static String convertInputStreamToString( InputStream streamToConvert ) {
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader( new InputStreamReader( streamToConvert ) );
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ( ( line = br.readLine() ) != null ) {
+                sb.append( line );
+            }
+            return sb.toString();
+        } catch ( IOException e ) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            IOUtils.closeQuietly( br );
+            IOUtils.closeQuietly( streamToConvert );
+        }
     }
 
     private Matcher<OperatorFilter> hasOperation( final Class<?> expectedClass ) {

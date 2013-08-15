@@ -37,16 +37,21 @@ package org.deegree.protocol.wms.sld;
 
 import static javax.xml.stream.XMLStreamConstants.END_ELEMENT;
 import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
+import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.deegree.commons.xml.CommonNamespaces.GMLNS;
 import static org.deegree.commons.xml.stax.XMLStreamUtils.skipElement;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
@@ -86,16 +91,16 @@ public class SldParser {
      * Parses layer, style and filter information. Currently only NamedLayer, not UserLayers are parsed.
      * 
      * @param sldToParse
-     *            never <code>null</code>
-     * @return the parsed layer, style and filter information, for each NamedLayer one {@link SldNamedLayer} instance.
+     *            the XMLStreamReader is not closed by this method, never <code>null</code>
+     * @return the parsed layer, style and filter information, for each NamedLayer one {@link SldNamedLayer} instance,
+     *         never <code>null</code>
      * @throws XMLStreamException
      *             if a exception occurred during parsing the sld
      * @throws OWSException
      *             if the SLD contains a UserLayer
-     * @throws ParseException
      */
     public List<SldNamedLayer> parseSld( XMLStreamReader sldToParse )
-                            throws XMLStreamException, OWSException, ParseException {
+                            throws XMLStreamException, OWSException {
         List<SldNamedLayer> sldNamedLayers = new ArrayList<SldNamedLayer>();
 
         fastForwardUntilLayers( sldToParse );
@@ -111,6 +116,41 @@ public class SldParser {
         return sldNamedLayers;
     }
 
+    /**
+     * @param urlToSld
+     * @return
+     */
+    public List<SldNamedLayer> parseFromExternalReference( String urlToSld ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * Parses layer, style and filter information. Currently only NamedLayer, not UserLayers are parsed.
+     * 
+     * @param sldToParse
+     *            never <code>null</code>
+     * @return the parsed layer, style and filter information, for each NamedLayer one {@link SldNamedLayer} instance,
+     *         never <code>null</code>
+     * @throws XMLStreamException
+     *             if a exception occurred during parsing the sld
+     * @throws FactoryConfigurationError
+     * @throws OWSException
+     *             if the SLD contains a UserLayer
+     * @throws ParseException
+     */
+    public List<SldNamedLayer> parseSld( String sldToParse )
+                            throws XMLStreamException, OWSException {
+        InputStream is = new ByteArrayInputStream( sldToParse.getBytes() );
+        XMLStreamReader xmlStreamReader = XMLInputFactory.newInstance().createXMLStreamReader( is );
+        try {
+            return parseSld( xmlStreamReader );
+        } finally {
+            xmlStreamReader.close();
+            closeQuietly( is );
+        }
+    }
+
     private void fastForwardUntilLayers( XMLStreamReader in )
                             throws XMLStreamException {
         while ( !in.isStartElement() || in.getLocalName() == null || !( isNamedLayer( in ) || isUserLayer( in ) ) ) {
@@ -119,7 +159,7 @@ public class SldParser {
     }
 
     private List<SldNamedLayer> parseNamedLayer( XMLStreamReader in )
-                            throws XMLStreamException, OWSException, ParseException {
+                            throws XMLStreamException {
         List<SldNamedLayer> sldNamedLayers = new ArrayList<SldNamedLayer>();
 
         in.nextTag();
@@ -160,7 +200,7 @@ public class SldParser {
     }
 
     private void parseExtentAndAddDimensions( XMLStreamReader in, Map<String, String> extents )
-                            throws XMLStreamException, OWSException, ParseException {
+                            throws XMLStreamException {
         in.nextTag();
 
         in.require( START_ELEMENT, null, "Name" );
