@@ -94,14 +94,16 @@ import org.deegree.gml.GMLVersion;
 import org.deegree.gml.schema.GMLAppSchemaWriter;
 import org.deegree.layer.LayerRef;
 import org.deegree.protocol.ows.getcapabilities.GetCapabilities;
+import org.deegree.protocol.ows.http.OwsHttpClient;
+import org.deegree.protocol.ows.http.OwsHttpClientImpl;
 import org.deegree.protocol.wms.WMSConstants.WMSRequestType;
 import org.deegree.protocol.wms.WMSException.InvalidDimensionValue;
 import org.deegree.protocol.wms.WMSException.MissingDimensionValue;
 import org.deegree.protocol.wms.ops.FeaturePortrayalGetMap;
 import org.deegree.protocol.wms.ops.GetFeatureInfoSchema;
 import org.deegree.protocol.wms.ops.GetLegendGraphic;
-import org.deegree.protocol.wms.ops.SLDParser;
 import org.deegree.protocol.wms.ops.WmsRequestBuilder;
+import org.deegree.protocol.wms.sld.SldParser;
 import org.deegree.rendering.r2d.context.DefaultRenderContext;
 import org.deegree.rendering.r2d.context.RenderContext;
 import org.deegree.rendering.r2d.context.RenderingInfo;
@@ -463,8 +465,9 @@ public class WMSController extends AbstractOWS {
     private void handleFeaturePortrayalGetMapRequest( Map<String, String> map, HttpResponseBuffer response,
                                                       Version version )
                             throws OWSException, IOException {
-        SLDParser sldParser = new SLDParser();
-        WmsRequestBuilder requestBuilder = new WmsRequestBuilder( sldParser );
+        SldParser sldParser = new SldParser();
+        OwsHttpClient owsHttpClient = new OwsHttpClientImpl();
+        WmsRequestBuilder requestBuilder = new WmsRequestBuilder( sldParser, owsHttpClient );
         FeaturePortrayalGetMap featurePortrayalGetMapRequest = requestBuilder.buildFeaturePortrayalGetMapRequest( map,
                                                                                                                   version );
         // TODO: check if this parameters could be part of the request!
