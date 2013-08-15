@@ -36,7 +36,6 @@
 
 package org.deegree.services.wms.controller;
 
-import static java.awt.Color.WHITE;
 import static javax.imageio.ImageIO.write;
 import static org.deegree.commons.ows.exception.OWSException.OPERATION_NOT_SUPPORTED;
 import static org.deegree.commons.tom.ows.Version.parseVersion;
@@ -51,7 +50,6 @@ import static org.deegree.services.i18n.Messages.get;
 import static org.deegree.services.metadata.MetadataUtils.convertFromJAXB;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -470,13 +468,12 @@ public class WMSController extends AbstractOWS {
         WmsRequestBuilder requestBuilder = new WmsRequestBuilder( sldParser, owsHttpClient );
         FeaturePortrayalGetMap featurePortrayalGetMapRequest = requestBuilder.buildFeaturePortrayalGetMapRequest( map,
                                                                                                                   version );
-        // TODO: check if this parameters could be part of the request!
         double pixelSize = 0.00028;
-        boolean transparent = true;
-        Color bgColor = WHITE;
         RenderingInfo info = new RenderingInfo( featurePortrayalGetMapRequest.getFormat(),
                                                 featurePortrayalGetMapRequest.getWidth(),
-                                                featurePortrayalGetMapRequest.getHeight(), transparent, bgColor,
+                                                featurePortrayalGetMapRequest.getHeight(),
+                                                featurePortrayalGetMapRequest.isTransparent(),
+                                                featurePortrayalGetMapRequest.getBgColor(),
                                                 featurePortrayalGetMapRequest.getBbox(), pixelSize, map );
         RenderContext renderContext = createRenderContext( response, info );
         service.getFeaturePortayalMap( featurePortrayalGetMapRequest, renderContext );

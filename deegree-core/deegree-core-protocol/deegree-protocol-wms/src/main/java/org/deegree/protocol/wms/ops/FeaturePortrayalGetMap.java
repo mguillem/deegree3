@@ -35,6 +35,9 @@
  ----------------------------------------------------------------------------*/
 package org.deegree.protocol.wms.ops;
 
+import static java.awt.Color.WHITE;
+
+import java.awt.Color;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
@@ -71,6 +74,10 @@ public class FeaturePortrayalGetMap {
 
     private final URL remoteWfsUrl;
 
+    private final Color bgColor;
+
+    private final boolean transparent;
+
     /**
      * Instantiates a new {@link FeaturePortrayalGetMap}.
      * 
@@ -86,11 +93,15 @@ public class FeaturePortrayalGetMap {
      *            of the map to return, may be <code>null</code>, default value is 'image/png'
      * @param remoteWfsUrl
      *            the URL of the remote WFS containing the data to render, never <code>null</code>
+     * @param bgColor
+     *            background color, may be <code>null</code>, default is white
+     * @param transparent
+     *            if background of the map should be transparent
      * @throws IllegalArgumentException
      *             if one of the passed parameters is not valid
      */
     FeaturePortrayalGetMap( ICRS crs, Envelope bbox, List<SldNamedLayer> style, int width, int height, String format,
-                            URL remoteWfsUrl ) throws MalformedURLException {
+                            URL remoteWfsUrl, Color bgColor, boolean transparent ) throws MalformedURLException {
         checkParameters( style, width, height, remoteWfsUrl );
         this.crs = crs;
         this.bbox = bbox;
@@ -103,6 +114,12 @@ public class FeaturePortrayalGetMap {
             this.format = format;
         }
         this.remoteWfsUrl = remoteWfsUrl;
+        if ( bgColor == null ) {
+            this.bgColor = WHITE;
+        } else {
+            this.bgColor = bgColor;
+        }
+        this.transparent = transparent;
     }
 
     /**
@@ -152,6 +169,20 @@ public class FeaturePortrayalGetMap {
      */
     public URL getRemoteWfsUrl() {
         return remoteWfsUrl;
+    }
+
+    /**
+     * @return the background color of the map, never <code>null</code>
+     */
+    public Color getBgColor() {
+        return bgColor;
+    }
+
+    /**
+     * @return true if the background of the map is transparent, false otherwise
+     */
+    public boolean isTransparent() {
+        return transparent;
     }
 
     private void checkParameters( List<SldNamedLayer> style, int width, int height, URL remoteWfsUrl ) {

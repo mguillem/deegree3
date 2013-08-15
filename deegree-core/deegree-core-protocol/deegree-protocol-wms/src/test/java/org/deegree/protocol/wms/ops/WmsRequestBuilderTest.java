@@ -35,6 +35,8 @@
  ----------------------------------------------------------------------------*/
 package org.deegree.protocol.wms.ops;
 
+import static java.awt.Color.WHITE;
+import static java.awt.Color.decode;
 import static java.lang.Double.parseDouble;
 import static java.util.Collections.emptyMap;
 import static org.deegree.protocol.wms.WMSConstants.VERSION_130;
@@ -105,6 +107,12 @@ public class WmsRequestBuilderTest {
     private static final String VALID_CRS = "EPSG:4326";
 
     private static final String VALID_SLD_BODY = "%3C%3Fxml+version%3D%221.0%22+encoding%3D%22UTF-8%22%3F%3E%3CStyledLayerDescriptor+version%3D%221.1.0%22%3E%3CNamedLayer%3E%3CName%3ERivers%3C%2FName%3E%3CNamedStyle%3E%3CName%3ECenterLine%3C%2FName%3E%3C%2FNamedStyle%3E%3C%2FNamedLayer%3E%3CNamedLayer%3E%3CName%3ERoads%3C%2FName%3E%3CNamedStyle%3E%3CName%3ECenterLine%3C%2FName%3E%3C%2FNamedStyle%3E%3C%2FNamedLayer%3E%3CNamedLayer%3E%3CName%3EHouses%3C%2FName%3E%3CNamedStyle%3E%3CName%3EOutline%3C%2FName%3E%3C%2FNamedStyle%3E%3C%2FNamedLayer%3E%3C%2FStyledLayerDescriptor%3E";
+
+    private static final boolean IS_TRANSPARENT = true;
+
+    private static final boolean IS_NOT_TRANSPARENT = false;
+
+    private static final String COLOR_RED = "#FF0000";
 
     private static WmsRequestBuilder wmsRequestBuilder;
 
@@ -227,6 +235,58 @@ public class WmsRequestBuilderTest {
         assertThat( getMapRequest.getFormat(), is( DEFAULT_FORMAT ) );
     }
 
+    @Test
+    public void testBuildFeaturePortrayalGetMapRequestWithoutTransparentShoudBeIntransparent()
+                            throws Exception {
+        Map<String, String> parameterMap = createValidFpsGetMapParameterMap();
+        FeaturePortrayalGetMap getMapRequest = wmsRequestBuilder.buildFeaturePortrayalGetMapRequest( parameterMap,
+                                                                                                     VERSION_130 );
+        assertThat( getMapRequest.isTransparent(), is( IS_NOT_TRANSPARENT ) );
+    }
+
+    @Test
+    public void testBuildFeaturePortrayalGetMapRequestWithTransparentShoudBeTransparent()
+                            throws Exception {
+        Map<String, String> parameterMap = createValidFpsGetMapParameterMapWithTransparentTrue();
+        FeaturePortrayalGetMap getMapRequest = wmsRequestBuilder.buildFeaturePortrayalGetMapRequest( parameterMap,
+                                                                                                     VERSION_130 );
+        assertThat( getMapRequest.isTransparent(), is( IS_TRANSPARENT ) );
+    }
+
+    @Test
+    public void testBuildFeaturePortrayalGetMapRequestWithTransparentShoudBeIntransparent()
+                            throws Exception {
+        Map<String, String> parameterMap = createValidFpsGetMapParameterMapWithTransparentFalse();
+        FeaturePortrayalGetMap getMapRequest = wmsRequestBuilder.buildFeaturePortrayalGetMapRequest( parameterMap,
+                                                                                                     VERSION_130 );
+        assertThat( getMapRequest.isTransparent(), is( IS_NOT_TRANSPARENT ) );
+    }
+
+    @Test
+    public void testBuildFeaturePortrayalGetMapRequestWithoutBgColor()
+                            throws Exception {
+        Map<String, String> parameterMap = createValidFpsGetMapParameterMap();
+        FeaturePortrayalGetMap getMapRequest = wmsRequestBuilder.buildFeaturePortrayalGetMapRequest( parameterMap,
+                                                                                                     VERSION_130 );
+        assertThat( getMapRequest.getBgColor(), is( WHITE ) );
+    }
+
+    @Test
+    public void testBuildFeaturePortrayalGetMapRequestWithBgColor()
+                            throws Exception {
+        Map<String, String> parameterMap = createValidFpsGetMapParameterMapWithBgColor();
+        FeaturePortrayalGetMap getMapRequest = wmsRequestBuilder.buildFeaturePortrayalGetMapRequest( parameterMap,
+                                                                                                     VERSION_130 );
+        assertThat( getMapRequest.getBgColor(), is( decode( COLOR_RED ) ) );
+    }
+
+    @Test(expected = OWSException.class)
+    public void testBuildFeaturePortrayalGetMapRequestWithInvalidBgColorShouldFail()
+                            throws Exception {
+        Map<String, String> parameterMap = createFpsGetMapParameterMapWithInvalidBgColor();
+        wmsRequestBuilder.buildFeaturePortrayalGetMapRequest( parameterMap, VERSION_130 );
+    }
+
     private static SldParser mockSldParser()
                             throws XMLStreamException, OWSException {
         SldParser sldParser = mock( SldParser.class );
@@ -323,6 +383,30 @@ public class WmsRequestBuilderTest {
     private Map<String, String> createValidFpsGetMapParameterMapWithoutFormat() {
         Map<String, String> parameterMap = createValidFpsGetMapParameterMap();
         parameterMap.remove( "FORMAT" );
+        return parameterMap;
+    }
+
+    private Map<String, String> createValidFpsGetMapParameterMapWithTransparentTrue() {
+        Map<String, String> parameterMap = createValidFpsGetMapParameterMap();
+        parameterMap.put( "TRANSPARENT", Boolean.toString( IS_TRANSPARENT ) );
+        return parameterMap;
+    }
+
+    private Map<String, String> createValidFpsGetMapParameterMapWithTransparentFalse() {
+        Map<String, String> parameterMap = createValidFpsGetMapParameterMap();
+        parameterMap.put( "TRANSPARENT", Boolean.toString( IS_NOT_TRANSPARENT ) );
+        return parameterMap;
+    }
+
+    private Map<String, String> createValidFpsGetMapParameterMapWithBgColor() {
+        Map<String, String> parameterMap = createValidFpsGetMapParameterMap();
+        parameterMap.put( "BGCOLOR", COLOR_RED );
+        return parameterMap;
+    }
+
+    private Map<String, String> createFpsGetMapParameterMapWithInvalidBgColor() {
+        Map<String, String> parameterMap = createValidFpsGetMapParameterMap();
+        parameterMap.put( "BGCOLOR", "NOT A HEX VALUE" );
         return parameterMap;
     }
 

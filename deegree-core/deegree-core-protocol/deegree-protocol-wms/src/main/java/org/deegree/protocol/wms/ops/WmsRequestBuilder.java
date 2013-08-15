@@ -35,6 +35,9 @@
  ----------------------------------------------------------------------------*/
 package org.deegree.protocol.wms.ops;
 
+import static java.awt.Color.WHITE;
+import static java.awt.Color.decode;
+import static java.lang.Boolean.parseBoolean;
 import static java.lang.Double.parseDouble;
 import static java.lang.Integer.parseInt;
 import static org.deegree.commons.ows.exception.OWSException.INVALID_PARAMETER_VALUE;
@@ -43,6 +46,7 @@ import static org.deegree.commons.ows.exception.OWSException.NO_APPLICABLE_CODE;
 import static org.deegree.protocol.wms.WMSConstants.VERSION_130;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -116,8 +120,11 @@ public class WmsRequestBuilder {
         List<SldNamedLayer> style = parseSld( parameterMap );
         ICRS crs = parseCrs( parameterMap );
         Envelope bbox = parseBbox( parameterMap, crs );
+        boolean isTransparent = parseBooleanValue( parameterMap, "TRANSPARENT", false );
+        Color bgColor = parseBgColor( parameterMap );
         try {
-            return new FeaturePortrayalGetMap( crs, bbox, style, width, height, format, remoteWfsUrl );
+            return new FeaturePortrayalGetMap( crs, bbox, style, width, height, format, remoteWfsUrl, bgColor,
+                                               isTransparent );
         } catch ( MalformedURLException e ) {
             throw new OWSException( "", INVALID_PARAMETER_VALUE );
         }
@@ -201,6 +208,20 @@ public class WmsRequestBuilder {
         }
     }
 
+    private Color parseBgColor( Map<String, String> parameterMap )
+                            throws OWSException {
+        String hexValue = parameterMap.get( "BGCOLOR" );
+        if ( hexValue == null )
+            return WHITE;
+        try {
+            return decode( hexValue );
+        } catch ( NumberFormatException e ) {
+            throw new OWSException(
+                                    "Parameter 'BGCOLOR' must be a valid Hexadecimal red-green-blue color value, but is "
+                                                            + hexValue + "!", INVALID_PARAMETER_VALUE );
+        }
+    }
+
     private ICRS parseCrs( Map<String, String> parameterMap )
                             throws OWSException {
         String crs = parameterMap.get( "CRS" );
@@ -251,6 +272,14 @@ public class WmsRequestBuilder {
             throw new OWSException( "Value of parmeter '" + key + "' must be an integer value, but is " + valueAsString
                                     + "!", INVALID_PARAMETER_VALUE );
         }
+    }
+
+    private boolean parseBooleanValue( Map<String, String> parameterMap, String key, boolean defaultValue )
+                            throws OWSException {
+        String valueAsString = parameterMap.get( key );
+        if ( valueAsString == null )
+            return defaultValue;
+        return parseBoolean( valueAsString );
     }
 
     private void closeQuietly( XMLStreamReader xmlStreamReader ) {
