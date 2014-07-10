@@ -173,6 +173,11 @@ public class Query {
      */
     public Query( TypeName[] typeNames, Filter filter, SortProperty[] sortBy, int scale, int maxFeatures,
                   double resolution ) {
+        this( typeNames, filter, sortBy, scale, maxFeatures, resolution, null );
+    }
+
+    public Query( TypeName[] typeNames, Filter filter, SortProperty[] sortBy, int scale, int maxFeatures,
+                  double resolution, List<ProjectionClause> projections ) {
         this.typeNames = typeNames;
         this.filter = filter;
         if ( sortBy != null ) {
@@ -187,7 +192,10 @@ public class Query {
         if ( resolution > 0 ) {
             hints.put( HINT_RESOLUTION, resolution );
         }
-        this.projections = emptyList();
+        if ( projections == null )
+            this.projections = emptyList();
+        else
+            this.projections = projections;
     }
 
     public Object getHint( QueryHint code ) {

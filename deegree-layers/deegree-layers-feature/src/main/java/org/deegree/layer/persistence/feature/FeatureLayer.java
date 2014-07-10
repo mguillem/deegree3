@@ -46,12 +46,15 @@ import static org.deegree.style.utils.Styles.getStyleFilters;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import javax.xml.namespace.QName;
 
 import org.deegree.commons.ows.exception.OWSException;
+import org.deegree.commons.utils.DoublePair;
+import org.deegree.commons.utils.Pair;
 import org.deegree.feature.persistence.FeatureStore;
 import org.deegree.feature.persistence.query.Query;
 import org.deegree.feature.types.AppSchemas;
@@ -59,13 +62,16 @@ import org.deegree.filter.Expression;
 import org.deegree.filter.Filters;
 import org.deegree.filter.OperatorFilter;
 import org.deegree.filter.expression.ValueReference;
+import org.deegree.filter.projection.ProjectionClause;
 import org.deegree.filter.sort.SortProperty;
 import org.deegree.geometry.Envelope;
 import org.deegree.layer.AbstractLayer;
 import org.deegree.layer.LayerQuery;
 import org.deegree.layer.metadata.LayerMetadata;
 import org.deegree.style.StyleRef;
+import org.deegree.style.se.unevaluated.Continuation;
 import org.deegree.style.se.unevaluated.Style;
+import org.deegree.style.se.unevaluated.Symbolizer;
 import org.deegree.style.utils.Styles;
 import org.slf4j.Logger;
 
@@ -121,6 +127,8 @@ public class FeatureLayer extends AbstractLayer {
 
         Set<Expression> exprs = new HashSet<Expression>( Styles.getGeometryExpressions( style ) );
 
+        List<ProjectionClause> projections = createProjections( style );
+        
         final ValueReference geomProp;
 
         if ( exprs.size() == 1 && exprs.iterator().next() instanceof ValueReference ) {
@@ -138,7 +146,7 @@ public class FeatureLayer extends AbstractLayer {
         filter = Filters.repair( filter, AppSchemas.collectProperyNames( featureStore.getSchema(), ftName ) );
 
         QueryBuilder builder = new QueryBuilder( featureStore, filter, ftName, bbox, query, geomProp, sortBy,
-                                                 getMetadata().getName() );
+                                                 getMetadata().getName(), projections );
         List<Query> queries = builder.buildMapQueries();
 
         if ( queries.isEmpty() ) {
@@ -183,6 +191,14 @@ public class FeatureLayer extends AbstractLayer {
         LOG.debug( "Finished querying the feature store(s)." );
 
         return new FeatureLayerData( queries, featureStore, query.getFeatureCount(), style, featureType );
+    }
+    
+    private List<ProjectionClause> createProjections( Style style ) {
+        List<ProjectionClause> projections = null;
+        for ( Pair<Continuation<LinkedList<Symbolizer<?>>>, DoublePair> rule : style.getRules() ) {
+                    // TODO
+        }        
+        return projections;
     }
 
 }

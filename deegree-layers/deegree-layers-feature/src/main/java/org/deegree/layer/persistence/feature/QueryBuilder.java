@@ -59,6 +59,7 @@ import org.deegree.feature.types.FeatureType;
 import org.deegree.filter.Filter;
 import org.deegree.filter.OperatorFilter;
 import org.deegree.filter.expression.ValueReference;
+import org.deegree.filter.projection.ProjectionClause;
 import org.deegree.filter.sort.SortProperty;
 import org.deegree.geometry.Envelope;
 import org.deegree.layer.LayerQuery;
@@ -90,8 +91,17 @@ class QueryBuilder {
 
     private String layerName;
 
+    private List<ProjectionClause> projections;
+
     QueryBuilder( FeatureStore featureStore, OperatorFilter filter, QName ftName, Envelope bbox, LayerQuery query,
                   ValueReference geomProp, SortProperty[] sortBy, String layerName ) {
+        this( featureStore, filter, ftName, bbox, query, geomProp, sortBy, layerName, null );
+    }
+
+    public QueryBuilder( FeatureStore featureStore, OperatorFilter filter, QName ftName, Envelope bbox,
+                         LayerQuery query, ValueReference geomProp, SortProperty[] sortBy, String layerName,
+                         List<ProjectionClause> projections ) {
+        this.projections = projections;
         this.featureStore = featureStore;
         this.filter = filter;
         this.ftName = ftName;
@@ -114,12 +124,13 @@ class QueryBuilder {
                                      public Query apply( FeatureType u ) {
                                          Filter fil = addBBoxConstraint( bbox, filter2, geomProp, true );
                                          return createQuery( u.getName(), fil, round( query.getScale() ), maxFeatures,
-                                                             query.getResolution(), sortBy );
+                                                             query.getResolution(), sortBy, projections );
                                      }
                                  } ) );
         } else {
             Query fquery = createQuery( ftName, addBBoxConstraint( bbox, filter, geomProp, true ),
-                                        round( query.getScale() ), maxFeatures, query.getResolution(), sortBy );
+                                        round( query.getScale() ), maxFeatures, query.getResolution(), sortBy,
+                                        projections );
             queries.add( fquery );
         }
 
@@ -139,7 +150,8 @@ class QueryBuilder {
                                          } else {
                                              f = buildFilter( ( (OperatorFilter) filter ).getOperator(), u, bbox );
                                          }
-                                         return createQuery( u.getName(), f, -1, query.getFeatureCount(), -1, sortBy );
+                                         return createQuery( u.getName(), f, -1, query.getFeatureCount(), -1, sortBy,
+                                                             null );
                                      }
                                  } ) );
             clearNulls( queries );
@@ -151,15 +163,15 @@ class QueryBuilder {
                 f = buildFilter( ( (OperatorFilter) filter ).getOperator(),
                                  featureStore.getSchema().getFeatureType( ftName ), bbox );
             }
-            queries.add( createQuery( ftName, f, -1, query.getFeatureCount(), -1, sortBy ) );
+            queries.add( createQuery( ftName, f, -1, query.getFeatureCount(), -1, sortBy, null ) );
         }
         return queries;
     }
 
     static Query createQuery( QName ftName, Filter filter, int scale, int maxFeatures, double resolution,
-                              SortProperty[] sort ) {
+                              SortProperty[] sort, List<ProjectionClause> projections ) {
         TypeName[] typeNames = new TypeName[] { new TypeName( ftName, null ) };
-        return new Query( typeNames, filter, sort, scale, maxFeatures, resolution );
+        return new Query( typeNames, filter, sort, scale, maxFeatures, resolution, projections );
     }
 
 }
