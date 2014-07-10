@@ -40,6 +40,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.deegree.feature.Feature;
+import org.deegree.filter.projection.ProjectionClause;
 
 /**
  * Builds {@link Feature} instances from SQL result sets.
@@ -57,6 +58,16 @@ public interface FeatureBuilder {
      * @return list of columns, never <code>null</code>
      */
     public List<String> getInitialSelectColumns();
+
+    /**
+     * Returns the columns for the SELECT statement that is used to retrieve the {@link ResultSet} limited to
+     * projections.
+     * 
+     * @param projections
+     *            may be <code>null</code> (all columns are returned)
+     * @return list of columns, never <code>null</code>
+     */
+    public List<String> getSelectColumns( List<ProjectionClause> projections );
 
     /**
      * Builds a {@link Feature} instance from the current row of the given {@link ResultSet}.

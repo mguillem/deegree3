@@ -80,6 +80,8 @@ import org.deegree.feature.property.GenericProperty;
 import org.deegree.feature.types.AppSchemaGeometryHierarchy;
 import org.deegree.feature.types.FeatureType;
 import org.deegree.filter.expression.ValueReference;
+import org.deegree.filter.projection.ProjectionClause;
+import org.deegree.filter.projection.PropertyName;
 import org.deegree.geometry.Geometry;
 import org.deegree.geometry.GeometryFactory;
 import org.deegree.geometry.primitive.LineString;
@@ -175,6 +177,33 @@ public class FeatureBuilderRelational implements FeatureBuilder {
         return new ArrayList<String>( colToRsIdx.keySet() );
     }
 
+    @Override
+    public List<String> getSelectColumns( List<ProjectionClause> projections ) {
+        if ( projections == null )
+            return getInitialSelectColumns();
+        LinkedHashMap<String, Integer> limitedColToRsIdx = new LinkedHashMap<String, Integer>();
+        for ( Pair<SQLIdentifier, BaseType> fidColumn : ftMapping.getFidMapping().getColumns() ) {
+            addColumn( limitedColToRsIdx, tableAlias + "." + fidColumn.first.getName() );
+        }
+        for ( ProjectionClause projectionClause : projections ) {
+            if ( projectionClause instanceof PropertyName ) {
+                ValueReference valueReference = ( (PropertyName) projectionClause ).getPropertyName();
+                Mapping mapping = getMapping( valueReference );
+                if ( mapping != null )
+                    addSelectColumns( mapping, limitedColToRsIdx, true );
+            }
+        }
+        return new ArrayList<String>( limitedColToRsIdx.keySet() );
+    }
+
+    private Mapping getMapping( ValueReference valueReference ) {
+        for ( Mapping mapping : ftMapping.getMappings() ) {
+            if ( valueReference == mapping.getPath() )
+                return mapping;
+        }
+        return null;
+    }
+
     private void addColumn( LinkedHashMap<String, Integer> colToRsIdx, String column ) {
         if ( !colToRsIdx.containsKey( column ) ) {
             colToRsIdx.put( column, colToRsIdx.size() + 1 );
@@ -247,7 +276,7 @@ public class FeatureBuilderRelational implements FeatureBuilder {
             gmlId += rs.getObject( colToRsIdx.get( tableAlias + "." + fidColumns.get( 0 ).first ) );
             for ( int i = 1; i < fidColumns.size(); i++ ) {
                 gmlId += ftMapping.getFidMapping().getDelimiter()
-                                        + rs.getObject( colToRsIdx.get( tableAlias + "." + fidColumns.get( i ).first ) );
+                         + rs.getObject( colToRsIdx.get( tableAlias + "." + fidColumns.get( i ).first ) );
             }
             if ( fs.getCache() != null ) {
                 feature = (Feature) fs.getCache().get( gmlId );
@@ -294,7 +323,7 @@ public class FeatureBuilderRelational implements FeatureBuilder {
 
     private void addProperties( List<Property> props, PropertyType pt, Mapping propMapping, ResultSet rs,
                                 String idPrefix )
-                                                        throws SQLException {
+                            throws SQLException {
 
         List<TypedObjectNode> particles = buildParticles( propMapping, rs, colToRsIdx, idPrefix );
         if ( particles.isEmpty() && pt.getMinOccurs() > 0 ) {
@@ -320,7 +349,7 @@ public class FeatureBuilderRelational implements FeatureBuilder {
 
     private List<TypedObjectNode> buildParticles( Mapping mapping, ResultSet rs,
                                                   LinkedHashMap<String, Integer> colToRsIdx, String idPrefix )
-                                                                          throws SQLException {
+                            throws SQLException {
 
         if ( !( mapping instanceof FeatureMapping ) && mapping.getJoinedTable() != null ) {
             List<TypedObjectNode> values = new ArrayList<TypedObjectNode>();
@@ -353,7 +382,7 @@ public class FeatureBuilderRelational implements FeatureBuilder {
 
     private TypedObjectNode buildParticle( Mapping mapping, ResultSet rs, LinkedHashMap<String, Integer> colToRsIdx,
                                            String idPrefix )
-                                                                   throws SQLException {
+                            throws SQLException {
 
         LOG.debug( "Trying to build particle with path {}.", mapping.getPath() );
 
@@ -464,10 +493,10 @@ public class FeatureBuilderRelational implements FeatureBuilder {
                                     // TODO
                                     XSElementDeclaration childType = null;
                                     GenericXMLElement child = new GenericXMLElement(
-                                                                                    name,
-                                                                                    childType,
-                                                                                    Collections.<QName, PrimitiveValue> emptyMap(),
-                                                                                    Collections.singletonList( particleValue ) );
+                                                                                     name,
+                                                                                     childType,
+                                                                                     Collections.<QName, PrimitiveValue> emptyMap(),
+                                                                                     Collections.singletonList( particleValue ) );
                                     children.add( child );
                                 } else if ( particleValue != null ) {
                                     children.add( particleValue );
@@ -475,7 +504,7 @@ public class FeatureBuilderRelational implements FeatureBuilder {
                             }
                         } else {
                             LOG.warn( "Unhandled axis type '" + step.getAxis() + "' for path: '"
-                                                    + particleMapping.getPath() + "'" );
+                                      + particleMapping.getPath() + "'" );
                         }
                     } else {
                         // TODO handle other steps as self()
@@ -485,7 +514,7 @@ public class FeatureBuilderRelational implements FeatureBuilder {
                     }
                 } else {
                     LOG.warn( "Unhandled mapping type '" + particleMapping.getClass() + "' for path: '"
-                                            + particleMapping.getPath() + "'" );
+                              + particleMapping.getPath() + "'" );
                 }
             }
 
@@ -615,7 +644,7 @@ public class FeatureBuilderRelational implements FeatureBuilder {
                                                                                 Mapping mapping,
                                                                                 ResultSet rs,
                                                                                 LinkedHashMap<String, Integer> colToRsIdx )
-                                                                                                        throws SQLException {
+                            throws SQLException {
 
         LinkedHashMap<String, Integer> rsToIdx = getSubsequentSelectColumns( mapping );
 

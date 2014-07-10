@@ -44,6 +44,7 @@ import org.deegree.cs.coordinatesystems.ICRS;
 import org.deegree.feature.Feature;
 import org.deegree.feature.persistence.sql.FeatureBuilder;
 import org.deegree.feature.persistence.sql.SQLFeatureStore;
+import org.deegree.filter.projection.ProjectionClause;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,6 +85,11 @@ public class FeatureBuilderBlob implements FeatureBuilder {
 
     @Override
     public List<String> getInitialSelectColumns() {
+        return getSelectColumns( null );
+    }
+
+    @Override
+    public List<String> getSelectColumns( List<ProjectionClause> projections ) {
         List<String> columns = new ArrayList<String>();
         columns.add( blobMapping.getGMLIdColumn() );
         columns.add( blobMapping.getDataColumn() );
@@ -115,4 +121,5 @@ public class FeatureBuilderBlob implements FeatureBuilder {
         }
         return feature;
     }
+
 }
