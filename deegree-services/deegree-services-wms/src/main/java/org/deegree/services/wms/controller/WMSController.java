@@ -130,6 +130,7 @@ import org.deegree.services.jaxb.wms.DeegreeWMS;
 import org.deegree.services.jaxb.wms.DeegreeWMS.ExtendedCapabilities;
 import org.deegree.services.jaxb.wms.FeatureInfoFormatsType.GetFeatureInfoFormat;
 import org.deegree.services.jaxb.wms.FeatureInfoFormatsType.GetFeatureInfoFormat.XSLTFile;
+import org.deegree.services.jaxb.wms.GetMapFormatsType;
 import org.deegree.services.jaxb.wms.ServiceConfigurationType;
 import org.deegree.services.metadata.OWSMetadataProvider;
 import org.deegree.services.metadata.OWSMetadataProviderManager;
@@ -157,7 +158,7 @@ public class WMSController extends AbstractOWS {
     private static final String CONFIG_JAXB_PACKAGE = "org.deegree.services.jaxb.wms";
 
     private static final String CONFIG_SCHEMA = "/META-INF/schemas/wms/3.2.0/wms_configuration.xsd";
-
+    
     private final HashMap<String, ImageSerializer> imageSerializers = new HashMap<String, ImageSerializer>();
 
     /** The list of supported image formats. */
@@ -178,7 +179,7 @@ public class WMSController extends AbstractOWS {
     private String metadataURLTemplate;
 
     private FeatureInfoManager featureInfoManager;
-
+    
     public WMSController( URL configURL, ImplementationMetadata<?> serviceInfo ) {
         super( configURL, serviceInfo );
         try {
@@ -299,14 +300,7 @@ public class WMSController extends AbstractOWS {
         }
 
         try {
-            // put in the default formats
-            supportedImageFormats.add( "image/png" );
-            supportedImageFormats.add( "image/png; subtype=8bit" );
-            supportedImageFormats.add( "image/png; mode=8bit" );
-            supportedImageFormats.add( "image/gif" );
-            supportedImageFormats.add( "image/jpeg" );
-            supportedImageFormats.add( "image/tiff" );
-            supportedImageFormats.add( "image/x-ms-bmp" );
+            addSupportedImageFormats( conf );
 
             if ( conf.getFeatureInfoFormats() != null ) {
                 for ( GetFeatureInfoFormat t : conf.getFeatureInfoFormats().getGetFeatureInfoFormat() ) {
@@ -867,6 +861,26 @@ public class WMSController extends AbstractOWS {
 
     public FeatureInfoManager getFeatureInfoManager() {
         return featureInfoManager;
+    }
+
+    private void addSupportedImageFormats( DeegreeWMS conf ) {
+        if ( conf.getGetMapFormats() != null ) {
+            GetMapFormatsType getMapFormats = conf.getGetMapFormats();
+            List<String> getMapFormatList = getMapFormats.getGetMapFormat();
+            for ( String getMapFormat : getMapFormatList ) {
+                supportedImageFormats.add( getMapFormat );
+            }
+        }
+        if ( supportedImageFormats.isEmpty() ) {
+            // put in the default formats
+            supportedImageFormats.add( "image/png" );
+            supportedImageFormats.add( "image/png; subtype=8bit" );
+            supportedImageFormats.add( "image/png; mode=8bit" );
+            supportedImageFormats.add( "image/gif" );
+            supportedImageFormats.add( "image/jpeg" );
+            supportedImageFormats.add( "image/tiff" );
+            supportedImageFormats.add( "image/x-ms-bmp" );
+        }
     }
 
     /**
