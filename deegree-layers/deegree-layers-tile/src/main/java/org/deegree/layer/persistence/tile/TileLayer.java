@@ -49,6 +49,7 @@ import org.deegree.geometry.GeometryTransformer;
 import org.deegree.layer.AbstractLayer;
 import org.deegree.layer.LayerData;
 import org.deegree.layer.LayerQuery;
+import org.deegree.layer.Utils;
 import org.deegree.layer.metadata.LayerMetadata;
 import org.deegree.style.StyleRef;
 import org.deegree.tile.Tile;
@@ -95,6 +96,7 @@ public class TileLayer extends AbstractLayer {
         ICRS crs = env.getCoordinateSystem();
 
         String tds = coordinateSystems.get( crs );
+        double resolution = query.getResolution();
         if ( tds == null ) {
             ICRS newCrs = (ICRS) coordinateSystems.keySet().toArray()[0];
             tds = coordinateSystems.get(newCrs);
@@ -105,6 +107,7 @@ public class TileLayer extends AbstractLayer {
             } catch ( UnknownCRSException e ) {
                 e.printStackTrace();
             }
+            resolution = Utils.calcResolution( env, query.getWidth(), query.getHeight() );
 //            String msg = "Tile layer " + getMetadata().getName() + " does not offer the coordinate system "
 //                                    + crs.getAlias();
 //            LOG.debug( msg );
@@ -112,7 +115,7 @@ public class TileLayer extends AbstractLayer {
         }
         TileDataSet data = tileDataSets.get( tds );
 
-        Iterator<Tile> tiles = data.getTiles( env, query.getResolution() );
+        Iterator<Tile> tiles = data.getTiles( env, resolution );
         return new TileLayerData( tiles );
     }
 

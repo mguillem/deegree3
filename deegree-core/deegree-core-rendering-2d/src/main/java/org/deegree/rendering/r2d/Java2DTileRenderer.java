@@ -40,18 +40,29 @@
  ----------------------------------------------------------------------------*/
 package org.deegree.rendering.r2d;
 
-import static java.awt.Color.RED;
-import static org.slf4j.LoggerFactory.getLogger;
-
-import java.awt.Graphics2D;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
-
 import org.deegree.commons.utils.math.MathUtils;
+import org.deegree.coverage.raster.RasterTransformer;
+import org.deegree.coverage.raster.SimpleRaster;
+import org.deegree.coverage.raster.data.RasterData;
+import org.deegree.coverage.raster.geom.RasterGeoReference;
+import org.deegree.coverage.raster.interpolation.InterpolationType;
+import org.deegree.cs.exceptions.TransformationException;
+import org.deegree.cs.exceptions.UnknownCRSException;
 import org.deegree.geometry.Envelope;
+import org.deegree.geometry.GeometryTransformer;
 import org.deegree.tile.Tile;
 import org.deegree.tile.TileIOException;
 import org.slf4j.Logger;
+
+import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
+
+import static java.awt.Color.RED;
+import static org.deegree.coverage.raster.utils.RasterFactory.rasterDataFromImage;
+import static org.deegree.coverage.raster.utils.RasterFactory.rasterDataToImage;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * <code>Java2DTileRenderer</code>
@@ -70,6 +81,12 @@ public class Java2DTileRenderer implements TileRenderer {
 
     private AffineTransform worldToScreen = new AffineTransform();
 
+    private Envelope envelope;
+
+    private int width;
+
+    private int height;
+
     /**
      * @param graphics
      * @param width
@@ -78,6 +95,9 @@ public class Java2DTileRenderer implements TileRenderer {
      */
     public Java2DTileRenderer( Graphics2D graphics, int width, int height, Envelope envelope ) {
         this.graphics = graphics;
+        this.envelope = envelope;
+        this.width = width;
+        this.height = height;
         RenderHelper.getWorldToScreenTransform( worldToScreen, envelope, width, height );
     }
 
@@ -89,6 +109,13 @@ public class Java2DTileRenderer implements TileRenderer {
         }
         int minx, miny, maxx, maxy;
         Envelope env = tile.getEnvelope();
+        try {
+            env = new GeometryTransformer( envelope.getCoordinateSystem() ).transform( env );
+        } catch ( TransformationException e ) {
+            e.printStackTrace();
+        } catch ( UnknownCRSException e ) {
+            e.printStackTrace();
+        }
         Point2D.Double p = (Point2D.Double) worldToScreen.transform( new Point2D.Double( env.getMin().get0(),
                                                                                          env.getMin().get1() ), null );
         minx = MathUtils.round( p.x );
@@ -98,7 +125,28 @@ public class Java2DTileRenderer implements TileRenderer {
         maxx = MathUtils.round( p.x );
         maxy = MathUtils.round( p.y );
         try {
-            graphics.drawImage( tile.getAsImage(), minx, miny, maxx - minx, maxy - miny, null );
+            BufferedImage image = tile.getAsImage();
+
+            RasterData data = rasterDataFromImage( image );
+            SimpleRaster raster = new SimpleRaster( data, tile.getEnvelope(),
+                            RasterGeoReference.create( RasterGeoReference.OriginLocation.OUTER, tile.getEnvelope(), tile.getAsImage().getWidth(),
+                                                       tile.getAsImage().getHeight() ), null );
+            RasterTransformer rtrans = new RasterTransformer( envelope.getCoordinateSystem() );
+            SimpleRaster transformed = null;
+            try {
+                transformed = rtrans.transform( raster, env, tile.getAsImage().getWidth(),
+                                                tile.getAsImage().getHeight(), InterpolationType.BILINEAR ).getAsSimpleRaster();
+            } catch ( TransformationException e ) {
+                e.printStackTrace();
+            }
+            image = rasterDataToImage( transformed.getRasterData() );
+
+            int minxa = Math.min( minx,  maxx );
+            int minya = Math.min( miny,  maxy );
+            int maxxa = Math.max( minx,  maxx );
+            int maxya = Math.max( miny,  maxy );
+
+            graphics.drawImage( image, minxa, minya, maxxa - minxa, maxya - minya, null );
         } catch ( TileIOException e ) {
             LOG.debug( "Error retrieving tile image: " + e.getMessage() );
             graphics.setColor( RED );
