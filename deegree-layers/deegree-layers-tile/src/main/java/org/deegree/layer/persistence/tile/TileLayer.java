@@ -40,17 +40,12 @@
  ----------------------------------------------------------------------------*/
 package org.deegree.layer.persistence.tile;
 
-import static org.slf4j.LoggerFactory.getLogger;
-
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.deegree.commons.ows.exception.OWSException;
 import org.deegree.cs.coordinatesystems.ICRS;
+import org.deegree.cs.exceptions.TransformationException;
+import org.deegree.cs.exceptions.UnknownCRSException;
 import org.deegree.geometry.Envelope;
+import org.deegree.geometry.GeometryTransformer;
 import org.deegree.layer.AbstractLayer;
 import org.deegree.layer.LayerData;
 import org.deegree.layer.LayerQuery;
@@ -59,6 +54,14 @@ import org.deegree.style.StyleRef;
 import org.deegree.tile.Tile;
 import org.deegree.tile.TileDataSet;
 import org.slf4j.Logger;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * A layer implementation based on a list of tile data sets.
@@ -93,10 +96,19 @@ public class TileLayer extends AbstractLayer {
 
         String tds = coordinateSystems.get( crs );
         if ( tds == null ) {
-            String msg = "Tile layer " + getMetadata().getName() + " does not offer the coordinate system "
-                                    + crs.getAlias();
-            LOG.debug( msg );
-            throw new OWSException( msg, OWSException.INVALID_CRS );
+            ICRS newCrs = (ICRS) coordinateSystems.keySet().toArray()[0];
+            tds = coordinateSystems.get(newCrs);
+            try {
+                env = new GeometryTransformer( newCrs ).transform( env );
+            } catch ( TransformationException e ) {
+                e.printStackTrace();
+            } catch ( UnknownCRSException e ) {
+                e.printStackTrace();
+            }
+//            String msg = "Tile layer " + getMetadata().getName() + " does not offer the coordinate system "
+//                                    + crs.getAlias();
+//            LOG.debug( msg );
+//            throw new OWSException( msg, OWSException.INVALID_CRS );
         }
         TileDataSet data = tileDataSets.get( tds );
 

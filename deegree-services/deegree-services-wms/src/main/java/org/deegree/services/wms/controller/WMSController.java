@@ -36,40 +36,6 @@
 
 package org.deegree.services.wms.controller;
 
-import static javax.imageio.ImageIO.write;
-import static org.deegree.commons.ows.exception.OWSException.OPERATION_NOT_SUPPORTED;
-import static org.deegree.commons.tom.ows.Version.parseVersion;
-import static org.deegree.commons.utils.ArrayUtils.join;
-import static org.deegree.commons.utils.CollectionUtils.getStringJoiner;
-import static org.deegree.commons.utils.CollectionUtils.map;
-import static org.deegree.commons.utils.CollectionUtils.reduce;
-import static org.deegree.protocol.wms.WMSConstants.VERSION_111;
-import static org.deegree.protocol.wms.WMSConstants.VERSION_130;
-import static org.deegree.services.controller.OGCFrontController.getHttpGetURL;
-import static org.deegree.services.i18n.Messages.get;
-import static org.deegree.services.metadata.MetadataUtils.convertFromJAXB;
-import static org.slf4j.LoggerFactory.getLogger;
-
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
-import javax.xml.transform.dom.DOMSource;
-
 import org.apache.axiom.om.OMElement;
 import org.apache.commons.fileupload.FileItem;
 import org.deegree.commons.annotations.LoggingNotes;
@@ -83,12 +49,16 @@ import org.deegree.commons.utils.Pair;
 import org.deegree.commons.xml.NamespaceBindings;
 import org.deegree.commons.xml.XMLAdapter;
 import org.deegree.cs.coordinatesystems.ICRS;
+import org.deegree.cs.exceptions.TransformationException;
+import org.deegree.cs.exceptions.UnknownCRSException;
+import org.deegree.cs.persistence.CRSManager;
 import org.deegree.cs.refs.coordinatesystem.CRSRef;
 import org.deegree.feature.FeatureCollection;
 import org.deegree.feature.types.FeatureType;
 import org.deegree.featureinfo.FeatureInfoManager;
 import org.deegree.featureinfo.FeatureInfoParams;
 import org.deegree.featureinfo.serializing.FeatureInfoSerializer;
+import org.deegree.geometry.GeometryTransformer;
 import org.deegree.gml.GMLVersion;
 import org.deegree.gml.schema.GMLAppSchemaWriter;
 import org.deegree.layer.LayerRef;
@@ -129,6 +99,39 @@ import org.deegree.workspace.ResourceInitException;
 import org.deegree.workspace.ResourceMetadata;
 import org.deegree.workspace.Workspace;
 import org.slf4j.Logger;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
+import javax.xml.transform.dom.DOMSource;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import static javax.imageio.ImageIO.write;
+import static org.deegree.commons.ows.exception.OWSException.OPERATION_NOT_SUPPORTED;
+import static org.deegree.commons.tom.ows.Version.parseVersion;
+import static org.deegree.commons.utils.ArrayUtils.join;
+import static org.deegree.commons.utils.CollectionUtils.getStringJoiner;
+import static org.deegree.commons.utils.CollectionUtils.map;
+import static org.deegree.commons.utils.CollectionUtils.reduce;
+import static org.deegree.protocol.wms.WMSConstants.VERSION_111;
+import static org.deegree.protocol.wms.WMSConstants.VERSION_130;
+import static org.deegree.services.controller.OGCFrontController.getHttpGetURL;
+import static org.deegree.services.i18n.Messages.get;
+import static org.deegree.services.metadata.MetadataUtils.convertFromJAXB;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * <code>WMSController</code> handles the protocol and map service globally.
@@ -537,8 +540,21 @@ public class WMSController extends AbstractOWS {
 
         checkGetMap( version, gm2 );
 
-        RenderingInfo info = new RenderingInfo( gm2.getFormat(), gm2.getWidth(), gm2.getHeight(), gm2.getTransparent(),
-                                                gm2.getBgColor(), gm2.getBoundingBox(), gm2.getPixelSize(), map );
+        RenderingInfo info = null;
+        try {
+            info = new RenderingInfo(
+                            gm2.getFormat(),
+                            gm2.getWidth(),
+                            gm2.getHeight(),
+                            gm2.getTransparent(),
+                            gm2.getBgColor(),
+                            new GeometryTransformer( CRSManager.lookup( "EPSG:25833" ) ).transform( gm2.getBoundingBox() ),
+                            gm2.getPixelSize(), map );
+        } catch ( TransformationException e ) {
+            e.printStackTrace();
+        } catch ( UnknownCRSException e ) {
+            e.printStackTrace();
+        }
         RenderContext ctx = new DefaultRenderContext( info );
         ctx.setOutput( response.getOutputStream() );
         LinkedList<String> headers = new LinkedList<String>();
