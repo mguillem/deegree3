@@ -41,6 +41,7 @@
 package org.deegree.rendering.r2d;
 
 import static java.awt.Color.RED;
+import static java.awt.image.BufferedImage.TYPE_4BYTE_ABGR;
 import static org.deegree.coverage.raster.geom.RasterGeoReference.OriginLocation.OUTER;
 import static org.deegree.coverage.raster.interpolation.InterpolationType.BILINEAR;
 import static org.deegree.coverage.raster.utils.RasterFactory.rasterDataFromImage;
@@ -131,10 +132,18 @@ public class Java2DTileRenderer implements TileRenderer {
         ICRS requestedCrs = envelope.getCoordinateSystem();
         if ( !requestedCrs.equals( env.getCoordinateSystem() ) ) {
             try {
-                Envelope targetEnv = new GeometryTransformer( requestedCrs ).transform( env );
 
                 int tileWidth = imageToDraw.getWidth();
                 int tileHeight = imageToDraw.getHeight();
+                if ( imageToDraw.getType() != TYPE_4BYTE_ABGR ) {
+                    BufferedImage img = new BufferedImage( tileWidth, tileHeight, TYPE_4BYTE_ABGR );
+                    Graphics2D g = img.createGraphics();
+                    g.drawImage( imageToDraw, 0, 0, null );
+                    g.dispose();
+                    imageToDraw = img;
+                }
+
+                Envelope targetEnv = new GeometryTransformer( requestedCrs ).transform( env );
 
                 RasterGeoReference rasterGeoReference = RasterGeoReference.create( OUTER, env, tileWidth, tileHeight );
                 RasterData data = rasterDataFromImage( imageToDraw );
@@ -167,7 +176,7 @@ public class Java2DTileRenderer implements TileRenderer {
         maxy = MathUtils.round( p.y );
 
         try {
-            graphics.drawImage( tile.getAsImage(), minx, maxy, maxx - minx, miny - maxy, null );
+            graphics.drawImage( imageToDraw, minx, maxy, maxx - minx, miny - maxy, null );
         } catch ( TileIOException e ) {
             LOG.debug( "Error retrieving tile image: " + e.getMessage() );
             graphics.setColor( RED );
