@@ -105,8 +105,8 @@ public class GeoTIFFTileDataLevel implements TileDataLevel {
         double height = metadata.getTileHeight();
         Envelope env = metadata.getSpatialMetadata().getEnvelope();
         double minx = width * x + env.getMin().get0();
-        double miny = env.getMax().get1() - height * y;
-        Envelope envelope = fac.createEnvelope( minx, miny, minx + width, miny - height, env.getCoordinateSystem() );
+        double maxy = env.getMax().get1() - height * y;
+        Envelope envelope = fac.createEnvelope( minx, maxy - height, minx + width, maxy, env.getCoordinateSystem() );
         return new GeoTIFFTile( readerPool, imageIndex, (int) x, (int) y, envelope, (int) metadata.getTilePixelsX(),
                                 (int) metadata.getTilePixelsY() );
     }

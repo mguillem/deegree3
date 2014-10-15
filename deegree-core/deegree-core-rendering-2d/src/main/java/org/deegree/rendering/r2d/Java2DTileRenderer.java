@@ -132,6 +132,7 @@ public class Java2DTileRenderer implements TileRenderer {
         if ( !requestedCrs.equals( env.getCoordinateSystem() ) ) {
             try {
                 Envelope targetEnv = new GeometryTransformer( requestedCrs ).transform( env );
+
                 int tileWidth = imageToDraw.getWidth();
                 int tileHeight = imageToDraw.getHeight();
 
@@ -165,12 +166,8 @@ public class Java2DTileRenderer implements TileRenderer {
         maxx = MathUtils.round( p.x );
         maxy = MathUtils.round( p.y );
 
-        int minxa = Math.min( minx, maxx );
-        int minya = Math.min( miny, maxy );
-        int maxxa = Math.max( minx, maxx );
-        int maxya = Math.max( miny, maxy );
         try {
-            graphics.drawImage( tile.getAsImage(), minxa, minya, maxxa - minxa, maxya - minya, null );
+            graphics.drawImage( tile.getAsImage(), minx, maxy, maxx - minx, miny - maxy, null );
         } catch ( TileIOException e ) {
             LOG.debug( "Error retrieving tile image: " + e.getMessage() );
             graphics.setColor( RED );
