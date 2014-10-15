@@ -92,7 +92,10 @@ public class DefaultRenderContext implements RenderContext {
 
     private String format;
 
+    private final RenderingInfo info;
+
     public DefaultRenderContext( RenderingInfo info ) {
+        this.info = info;
         format = info.getFormat();
         image = ImageUtils.prepareImage( format, info.getWidth(), info.getHeight(), info.getTransparent(),
                                          info.getBgColor() );
@@ -235,6 +238,11 @@ public class DefaultRenderContext implements RenderContext {
             graphics.setRenderingHint( KEY_RENDERING, VALUE_RENDER_DEFAULT );
             break;
         }
+    }
+
+    @Override
+    public RenderingInfo getInfo() {
+        return info;
     }
 
 }

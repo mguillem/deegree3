@@ -75,4 +75,6 @@ public interface RenderContext {
 
     void applyOptions( MapOptions options );
 
+    RenderingInfo getInfo();
+
 }

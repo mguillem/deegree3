@@ -101,12 +101,12 @@ public class TileLayer extends AbstractLayer {
             String msg = "Tile layer " + getMetadata().getName() + " does not offer the coordinate system "
                          + crs.getAlias();
             LOG.debug( msg );
-            
+
             try {
                 ICRS targetCRS = (ICRS) coordinateSystems.keySet().toArray()[0];
                 env = new GeometryTransformer( targetCRS ).transform( env );
                 tds = coordinateSystems.get( targetCRS );
-                resolution = Utils.calcResolution( env, query.getWidth(),query.getHeight() );
+                resolution = Utils.calcResolution( env, query.getWidth(), query.getHeight() );
             } catch ( IllegalArgumentException e ) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -117,8 +117,8 @@ public class TileLayer extends AbstractLayer {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            
-//            throw new OWSException( msg, OWSException.INVALID_CRS );
+
+            // throw new OWSException( msg, OWSException.INVALID_CRS );
         }
         TileDataSet data = tileDataSets.get( tds );
 

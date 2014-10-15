@@ -42,18 +42,28 @@ package org.deegree.rendering.r2d;
 
 import static java.awt.Color.RED;
 import static java.awt.image.BufferedImage.TYPE_4BYTE_ABGR;
+import static java.lang.Math.abs;
+import static java.lang.Math.sqrt;
+import static org.deegree.commons.utils.math.MathUtils.round;
 import static org.deegree.coverage.raster.geom.RasterGeoReference.OriginLocation.OUTER;
 import static org.deegree.coverage.raster.interpolation.InterpolationType.BILINEAR;
 import static org.deegree.coverage.raster.utils.RasterFactory.rasterDataFromImage;
 import static org.deegree.coverage.raster.utils.RasterFactory.rasterDataToImage;
+import static org.deegree.cs.coordinatesystems.GeographicCRS.WGS84;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
+
+import org.deegree.commons.utils.MapUtils;
 import org.deegree.commons.utils.math.MathUtils;
+import org.deegree.coverage.raster.AbstractRaster;
 import org.deegree.coverage.raster.RasterTransformer;
 import org.deegree.coverage.raster.SimpleRaster;
 import org.deegree.coverage.raster.data.RasterData;
@@ -63,6 +73,7 @@ import org.deegree.cs.exceptions.TransformationException;
 import org.deegree.cs.exceptions.UnknownCRSException;
 import org.deegree.geometry.Envelope;
 import org.deegree.geometry.GeometryTransformer;
+import org.deegree.rendering.r2d.context.MapOptions.Interpolation;
 import org.deegree.tile.Tile;
 import org.deegree.tile.TileIOException;
 import org.slf4j.Logger;
@@ -101,24 +112,9 @@ public class Java2DTileRenderer implements TileRenderer {
         this.width = width;
         this.height = height;
         this.envelope = envelope;
-        //
-        // try {
-        // ICRS targetCRS = CRSManager.lookup( "epsg:25833" );
-        // envelope = new GeometryTransformer( targetCRS ).transform( envelope );
-        // } catch ( IllegalArgumentException e ) {
-        // // TODO Auto-generated catch block
-        // e.printStackTrace();
-        // } catch ( TransformationException e ) {
-        // // TODO Auto-generated catch block
-        // e.printStackTrace();
-        // } catch ( UnknownCRSException e ) {
-        // // TODO Auto-generated catch block
-        // e.printStackTrace();
-        // }
-        //
         RenderHelper.getWorldToScreenTransform( worldToScreen, envelope, width, height );
     }
-
+    
     @Override
     public void render( Tile tile ) {
         if ( tile == null ) {
@@ -133,25 +129,33 @@ public class Java2DTileRenderer implements TileRenderer {
         if ( !requestedCrs.equals( env.getCoordinateSystem() ) ) {
             try {
 
-                int tileWidth = imageToDraw.getWidth();
-                int tileHeight = imageToDraw.getHeight();
-                if ( imageToDraw.getType() != TYPE_4BYTE_ABGR ) {
-                    BufferedImage img = new BufferedImage( tileWidth, tileHeight, TYPE_4BYTE_ABGR );
-                    Graphics2D g = img.createGraphics();
-                    g.drawImage( imageToDraw, 0, 0, null );
-                    g.dispose();
-                    imageToDraw = img;
-                }
+//                int tileWidth = imageToDraw.getWidth();
+//                int tileHeight = imageToDraw.getHeight();
+//
+//                if ( imageToDraw.getType() != TYPE_4BYTE_ABGR ) {
+//                    BufferedImage img = new BufferedImage( tileWidth, tileHeight, TYPE_4BYTE_ABGR );
+//                    Graphics2D g = img.createGraphics();
+//                    g.drawImage( imageToDraw, 0, 0, null );
+//                    g.dispose();
+//                    imageToDraw = img;
+//                }
 
                 Envelope targetEnv = new GeometryTransformer( requestedCrs ).transform( env );
 
-                RasterGeoReference rasterGeoReference = RasterGeoReference.create( OUTER, env, tileWidth, tileHeight );
-                RasterData data = rasterDataFromImage( imageToDraw );
-                SimpleRaster raster = new SimpleRaster( data, env, rasterGeoReference, null );
-
-                RasterTransformer rtrans = new RasterTransformer( requestedCrs );
-                SimpleRaster transformed = rtrans.transform( raster, targetEnv, tileWidth, tileHeight, BILINEAR ).getAsSimpleRaster();
-                imageToDraw = rasterDataToImage( transformed.getRasterData() );
+//                RasterGeoReference rasterGeoReference = RasterGeoReference.create( OUTER, env, tileWidth, tileHeight );
+//                RasterData data = rasterDataFromImage( imageToDraw );
+//                SimpleRaster raster = new SimpleRaster( data, env, rasterGeoReference, null );
+//
+//                RasterTransformer rtrans = new RasterTransformer( requestedCrs );
+////
+////                double ratio = calculateRatio( env, tileWidth, tileHeight, targetEnv );
+////
+////                int newTileWidth = abs( round( ratio * tileWidth ) );
+////                int newTileHeight = abs( round( ratio * tileHeight ) );
+//
+//                AbstractRaster transformedRaster = rtrans.transform( raster, targetEnv, tileWidth+10, tileHeight+10, BILINEAR );
+//                SimpleRaster transformed = transformedRaster.getAsSimpleRaster();
+//                imageToDraw = rasterDataToImage( transformed.getRasterData() );
 
                 env = targetEnv;
             } catch ( TransformationException e ) {
@@ -181,6 +185,50 @@ public class Java2DTileRenderer implements TileRenderer {
             LOG.debug( "Error retrieving tile image: " + e.getMessage() );
             graphics.setColor( RED );
             graphics.fillRect( minx, miny, maxx - minx, maxy - miny );
+        }
+    }
+
+    private double calculateRatio( Envelope env, int tileWidth, int tileHeight, Envelope targetEnv ) {
+        double scale = calculateScale( tileWidth, tileHeight, env );
+        double newScale = calculateScale( tileWidth, tileHeight, targetEnv );
+        return scale / newScale;
+    }
+
+    // TODO copy of org.deegree.rendering.r2d.RenderHelper.calcScaleWMS111(int, int, Envelope, ICRS)
+    private double calculateScale( int tileWidth, int tileHeight, Envelope bbox ) {
+        if ( tileWidth == 0 || tileHeight == 0 ) {
+            return 0;
+        }
+        ICRS crs = bbox.getCoordinateSystem();
+        if ( "m".equalsIgnoreCase( crs.getAxis()[0].getUnits().toString() ) ) {
+            /*
+             * this method to calculate a maps scale as defined in OGC WMS and SLD specification is not required for
+             * maps having a projected reference system. Direct calculation of scale avoids uncertainties
+             */
+            double dx = bbox.getSpan0() / tileWidth;
+            double dy = bbox.getSpan1() / tileHeight;
+            return sqrt( dx * dx + dy * dy );
+        } else {
+            if ( !crs.equals( WGS84 ) ) {
+                // transform the bounding box of the request to EPSG:4326
+                GeometryTransformer trans = new GeometryTransformer( WGS84 );
+                try {
+                    bbox = trans.transform( bbox, crs );
+                } catch ( IllegalArgumentException e ) {
+                    LOG.error( "Unknown error", e );
+                } catch ( TransformationException e ) {
+                    LOG.error( "Unknown error", e );
+                }
+            }
+            double dx = bbox.getSpan0() / tileWidth;
+            double dy = bbox.getSpan1() / tileHeight;
+            double minx = bbox.getMin().get0() + dx * ( tileWidth / 2d - 1 );
+            double miny = bbox.getMin().get1() + dy * ( tileHeight / 2d - 1 );
+            double maxx = bbox.getMin().get0() + dx * ( tileWidth / 2d );
+            double maxy = bbox.getMin().get1() + dy * ( tileHeight / 2d );
+
+            double distance = MapUtils.calcDistance( minx, miny, maxx, maxy );
+            return distance / MapUtils.SQRT2;
         }
     }
 }

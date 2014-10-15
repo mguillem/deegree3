@@ -40,12 +40,28 @@
  ----------------------------------------------------------------------------*/
 package org.deegree.layer.persistence.tile;
 
+import static org.deegree.coverage.raster.geom.RasterGeoReference.OriginLocation.OUTER;
+import static org.deegree.coverage.raster.utils.RasterFactory.rasterDataFromImage;
+
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.Iterator;
 
+import javax.imageio.ImageIO;
+
+import org.deegree.coverage.raster.SimpleRaster;
+import org.deegree.coverage.raster.data.RasterData;
+import org.deegree.coverage.raster.geom.RasterGeoReference;
 import org.deegree.feature.FeatureCollection;
+import org.deegree.geometry.Envelope;
 import org.deegree.layer.LayerData;
-import org.deegree.rendering.r2d.TileRenderer;
+import org.deegree.rendering.r2d.Java2DTileRenderer;
+import org.deegree.rendering.r2d.RasterRenderer;
 import org.deegree.rendering.r2d.context.RenderContext;
+import org.deegree.rendering.r2d.context.RenderingInfo;
+import org.deegree.style.utils.ImageUtils;
 import org.deegree.tile.Tile;
 
 /**
@@ -67,10 +83,39 @@ public class TileLayerData implements LayerData {
 
     @Override
     public void render( RenderContext context ) {
-        TileRenderer renderer = context.getTileRenderer();
+        RenderingInfo info = context.getInfo();
+        int width = info.getWidth();
+        int height = info.getHeight();
+        BufferedImage image = ImageUtils.prepareImage( info.getFormat(), width, height, info.getTransparent(),
+                                                       info.getBgColor() );
+        Graphics2D graphics = image.createGraphics();
+
+//        if ( image.getType() != BufferedImage.TYPE_4BYTE_ABGR ) {
+//            BufferedImage img = new BufferedImage( width, height, BufferedImage.TYPE_4BYTE_ABGR );
+//            Graphics2D g = img.createGraphics();
+//            g.drawImage( image, 0, 0, null );
+//            g.dispose();
+//            image = img;
+//        }
+
+        Envelope envelope = info.getEnvelope();
+        Java2DTileRenderer tileRenderer = new Java2DTileRenderer( graphics, width, height, envelope );
         while ( tiles.hasNext() ) {
-            renderer.render( tiles.next() );
+            tileRenderer.render( tiles.next() );
         }
+
+        try {
+            ImageIO.write( image, "png",File.createTempFile( "alles_", ".png" ) );
+        } catch ( IOException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+        RasterRenderer rasterRenderer = context.getRasterRenderer();
+        RasterGeoReference rasterGeoReference = RasterGeoReference.create( OUTER, envelope, width, height );
+        RasterData data = rasterDataFromImage( image );
+        SimpleRaster raster = new SimpleRaster( data, envelope, rasterGeoReference, null );
+        rasterRenderer.render( null, raster );
     }
 
     @Override

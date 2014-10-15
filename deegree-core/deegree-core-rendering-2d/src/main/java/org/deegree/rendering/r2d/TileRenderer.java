@@ -54,5 +54,5 @@ import org.deegree.tile.Tile;
 public interface TileRenderer {
 
     void render( Tile tile );
-
+    
 }
