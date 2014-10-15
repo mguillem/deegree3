@@ -131,6 +131,7 @@ public class Java2DTileRenderer implements TileRenderer {
         ICRS requestedCrs = envelope.getCoordinateSystem();
         if ( !requestedCrs.equals( env.getCoordinateSystem() ) ) {
             try {
+                Envelope targetEnv = new GeometryTransformer( requestedCrs ).transform( env );
                 int tileWidth = imageToDraw.getWidth();
                 int tileHeight = imageToDraw.getHeight();
 
@@ -139,10 +140,10 @@ public class Java2DTileRenderer implements TileRenderer {
                 SimpleRaster raster = new SimpleRaster( data, env, rasterGeoReference, null );
 
                 RasterTransformer rtrans = new RasterTransformer( requestedCrs );
-                SimpleRaster transformed = rtrans.transform( raster, envelope, tileWidth, tileHeight, BILINEAR ).getAsSimpleRaster();
+                SimpleRaster transformed = rtrans.transform( raster, targetEnv, tileWidth, tileHeight, BILINEAR ).getAsSimpleRaster();
                 imageToDraw = rasterDataToImage( transformed.getRasterData() );
 
-                env = new GeometryTransformer( requestedCrs ).transform( env );
+                env = targetEnv;
             } catch ( TransformationException e ) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
