@@ -102,7 +102,7 @@ public class DefaultRenderContext implements RenderContext {
         textRenderer = new Java2DTextRenderer( renderer );
         labelRenderer = new Java2DLabelRenderer( renderer, textRenderer );
         rasterRenderer = new Java2DRasterRenderer( graphics );
-        tileRenderer = new Java2DTileRenderer( graphics, info.getWidth(), info.getHeight(), info.getEnvelope() );
+        tileRenderer = new Java2DTileRenderer( graphics, info.getWidth(), info.getHeight(), info.getEnvelope(), info );
     }
 
     @Override

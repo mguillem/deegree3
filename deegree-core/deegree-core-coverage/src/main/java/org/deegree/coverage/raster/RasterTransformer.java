@@ -59,6 +59,8 @@ import org.deegree.geometry.GeometryTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.lang.Math.max;
+
 /**
  * This class transforms raster to a taget coordinate system .
  * 
@@ -158,10 +160,11 @@ public class RasterTransformer extends Transformer {
             // interpolation is needed.
             Interpolation interpolation = InterpolationFactory.getInterpolation( interpolationType, srcData );
 
-            RasterRect rr = new RasterRect( 0, 0, dstWidth, dstHeight );
-            RasterData dstData = srcData.createCompatibleWritableRasterData( rr, null );
             RasterGeoReference dstREnv = RasterGeoReference.create( sourceRaster.getRasterReference().getOriginLocation(),
                                                                     dstEnvelope, dstWidth, dstHeight );
+
+            RasterRect rr = dstREnv.convertEnvelopeToRasterCRS(dstEnvelope);
+            RasterData dstData = srcData.createCompatibleWritableRasterData( rr, null );
 
             // use warp to calculate the correct sample positions in the source raster.
             // the warp is a cubic polynomial function created of 100 points in the dstEnvelope. This function will map

@@ -44,6 +44,7 @@ import java.util.Iterator;
 
 import org.deegree.feature.FeatureCollection;
 import org.deegree.layer.LayerData;
+import org.deegree.rendering.r2d.Java2DTileRenderer;
 import org.deegree.rendering.r2d.TileRenderer;
 import org.deegree.rendering.r2d.context.RenderContext;
 import org.deegree.tile.Tile;
@@ -67,10 +68,11 @@ public class TileLayerData implements LayerData {
 
     @Override
     public void render( RenderContext context ) {
-        TileRenderer renderer = context.getTileRenderer();
-        while ( tiles.hasNext() ) {
-            renderer.render( tiles.next() );
-        }
+        Java2DTileRenderer renderer = (Java2DTileRenderer)context.getTileRenderer();
+//        while ( tiles.hasNext() ) {
+//            renderer.render( tiles.next() );
+//        }
+        renderer.render(tiles);
     }
 
     @Override

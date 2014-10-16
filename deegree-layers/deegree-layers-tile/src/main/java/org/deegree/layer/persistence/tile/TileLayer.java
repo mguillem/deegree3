@@ -50,10 +50,14 @@ import java.util.Map;
 
 import org.deegree.commons.ows.exception.OWSException;
 import org.deegree.cs.coordinatesystems.ICRS;
+import org.deegree.cs.exceptions.TransformationException;
+import org.deegree.cs.exceptions.UnknownCRSException;
 import org.deegree.geometry.Envelope;
+import org.deegree.geometry.GeometryTransformer;
 import org.deegree.layer.AbstractLayer;
 import org.deegree.layer.LayerData;
 import org.deegree.layer.LayerQuery;
+import org.deegree.layer.Utils;
 import org.deegree.layer.metadata.LayerMetadata;
 import org.deegree.style.StyleRef;
 import org.deegree.tile.Tile;
@@ -92,15 +96,32 @@ public class TileLayer extends AbstractLayer {
         ICRS crs = env.getCoordinateSystem();
 
         String tds = coordinateSystems.get( crs );
+        double resolution = query.getResolution();
         if ( tds == null ) {
             String msg = "Tile layer " + getMetadata().getName() + " does not offer the coordinate system "
-                                    + crs.getAlias();
+                         + crs.getAlias();
             LOG.debug( msg );
-            throw new OWSException( msg, OWSException.INVALID_CRS );
+
+            try {
+                ICRS targetCRS = (ICRS) coordinateSystems.keySet().toArray()[0];
+                env = new GeometryTransformer( targetCRS ).transform( env );
+                tds = coordinateSystems.get( targetCRS );
+                resolution = Utils.calcResolution( env, query.getWidth(), query.getHeight() );
+            } catch ( IllegalArgumentException e ) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch ( TransformationException e ) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch ( UnknownCRSException e ) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            // throw new OWSException( msg, OWSException.INVALID_CRS );
         }
         TileDataSet data = tileDataSets.get( tds );
 
-        Iterator<Tile> tiles = data.getTiles( env, query.getResolution() );
+        Iterator<Tile> tiles = data.getTiles( env, resolution );
         return new TileLayerData( tiles );
     }
 
