@@ -52,13 +52,26 @@ import org.deegree.geometry.Envelope;
 import org.deegree.geometry.GeometryTransformer;
 import org.deegree.tile.Tile;
 import org.deegree.tile.TileIOException;
+import org.geotools.coverage.CoverageFactoryFinder;
+import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.coverage.grid.GridCoverageFactory;
+import org.geotools.coverage.processing.Operations;
+import org.geotools.geometry.Envelope2D;
+import org.geotools.referencing.CRS;
+import org.opengis.coverage.Coverage;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 
 import javax.imageio.ImageIO;
+import javax.media.jai.Interpolation;
+import javax.media.jai.NullOpImage;
+import javax.media.jai.OpImage;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -229,43 +242,64 @@ public class Java2DTileRenderer implements TileRenderer {
             } catch ( UnknownCRSException e ) {
                 e.printStackTrace();
             }
-            int imageWidth = image.getWidth();
-            int imageHeight = image.getHeight();
-
-            double scale = RenderHelper.calcScaleWMS111( imageWidth, imageHeight, envelope, envelope.getCoordinateSystem() );
-            double newScale = RenderHelper.calcScaleWMS111( imageWidth, imageHeight, envOfImage, envOfImage.getCoordinateSystem() );
-            double ratio = newScale / scale;
-
-            int newWidth = abs( round( ratio * imageWidth ) );
-            int newHeight = abs( round( ratio * imageHeight ) );
-
-            // hack to ensure correct raster transformations. 4byte_abgr seems to be working best with current api
-            if ( image != null && image.getType() != TYPE_4BYTE_ABGR ) {
-                BufferedImage img = new BufferedImage( imageWidth, imageHeight, TYPE_4BYTE_ABGR );
-                Graphics2D g = img.createGraphics();
-                g.drawImage( image, 0, 0, null );
-                g.dispose();
-                image = img;
-            }
-
-            RasterData data = rasterDataFromImage( image );
-            RasterGeoReference geoReference = RasterGeoReference.create( RasterGeoReference.OriginLocation.OUTER,
-                                                                         envOfImage, imageWidth, imageHeight );
-            SimpleRaster raster = new SimpleRaster( data, envOfImage, geoReference, null );
+//            int imageWidth = image.getWidth();
+//            int imageHeight = image.getHeight();
+//
+//            double scale = RenderHelper.calcScaleWMS111( imageWidth, imageHeight, envelope, envelope.getCoordinateSystem() );
+//            double newScale = RenderHelper.calcScaleWMS111( imageWidth, imageHeight, envOfImage, envOfImage.getCoordinateSystem() );
+//            double ratio = newScale / scale;
+//
+//            int newWidth = abs( round( ratio * imageWidth ) );
+//            int newHeight = abs( round( ratio * imageHeight ) );
+//
+//            // hack to ensure correct raster transformations. 4byte_abgr seems to be working best with current api
+//            if ( image != null && image.getType() != TYPE_4BYTE_ABGR ) {
+//                BufferedImage img = new BufferedImage( imageWidth, imageHeight, TYPE_4BYTE_ABGR );
+//                Graphics2D g = img.createGraphics();
+//                g.drawImage( image, 0, 0, null );
+//                g.dispose();
+//                image = img;
+//            }
+//
+//            RasterData data = rasterDataFromImage( image );
+//            RasterGeoReference geoReference = RasterGeoReference.create( RasterGeoReference.OriginLocation.OUTER,
+//                                                                         envOfImage, imageWidth, imageHeight );
+//            SimpleRaster raster = new SimpleRaster( data, envOfImage, geoReference, null );
+//            try {
+//                ImageIO.write( rasterDataToImage( raster.getRasterData() ), "png", new File(
+//                                "/home/stenger/tiling-georef-raster.png" ) );
+//            } catch ( IOException e ) {
+//                e.printStackTrace();
+//            }
+//            RasterTransformer rtrans = new RasterTransformer( envelope.getCoordinateSystem() );
+//            SimpleRaster transformed = null;
+//            try {
+//                transformed = rtrans.transform( raster, envelope, width, height, InterpolationType.BILINEAR ).getAsSimpleRaster();
+//            } catch ( TransformationException e ) {
+//                e.printStackTrace();
+//            }
+//            image = rasterDataToImage( transformed.getRasterData() );
             try {
-                ImageIO.write( rasterDataToImage( raster.getRasterData() ), "png", new File(
-                                "/home/stenger/tiling-georef-raster.png" ) );
-            } catch ( IOException e ) {
+                CoordinateReferenceSystem sourceCrs = CRS.decode( "EPSG:25833" );
+                CoordinateReferenceSystem targetCrs = CRS.decode( envelope.getCoordinateSystem().getAlias() );
+                Envelope2D gtEnv = new Envelope2D( sourceCrs, envOfImage.getMin().get0(), envOfImage.getMin().get1(),
+                                envOfImage.getMax().get0() - envOfImage.getMin().get0(), envOfImage.getMax().get1()
+                                                                                         - envOfImage.getMin().get1() );
+                GridCoverageFactory fac = CoverageFactoryFinder.getGridCoverageFactory( null );
+                GridCoverage2D coverage = fac.create( "test", image, gtEnv );
+                // Coverage coverageTrans = Operations.DEFAULT.resample( coverage, targetCrs );
+                Envelope2D gtTargetEnv = new Envelope2D( targetCrs, envelope.getMin().get0(), envelope.getMin().get1(),
+                                envelope.getMax().get0() - envelope.getMin().get0(), envelope.getMax().get1()
+                                                                                     - envelope.getMin().get1() );
+                Coverage coverageTrans = Operations.DEFAULT.resample( coverage,
+                                                                      gtTargetEnv,
+                                                                      Interpolation.getInstance( Interpolation.INTERP_BICUBIC ) );
+                RenderedImage renderedImage = ( (GridCoverage2D) coverageTrans ).getRenderedImage();
+                NullOpImage opImage = new NullOpImage( renderedImage, null, OpImage.OP_IO_BOUND, null );
+                image = opImage.getAsBufferedImage();
+            } catch ( FactoryException e ) {
                 e.printStackTrace();
             }
-            RasterTransformer rtrans = new RasterTransformer( envelope.getCoordinateSystem() );
-            SimpleRaster transformed = null;
-            try {
-                transformed = rtrans.transform( raster, envelope, width, height, InterpolationType.BILINEAR ).getAsSimpleRaster();
-            } catch ( TransformationException e ) {
-                e.printStackTrace();
-            }
-            image = rasterDataToImage( transformed.getRasterData() );
 
             int minxa = Math.min( minx, maxx );
             int minya = Math.min( miny, maxy );
