@@ -109,7 +109,7 @@ public class Java2DTileRenderer implements TileRenderer {
     }
 
     public void render( Iterator<Tile> tiles ) {
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage image = new BufferedImage(width, height, TYPE_4BYTE_ABGR);
         Graphics g = image.getGraphics();
         while ( tiles.hasNext() ) {
             Tile tile = tiles.next();
@@ -211,14 +211,7 @@ public class Java2DTileRenderer implements TileRenderer {
 //            return;
 //        }
         int minx, miny, maxx, maxy;
-        Envelope env = null;
-        try {
-            env = new GeometryTransformer( CRSManager.lookup("EPSG:25833") ).transform( envelope );
-        } catch ( TransformationException e ) {
-            e.printStackTrace();
-        } catch ( UnknownCRSException e ) {
-            e.printStackTrace();
-        }
+
         Point2D.Double p = (Point2D.Double) worldToScreen.transform( new Point2D.Double( envelope.getMin().get0(),
                                                                                          envelope.getMin().get1() ), null );
         minx = round( p.x );
@@ -228,10 +221,27 @@ public class Java2DTileRenderer implements TileRenderer {
         maxx = round( p.x );
         maxy = round( p.y );
         try {
+            Envelope envOfImage = null;
+            try {
+                envOfImage = new GeometryTransformer( CRSManager.lookup("EPSG:25833") ).transform( envelope );
+            } catch ( TransformationException e ) {
+                e.printStackTrace();
+            } catch ( UnknownCRSException e ) {
+                e.printStackTrace();
+            }
+            int imageWidth = image.getWidth();
+            int imageHeight = image.getHeight();
+
+            double scale = RenderHelper.calcScaleWMS111( imageWidth, imageHeight, envelope, envelope.getCoordinateSystem() );
+            double newScale = RenderHelper.calcScaleWMS111( imageWidth, imageHeight, envOfImage, envOfImage.getCoordinateSystem() );
+            double ratio = newScale / scale;
+
+            int newWidth = abs( round( ratio * imageWidth ) );
+            int newHeight = abs( round( ratio * imageHeight ) );
 
             // hack to ensure correct raster transformations. 4byte_abgr seems to be working best with current api
             if ( image != null && image.getType() != TYPE_4BYTE_ABGR ) {
-                BufferedImage img = new BufferedImage( image.getWidth(), image.getHeight(), TYPE_4BYTE_ABGR );
+                BufferedImage img = new BufferedImage( imageWidth, imageHeight, TYPE_4BYTE_ABGR );
                 Graphics2D g = img.createGraphics();
                 g.drawImage( image, 0, 0, null );
                 g.dispose();
@@ -240,31 +250,27 @@ public class Java2DTileRenderer implements TileRenderer {
 
             RasterData data = rasterDataFromImage( image );
             RasterGeoReference geoReference = RasterGeoReference.create( RasterGeoReference.OriginLocation.OUTER,
-                                                                         env, image.getWidth(),
-                                                                         image.getHeight() );
-            SimpleRaster raster = new SimpleRaster( data, env, geoReference, null );
+                                                                         envOfImage, imageWidth, imageHeight );
+            SimpleRaster raster = new SimpleRaster( data, envOfImage, geoReference, null );
+            try {
+                ImageIO.write( rasterDataToImage( raster.getRasterData() ), "png", new File(
+                                "/home/stenger/tiling-georef-raster.png" ) );
+            } catch ( IOException e ) {
+                e.printStackTrace();
+            }
             RasterTransformer rtrans = new RasterTransformer( envelope.getCoordinateSystem() );
             SimpleRaster transformed = null;
             try {
-
-                double scale = RenderHelper.calcScaleWMS111( image.getWidth(), image.getHeight(), env, env.getCoordinateSystem() );
-                double newScale = RenderHelper.calcScaleWMS111( image.getWidth(), image.getHeight(), envelope, envelope.getCoordinateSystem() );
-                double ratio = newScale / scale;
-
-                int newWidth = abs( round( ratio * image.getWidth() ) );
-                int newHeight = abs( round( ratio * image.getHeight() ) );
-
-                transformed = rtrans.transform( raster, envelope, image.getWidth(), image.getHeight(),
-                                                InterpolationType.NEAREST_NEIGHBOR ).getAsSimpleRaster();
+                transformed = rtrans.transform( raster, envelope, width, height, InterpolationType.BILINEAR ).getAsSimpleRaster();
             } catch ( TransformationException e ) {
                 e.printStackTrace();
             }
             image = rasterDataToImage( transformed.getRasterData() );
 
-            int minxa = Math.min( minx,  maxx );
-            int minya = Math.min( miny,  maxy );
-            int maxxa = Math.max( minx,  maxx );
-            int maxya = Math.max( miny,  maxy );
+            int minxa = Math.min( minx, maxx );
+            int minya = Math.min( miny, maxy );
+            int maxxa = Math.max( minx, maxx );
+            int maxya = Math.max( miny, maxy );
 
             try {
                 ImageIO.write( image, "png", new File( "/home/stenger/tiling-transformed.png" ) );
