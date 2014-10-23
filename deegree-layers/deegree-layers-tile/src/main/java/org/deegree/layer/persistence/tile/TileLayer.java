@@ -46,6 +46,8 @@ import org.deegree.cs.exceptions.TransformationException;
 import org.deegree.cs.exceptions.UnknownCRSException;
 import org.deegree.geometry.Envelope;
 import org.deegree.geometry.GeometryTransformer;
+import org.deegree.geometry.standard.DefaultEnvelope;
+import org.deegree.geometry.standard.primitive.DefaultPoint;
 import org.deegree.layer.AbstractLayer;
 import org.deegree.layer.LayerData;
 import org.deegree.layer.LayerQuery;
@@ -129,7 +131,7 @@ public class TileLayer extends AbstractLayer {
         return tileDataSets.values();
     }
 
-    //@Override
+    // @Override
     public boolean isStyleApplicable( StyleRef style ) {
         return true;
     }
@@ -174,7 +176,8 @@ public class TileLayer extends AbstractLayer {
     private Envelope retrieveTransformedEnvelope( Envelope env, ICRS alternativeCrs )
                             throws OWSException {
         try {
-            return new GeometryTransformer( alternativeCrs ).transform( env );
+            Envelope invertedEnvelope = createInvertedEnvelope( env );
+            return new GeometryTransformer( alternativeCrs ).transform( invertedEnvelope );
         } catch ( TransformationException e ) {
             String msg = "Could not transform bounding box to new coordinate system: " + e.getMessage();
             LOG.warn( msg );
@@ -187,6 +190,17 @@ public class TileLayer extends AbstractLayer {
             e.printStackTrace();
             throw new OWSException( "Tiles cannot be retrieved: " + msg, NO_APPLICABLE_CODE );
         }
+    }
+
+    private Envelope createInvertedEnvelope( Envelope envelope ) {
+        ICRS crs = envelope.getCoordinateSystem();
+        double minx = envelope.getMin().get0();
+        double miny = envelope.getMin().get1();
+        double maxx = envelope.getMax().get0();
+        double maxy = envelope.getMax().get1();
+        DefaultPoint minPoint = new DefaultPoint( "minPoint", crs, null, new double[] { miny, minx } );
+        DefaultPoint maxPoint = new DefaultPoint( "maxPoint", crs, null, new double[] { maxy, maxx } );
+        return new DefaultEnvelope( "newEnvelope", crs, null, minPoint, maxPoint );
     }
 
     private Iterator<Tile> retrieveTiles( double resolution, Envelope env, String tds ) {

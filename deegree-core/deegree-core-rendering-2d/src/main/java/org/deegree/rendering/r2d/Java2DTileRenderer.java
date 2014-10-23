@@ -44,9 +44,10 @@ import org.deegree.commons.utils.math.MathUtils;
 import org.deegree.cs.coordinatesystems.ICRS;
 import org.deegree.cs.exceptions.TransformationException;
 import org.deegree.cs.exceptions.UnknownCRSException;
-import org.deegree.cs.persistence.CRSManager;
 import org.deegree.geometry.Envelope;
 import org.deegree.geometry.GeometryTransformer;
+import org.deegree.geometry.standard.DefaultEnvelope;
+import org.deegree.geometry.standard.primitive.DefaultPoint;
 import org.deegree.tile.Tile;
 import org.deegree.tile.TileIOException;
 import org.slf4j.Logger;
@@ -180,8 +181,8 @@ public class Java2DTileRenderer implements TileRenderer {
     private Envelope transformQueryEnvelope( ICRS targetCrs )
                             throws UnknownCRSException, TransformationException {
         try {
-            ICRS crs = CRSManager.lookup( targetCrs.getAlias() );
-            return new GeometryTransformer( crs ).transform( envelope );
+            Envelope invertedEnvelope = createInvertedEnvelope();
+            return new GeometryTransformer( targetCrs ).transform( invertedEnvelope );
         } catch ( TransformationException e ) {
             LOG.warn( "Could not transform envelope: " + e.getMessage() );
             e.printStackTrace();
@@ -191,6 +192,17 @@ public class Java2DTileRenderer implements TileRenderer {
             e.printStackTrace();
             throw e;
         }
+    }
+
+    private Envelope createInvertedEnvelope() {
+        ICRS crs = envelope.getCoordinateSystem();
+        double minx = envelope.getMin().get0();
+        double miny = envelope.getMin().get1();
+        double maxx = envelope.getMax().get0();
+        double maxy = envelope.getMax().get1();
+        DefaultPoint minPoint = new DefaultPoint( "minPoint", crs, null, new double[] { miny, minx } );
+        DefaultPoint maxPoint = new DefaultPoint( "maxPoint", crs, null, new double[] { maxy, maxx } );
+        return new DefaultEnvelope( "newEnvelope", crs, null, minPoint, maxPoint );
     }
 
     private void drawImage( BufferedImage image, Graphics g, AffineTransform worldToScreenTransform, Envelope env ) {
