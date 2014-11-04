@@ -45,6 +45,7 @@ import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
 import static org.deegree.cs.CRSUtils.EPSG_4326;
 import static org.deegree.cs.components.Axis.AO_EAST;
+import static org.deegree.cs.components.Unit.METRE;
 import static org.deegree.cs.coordinatesystems.GeographicCRS.WGS84;
 import static org.deegree.style.utils.ShapeHelper.getShapeFromMark;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -253,40 +254,44 @@ public class RenderHelper {
         return new Pair<Envelope, DoublePair>( bbox, new DoublePair( scalex, scaley ) );
     }
 
+    static double calculateResolution( final Envelope bbox, int width ) {
+        if ( isDegreeBasedCrs( bbox ) ) {
+            try {
+                return calculateResolutionForDegreeBasedCrs( bbox, width );
+            } catch ( ReferenceResolvingException e ) {
+                LOG.warn( "Could not determine CRS of bbox, assuming it's in meter..." );
+                LOG.debug( "Stack trace:", e );
+            } catch ( UnknownCRSException e ) {
+                LOG.warn( "Could not determine CRS of bbox, assuming it's in meter..." );
+                LOG.debug( "Stack trace:", e );
+            } catch ( Throwable e ) {
+                LOG.warn( "Could not transform bbox, assuming it's in meter..." );
+                LOG.debug( "Stack trace:", e );
+            }
+        }
+        return bbox.getSpan0() / width;
+    }
+
+    private static double calculateResolutionForDegreeBasedCrs( final Envelope bbox, int width )
+                            throws TransformationException, UnknownCRSException {
+        // heuristics more or less copied from d2, TODO is use the proper UTM conversion
+        Envelope box = new GeometryTransformer( EPSG_4326 ).transform( bbox );
+        double minx = box.getMin().get0(), miny = box.getMin().get1();
+        double maxx = minx + box.getSpan0();
+        double r = 6378.137;
+        double rad = PI / 180d;
+        double cose = sin( rad * minx ) * sin( rad * maxx ) + cos( rad * minx ) * cos( rad * maxx );
+        double dist = r * acos( cose ) * cos( rad * miny );
+        return abs( dist * 1000 / width );
+    }
+
     private static boolean isXyOrdered( final ICRS crs ) {
         return crs == null || crs.getAlias().equals( "CRS:1" ) || crs.getAxis()[0].getOrientation() == AO_EAST;
     }
 
-    static double calculateResolution( final Envelope bbox, int width ) {
-        double res;
-        try {
-            if ( isXyOrdered( bbox.getCoordinateSystem() ) ) {
-                res = bbox.getSpan0() / width; // use x for resolution
-            } else {
-                // heuristics more or less copied from d2, TODO is use the proper UTM conversion
-                Envelope box = new GeometryTransformer( EPSG_4326 ).transform( bbox );
-                double minx = box.getMin().get0(), miny = box.getMin().get1();
-                double maxx = minx + box.getSpan0();
-                double r = 6378.137;
-                double rad = PI / 180d;
-                double cose = sin( rad * minx ) * sin( rad * maxx ) + cos( rad * minx ) * cos( rad * maxx );
-                double dist = r * acos( cose ) * cos( rad * miny );
-                res = abs( dist * 1000 / width );
-            }
-        } catch ( ReferenceResolvingException e ) {
-            LOG.warn( "Could not determine CRS of bbox, assuming it's in meter..." );
-            LOG.debug( "Stack trace:", e );
-            res = bbox.getSpan0() / width; // use x for resolution
-        } catch ( UnknownCRSException e ) {
-            LOG.warn( "Could not determine CRS of bbox, assuming it's in meter..." );
-            LOG.debug( "Stack trace:", e );
-            res = bbox.getSpan0() / width; // use x for resolution
-        } catch ( Throwable e ) {
-            LOG.warn( "Could not transform bbox, assuming it's in meter..." );
-            LOG.debug( "Stack trace:", e );
-            res = bbox.getSpan0() / width; // use x for resolution
-        }
-        return res;
+    private static boolean isDegreeBasedCrs( final Envelope bbox ) {
+        return bbox.getCoordinateSystem() != null && !bbox.getCoordinateSystem().getAlias().equals( "CRS:1" )
+               && !bbox.getCoordinateSystem().getUnits()[0].equals( METRE );
     }
 
 }
