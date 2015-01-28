@@ -12,7 +12,6 @@
     <connection>scm:git:git@github.com:lat-lon/deegree3.git</connection>
     <developerConnection>scm:git:git@github.com:lat-lon/deegree3.git</developerConnection>
     <url>https://github.com/lat-lon/deegree3.git</url>
-    <tag>deegree-3.3-sla</tag>
   </scm>
 
   <repositories>
@@ -37,13 +36,6 @@
       <id>latlon-snapshots</id>
       <url>http://repo.lat-lon/content/repositories/snapshots/</url>
     </snapshotRepository>
-    <site>
-      <id>apidoc.deegree.org</id>
-<!--
-      <url>scp://apidoc.deegree.org/var/www/apidoc.deegree.org/${project.version}/</url>
--->
-      <url>file:///tmp/site/${project.version}/</url>
-    </site>
   </distributionManagement>
 
   <prerequisites>
