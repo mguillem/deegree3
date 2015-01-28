@@ -52,8 +52,8 @@
 
   <pluginRepositories>
     <pluginRepository>
-      <id>deegree-plugin-repo</id>
-      <url>http://repo.deegree.org/content/groups/public/</url>
+      <id>latlon-plugin-repo</id>
+      <url>http://repo.lat-lon/content/groups/public/</url>
       <releases>
         <enabled>true</enabled>
         <updatePolicy>never</updatePolicy>
