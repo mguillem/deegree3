@@ -58,6 +58,7 @@ import org.gdal.gdal.Band;
 import org.gdal.gdal.Dataset;
 import org.gdal.gdal.Driver;
 import org.gdal.gdal.gdal;
+import org.gdal.gdalconst.gdalconstConstants;
 import org.slf4j.Logger;
 
 /**
@@ -381,22 +382,43 @@ public class GdalDataset implements KeyedResource {
         }
     }
 
-    private BufferedImage toImage( byte[][] bands, int xSize, int ySize )
-                            throws IOException {
-        int numBytes = xSize * ySize * bands.length;
+    private BufferedImage toImage( byte[][] bands, int xSize, int ySize ) {
+        int numberOfBands = bands.length;
+        int numBytes = xSize * ySize * numberOfBands;
         DataBuffer imgBuffer = new DataBufferByte( bands, numBytes );
-        SampleModel sampleModel = new BandedSampleModel( TYPE_BYTE, xSize, ySize, bands.length );
+        SampleModel sampleModel = new BandedSampleModel( TYPE_BYTE, xSize, ySize, numberOfBands );
         WritableRaster raster = Raster.createWritableRaster( sampleModel, imgBuffer, null );
-        ColorSpace cs = ColorSpace.getInstance( CS_sRGB );
-        ColorModel cm;
-        if ( bands.length == 3 ) {
-            cm = new ComponentColorModel( cs, false, false, ColorModel.OPAQUE, TYPE_BYTE );
-        } else if ( bands.length == 4 ) {
-            cm = new ComponentColorModel( cs, true, false, ColorModel.TRANSLUCENT, TYPE_BYTE );
+
+        if ( numberOfBands > 2 ) {
+            ColorSpace cs = ColorSpace.getInstance( CS_sRGB );
+            ColorModel cm;
+            if ( numberOfBands == 3 ) {
+                cm = new ComponentColorModel( cs, false, false, ColorModel.OPAQUE, TYPE_BYTE );
+            } else if ( numberOfBands == 4 ) {
+                cm = new ComponentColorModel( cs, true, false, ColorModel.TRANSLUCENT, TYPE_BYTE );
+            } else {
+                throw new IllegalArgumentException( "Unsupported number of bands: " + numberOfBands );
+            }
+            return new BufferedImage( cm, raster, false, null );
         } else {
-            throw new IllegalArgumentException( "Unsupported number of bands: " + bands.length );
+            int dataType = detectDataTypeFromFirstBand();
+            BufferedImage img = new BufferedImage( xSize, ySize, dataType );
+            img.setData( raster );
+            return img;
         }
-        return new BufferedImage( cm, raster, false, null );
+    }
+
+    private int detectDataTypeFromFirstBand() {
+        Band band = dataset.GetRasterBand( 1 );
+        int bufType = band.getDataType();
+        if ( bufType == gdalconstConstants.GDT_Byte )
+            return ( band.GetRasterColorInterpretation() == gdalconstConstants.GCI_PaletteIndex ) ? BufferedImage.TYPE_BYTE_INDEXED
+                                                                                                 : BufferedImage.TYPE_BYTE_GRAY;
+        else if ( bufType == gdalconstConstants.GDT_Int16 )
+            return BufferedImage.TYPE_USHORT_GRAY;
+        else if ( bufType == gdalconstConstants.GDT_Int32 )
+            return BufferedImage.TYPE_CUSTOM;
+        return BufferedImage.TYPE_CUSTOM;
     }
 
     private DefaultEnvelope switchYValues( Envelope envelope ) {
