@@ -59,7 +59,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -228,7 +227,8 @@ public class WebFeatureService extends AbstractOWS {
 
     private OWSMetadataProvider mdProvider;
 
-    public WebFeatureService( URL configURL, @SuppressWarnings("rawtypes") ImplementationMetadata serviceInfo ) {
+    public WebFeatureService( URL configURL, @SuppressWarnings("rawtypes")
+    ImplementationMetadata serviceInfo ) {
         super( configURL, serviceInfo );
     }
 
@@ -836,39 +836,14 @@ public class WebFeatureService extends AbstractOWS {
         if ( sectionsUC != null && sectionsUC.size() == 0 ) {
             sectionsUC = null;
         }
-        final Collection<FeatureType> sortedFts = getFeatureTypesToExport();
+        final Collection<FeatureType> sortedFts = getAllFeatureTypes();
+
         XMLStreamWriter xmlWriter = getXMLResponseWriter( response, "text/xml", null );
         GetCapabilitiesHandler adapter = new GetCapabilitiesHandler( this, service, negotiatedVersion, xmlWriter,
                                                                      sortedFts, sectionsUC, enableTransactions,
                                                                      queryCRS, mdProvider );
         adapter.export();
         xmlWriter.flush();
-    }
-
-    private Collection<FeatureType> getFeatureTypesToExport() {
-        if ( mdProvider.getDatasetMetadata() != null && !mdProvider.getDatasetMetadata().isEmpty() ) {
-            LOG.debug ("Dataset metadata available. Only announcing feature types with metadata.");
-            return getFeatureTypesWithMetadata();
-        }
-        LOG.debug ("No dataset metadata available. Announcing feature types from all feature stores.");
-        return getAllFeatureTypes();
-    }
-
-    private Collection<FeatureType> getFeatureTypesWithMetadata() {
-        final Collection<FeatureType> sortedFts = new LinkedHashSet<FeatureType>();
-        for ( final DatasetMetadata datasetMetadata : mdProvider.getDatasetMetadata() ) {
-            final QName ftName = datasetMetadata.getQName();
-            final FeatureStore fs = service.getStore( ftName );
-            if ( fs != null ) {
-                if ( fs.isMapped( ftName ) ) {
-                    sortedFts.add( service.lookupFeatureType( ftName ) );
-                }
-            } else {
-                LOG.warn( "Found metadata for feature type '" + ftName
-                          + "', but feature type is not available from any store." );
-            }
-        }
-        return sortedFts;
     }
 
     private Collection<FeatureType> getAllFeatureTypes() {
