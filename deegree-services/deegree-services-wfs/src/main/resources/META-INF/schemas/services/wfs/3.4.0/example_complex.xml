@@ -14,6 +14,11 @@
   <EnableTransactions idGen="UseExisting">true</EnableTransactions>
   <EnableResponseBuffering>false</EnableResponseBuffering>
 
+  <Encodings>
+    <!-- Encodings are active by default! Example to disable a method: -->
+    <Encoding active="false" encoding="XML" requestName="GetCapabilities"/>
+  </Encodings>
+  
   <QueryCRS>urn:ogc:def:crs:EPSG::4258</QueryCRS>
   <QueryCRS>urn:ogc:def:crs:EPSG::4326</QueryCRS>
   <QueryMaxFeatures>-1</QueryMaxFeatures>
