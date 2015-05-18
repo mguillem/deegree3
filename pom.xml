@@ -32,11 +32,11 @@
   <distributionManagement>
     <repository>
       <id>deegree-releases</id>
-      <url>http://repo.lat-lon/content/repositories/lgb-releases/</url>
+      <url>http://repo.lat-lon/nexus/content/repositories/lgb-releases/</url>
     </repository>
     <snapshotRepository>
       <id>deegree-snapshots</id>
-      <url>http://repo.lat-lon/content/repositories/lgb-snapshots/</url>
+      <url>http://repo.lat-lon/nexus/content/repositories/lgb-snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
 
