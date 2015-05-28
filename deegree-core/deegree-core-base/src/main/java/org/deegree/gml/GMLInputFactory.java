@@ -104,7 +104,7 @@ public class GMLInputFactory {
     public static GMLStreamReader createGMLStreamReader( GMLVersion version, URL url )
                             throws XMLStreamException, FactoryConfigurationError, IOException {
 
-        URLConnection conn = ProxySettings.openURLConnection( url );
+        URLConnection conn = ProxySettings.openURLConnection( url, 10 );
         InputStream is = conn.getInputStream();
         XMLStreamReader xmlStream = XMLInputFactory.newInstance().createXMLStreamReader( is );
         // skip START_DOCUMENT event

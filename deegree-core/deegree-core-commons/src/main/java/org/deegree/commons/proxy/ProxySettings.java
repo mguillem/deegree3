@@ -291,6 +291,19 @@ public final class ProxySettings implements Initializable {
 
     /**
      * This method should be used everywhere instead of <code>URL.openConnection()</code>, as it copes with proxies that
+     * require user authentication. This method will retrieve the configured password and user name.
+     * 
+     * @param url
+     * @return connection
+     * @throws IOException
+     */
+    public static URLConnection openURLConnection( URL url, int connectionTimoutInMillis )
+                            throws IOException {
+        return openURLConnection( url, getProxyUser(), getProxyPassword(), connectionTimoutInMillis );
+    }
+
+    /**
+     * This method should be used everywhere instead of <code>URL.openConnection()</code>, as it copes with proxies that
      * require user authentication and http basic authentication.
      * 
      * @param url
@@ -335,7 +348,19 @@ public final class ProxySettings implements Initializable {
             conn.setRequestProperty( "Proxy-Authorization", "Basic " + userAndPass );
         }
         // TODO should this be a method parameter?
-        conn.setConnectTimeout( 5000 );
+        conn.setConnectTimeout( 10 );
+        return openURLConnection( url, user, pass, 5000 );
+    }
+
+    public static URLConnection openURLConnection( URL url, String user, String pass, int connectionTimeoutInMillis )
+                            throws IOException {
+        URLConnection conn = url.openConnection();
+        if ( user != null ) {
+            // TODO evaluate java.net.Authenticator
+            String userAndPass = Base64.encodeBase64String( ( user + ":" + pass ).getBytes() );
+            conn.setRequestProperty( "Proxy-Authorization", "Basic " + userAndPass );
+        }
+        conn.setConnectTimeout( connectionTimeoutInMillis );
         return conn;
     }
 
