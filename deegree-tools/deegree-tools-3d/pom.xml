@@ -24,7 +24,7 @@
   <repositories>
     <repository>
       <id>latlon-repo</id>
-      <url>http://repo.lat-lon/nexus/content/groups/public/</url>
+      <url>http://repo.deegree.org/content/groups/public/</url>
       <releases>
         <updatePolicy>never</updatePolicy>
       </releases>
