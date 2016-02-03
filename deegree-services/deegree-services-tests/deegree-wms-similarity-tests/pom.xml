@@ -7,11 +7,6 @@
   <name>deegree-wms-similarity-tests Webapp</name>
   <url>http://www.deegree.org</url>
   
-  <scm>
-    <developerConnection>scm:svn:http://svn.wald.intevation.org/svn/deegree/deegree3/trunk/deegree-test/deegree-wms-similarity-tests</developerConnection>
-    <url>http://svn.wald.intevation.org/svn/deegree/deegree3/trunk/deegree-test/deegree-wms-similarity-tests</url>
-  </scm>
-
   <parent>
     <groupId>org.deegree</groupId>
     <artifactId>deegree-stable-service-parent</artifactId>
@@ -20,7 +15,7 @@
 
   <repositories>
     <repository>
-      <id>latlon-repo</id>
+      <id>deegree-repo</id>
       <url>http://repo.deegree.org/content/groups/public/</url>
       <releases>
         <updatePolicy>never</updatePolicy>

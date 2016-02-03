@@ -6,11 +6,6 @@
   <version>3.1-pre11-rapideye</version>
   <name>deegree-processprovider-sextante</name>
   <url>http://www.deegree.org</url>
-  <scm>
-    <connection>scm:svn:svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-processproviders/deegree-processprovider-sextante</connection>
-    <developerConnection>scm:svn:svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-processproviders/deegree-processprovider-sextante</developerConnection>
-    <url>scm:svn:svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-processproviders/deegree-processprovider-sextante?root=deegree</url>
-  </scm>
   <parent>
     <groupId>org.deegree</groupId>
     <artifactId>deegree-parent</artifactId>
@@ -19,8 +14,8 @@
   
   <repositories>
     <repository>
-      <id>latlon-repo</id>
-      <url>http://repo.lat-lon/nexus/content/groups/public/</url>
+      <id>deegree-repo</id>
+      <url>http://repo.deegree.org/nexus/content/groups/public/</url>
       <releases>
         <updatePolicy>never</updatePolicy>
       </releases>
@@ -59,11 +54,6 @@
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>
       <version>2.5</version>
-    </dependency>
-    <dependency>
-      <groupId>es.unex.sextante</groupId>
-      <artifactId>sextante</artifactId>
-      <version>0.6</version>
     </dependency>
     <dependency>
       <groupId>es.unex.sextante</groupId>

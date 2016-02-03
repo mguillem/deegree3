@@ -11,11 +11,12 @@
     <groupId>org.deegree</groupId>
     <artifactId>deegree-workspace-parent</artifactId>
     <version>3.1-pre11-rapideye</version>
+    <relativePath>../deegree-workspace-parent</relativePath>
   </parent>
 
   <repositories>
     <repository>
-      <id>latlon-repo</id>
+      <id>deegree-repo</id>
       <url>http://repo.deegree.org/content/groups/public/</url>
       <releases>
         <updatePolicy>never</updatePolicy>

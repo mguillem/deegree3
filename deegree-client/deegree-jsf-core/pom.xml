@@ -1,27 +1,20 @@
 <?xml version="1.0"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.deegree</groupId>
   <artifactId>deegree-jsf-core</artifactId>
-  <packaging>jar</packaging>
-  <version>3.1-pre11-rapideye</version>
   <name>deegree-jsf-core</name>
-  <url>http://www.deegree.org</url>
-  <scm>
-    <developerConnection>scm:svn:svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-client/deegree-jsf-core</developerConnection>
-    <url>svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-client/deegree-jsf-core</url>
-  </scm>
 
   <parent>
     <groupId>org.deegree</groupId>
     <artifactId>deegree-parent</artifactId>
     <version>3.1-pre11-rapideye</version>
+    <relativePath/>
   </parent>
 
   <repositories>
     <repository>
-      <id>latlon-repo</id>
-      <url>http://repo.lat-lon/nexus/content/groups/public/</url>
+      <id>deegree-repo</id>
+      <url>http://repo.deegree.org/nexus/content/groups/public/</url>
       <releases>
         <updatePolicy>never</updatePolicy>
       </releases>
@@ -119,12 +112,6 @@
     <dependency>
       <groupId>org.apache.tomcat</groupId>
       <artifactId>el-api</artifactId>
-      <version>6.0.26</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>jsp-api</artifactId>
       <version>6.0.26</version>
       <scope>provided</scope>
     </dependency>

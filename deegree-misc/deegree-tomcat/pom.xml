@@ -5,10 +5,6 @@
   <version>3.1-pre11-rapideye</version>
   <name>deegree Tomcat</name>
   <url>http://maven.apache.org</url>
-  <scm>
-    <developerConnection>scm:svn:svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-misc/deegree-tomcat</developerConnection>
-    <url>svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-misc/deegree-tomcat</url>
-  </scm>
 
   <parent>
     <groupId>org.deegree</groupId>
@@ -18,7 +14,7 @@
 
   <repositories>
     <repository>
-      <id>latlon-repo</id>
+      <id>deegree-repo</id>
       <url>http://repo.deegree.org/content/groups/public/</url>
       <releases>
         <updatePolicy>never</updatePolicy>
@@ -42,7 +38,7 @@
     <plugins>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.2-beta-5</version>
+        <version>2.2</version>
         <configuration>
           <descriptors>
             <descriptor>assembly.xml</descriptor>
@@ -64,6 +60,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.8</version>
         <executions>
           <execution>
             <id>copy</id>

@@ -2,28 +2,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.deegree</groupId>
     <artifactId>deegree-mdeditor</artifactId>
     <packaging>war</packaging>
-    <version>3.1-SNAPSHOT</version>
     <name>deegree-mdeditor</name>
-    <url>http://www.deegree.org</url>
-    
-  <scm>
-    <developerConnection>scm:svn:http://svn.wald.intevation.org/svn/deegree/deegree3/trunk/deegree-client/deegree-mdeditor</developerConnection>
-    <url>http://svn.wald.intevation.org/svn/deegree/deegree3/trunk/deegree-client/deegree-mdeditor</url>
-  </scm>
 
     <parent>
         <groupId>org.deegree</groupId>
         <artifactId>deegree-parent</artifactId>
-        <version>3.1-SNAPSHOT</version>
+        <version>3.1-pre11-rapideye</version>
     </parent>
 
     <repositories>
         <repository>
-            <id>latlon-repo</id>
-            <url>http://repo.lat-lon/nexus/content/groups/public/</url>
+            <id>deegree-repo</id>
+            <url>http://repo.deegree.org/nexus/content/groups/public/</url>
             <releases>
                 <updatePolicy>never</updatePolicy>
             </releases>
@@ -36,12 +28,12 @@
         <dependency>
             <groupId>org.deegree</groupId>
             <artifactId>deegree-core-base</artifactId>
-            <version>3.1-SNAPSHOT</version>
+            <version>3.1-pre11-rapideye</version>
         </dependency>
         <dependency>
             <groupId>org.deegree</groupId>
             <artifactId>deegree-core-commons</artifactId>
-            <version>3.1-SNAPSHOT</version>
+            <version>3.1-pre11-rapideye</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

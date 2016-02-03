@@ -7,21 +7,15 @@
   <name>deegree-maven-plugin</name>
   <url>http://www.deegree.org</url>
 
-  <scm>
-    <developerConnection>scm:svn:svn+ssh://svn.wald.intevation.org/deegree/deegree3/trunk/deegree-misc/deegree-maven-plugin</developerConnection>
-    <url>svn+ssh://svn.wald.intevation.org/deegree/deegree3/trunk/deegree-misc/deegree-maven-plugin</url>
-  </scm>
-
   <parent>
     <groupId>org.deegree</groupId>
     <artifactId>deegree-parent</artifactId>
     <version>3.1-pre8</version>
-    <relativePath />
   </parent>
 
   <repositories>
     <repository>
-      <id>latlon-repo</id>
+      <id>deegree-repo</id>
       <url>http://repo.deegree.org/content/groups/public/</url>
       <releases>
         <updatePolicy>never</updatePolicy>
@@ -37,7 +31,7 @@
      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>2.1</version>
+        <version>2.5.3</version>
         <configuration>
            <preparationGoals>clean install</preparationGoals>
            <tagBase>svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags</tagBase>

@@ -5,26 +5,21 @@
   <groupId>org.deegree</groupId>
   <artifactId>deegree-wps-webclient</artifactId>
   <packaging>war</packaging>
-  <version>3.1-SNAPSHOT</version>
+  <version>3.1-pre11-rapideye</version>
   <name>deegree-wps-webclient</name>
   <url>http://www.deegree.org</url>
-
-  <scm>
-    <developerConnection>scm:svn:http://svn.wald.intevation.org/svn/deegree/deegree3/trunk/deegree-client/deegree-wps-webclient</developerConnection>
-    <url>http://svn.wald.intevation.org/svn/deegree/deegree3/trunk/deegree-client/deegree-wps-webclient</url>
-  </scm>
 
   <parent>
     <groupId>org.deegree</groupId>
     <artifactId>deegree-parent</artifactId>
-    <version>3.1-SNAPSHOT</version>
+    <version>3.1-pre11-rapideye</version>
     <relativePath />
   </parent>
 
   <repositories>
     <repository>
-      <id>latlon-repo</id>
-      <url>http://repo.lat-lon/nexus/content/groups/public/</url>
+      <id>deegree-repo</id>
+      <url>http://repo.deegree.org/nexus/content/groups/public/</url>
       <releases>
         <updatePolicy>never</updatePolicy>
       </releases>
@@ -50,12 +45,12 @@
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-core-base</artifactId>
-      <version>3.1-pre4-SNAPSHOT</version>
+      <version>3.1-pre11-rapideye</version>
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-jsf-core</artifactId>
-      <version>3.1-pre4-SNAPSHOT</version>
+      <version>3.1-pre11-rapideye</version>
     </dependency>
     <dependency>
       <groupId>org.apache.tomcat</groupId>

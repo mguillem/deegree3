@@ -1,16 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.deegree</groupId>
   <artifactId>deegree-jsf-console</artifactId>
-  <packaging>jar</packaging>
-  <version>3.1-pre11-rapideye</version>
   <name>deegree 3 JSF console</name>
-  <url>http://maven.apache.org</url>
-
-  <scm>
-    <developerConnection>scm:svn:svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-client/deegree-jsf-console</developerConnection>
-    <url>svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-client/deegree-jsf-console</url>
-  </scm>
 
   <parent>
     <groupId>org.deegree</groupId>
@@ -21,8 +12,8 @@
 
   <repositories>
     <repository>
-      <id>latlon-repo</id>
-      <url>http://repo.lat-lon/nexus/content/groups/public/</url>
+      <id>deegree-repo</id>
+      <url>http://repo.deegree.org/nexus/content/groups/public/</url>
       <releases>
         <updatePolicy>never</updatePolicy>
       </releases>
@@ -36,7 +27,7 @@
     <plugins>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.2-beta-5</version>
+        <version>2.2</version>
         <configuration>
           <descriptors>
             <descriptor>webapp-template.xml</descriptor>

@@ -8,22 +8,17 @@
   <name>deegree-wps</name>
   <url>http://www.deegree.org</url>
 
-  <scm>
-    <developerConnection>scm:svn:svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-processproviders</developerConnection>
-    <url>svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-processproviders</url>
-  </scm>
-
   <parent>
     <groupId>org.deegree</groupId>
     <artifactId>deegree-parent</artifactId>
     <version>3.1-pre11-rapideye</version>
-    <relativePath />
+    <relativePath/>
   </parent>
 
   <repositories>
     <repository>
-      <id>latlon-repo</id>
-      <url>http://repo.lat-lon/nexus/content/groups/public/</url>
+      <id>deegree-repo</id>
+      <url>http://repo.deegree.org/nexus/content/groups/public/</url>
       <releases>
         <updatePolicy>never</updatePolicy>
       </releases>

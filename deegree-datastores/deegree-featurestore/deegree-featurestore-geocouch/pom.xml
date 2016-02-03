@@ -7,10 +7,6 @@
   <version>3.1-pre11-rapideye</version>
   <name>deegree-featurestore-geocouch</name>
   <url>http://www.deegree.org</url>
-  <scm>
-    <developerConnection>scm:svn:svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-datastores/deegree-featurestore/deegree-featurestore-geocouch</developerConnection>
-    <url>svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/deegree-datastores/deegree-featurestore/deegree-featurestore-geocouch</url>
-  </scm>
 
   <parent>
     <groupId>org.deegree</groupId>
@@ -42,7 +38,7 @@
 
   <repositories>
     <repository>
-      <id>latlon-repo</id>
+      <id>deegree-repo</id>
       <url>http://repo.deegree.org/content/groups/public/</url>
       <releases>
         <updatePolicy>never</updatePolicy>

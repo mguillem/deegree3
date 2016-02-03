@@ -8,16 +8,17 @@
   <name>deegree</name>
   <url>http://www.deegree.org</url>
 
-<scm>
+  <scm>
     <connection>scm:git:git@github.com:lat-lon/deegree3.git</connection>
     <developerConnection>scm:git:git@github.com:lat-lon/deegree3.git</developerConnection>
     <url>https://github.com/lat-lon/deegree3.git</url>
+    <tag>HEAD</tag>
   </scm>
 
   <repositories>
     <repository>
-      <id>latlon-repo</id>
-      <url>http://repo.lat-lon/nexus/content/groups/public/</url>
+      <id>deegree-repo</id>
+      <url>http://repo.deegree.org/nexus/content/groups/public/</url>
     </repository>
   </repositories>
 
@@ -34,19 +35,34 @@
 
   <pluginRepositories>
     <pluginRepository>
-      <id>latlon-repo</id>
-      <url>http://repo.lat-lon/nexus/content/groups/public/</url>
+      <id>deegree-repo</id>
+      <url>http://repo.deegree.org/nexus/content/groups/public/</url>
     </pluginRepository>
   </pluginRepositories>
+
+  <prerequisites>
+    <maven>3.0.3</maven>
+  </prerequisites>
   
   <build>
     <plugins>
      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>2.1</version>
+        <version>2.5.3</version>
         <configuration>
            <preparationGoals>clean install</preparationGoals>
+          <tagBase>https://github.com/lat-lon/deegree3</tagBase>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-scm-plugin</artifactId>
+        <version>1.8.1</version>
+        <configuration>
+          <connectionType>developerConnection</connectionType>
+          <scmVersion>3.1-pre11-rapideye</scmVersion>
+          <scmVersionType>branch</scmVersionType>
         </configuration>
       </plugin>
     </plugins>
@@ -54,15 +70,15 @@
 
   <modules>
     <module>deegree-misc/deegree-parent</module>
+    <module>deegree-misc</module>
     <module>deegree-services/deegree-services-parent</module>
     <module>deegree-services/deegree-stable-service-parent</module>
-    <module>deegree-services/deegree-tomcat-parent</module>
     <module>deegree-tools/deegree-tools-parent</module>
-    <module>deegree-client</module>
+    <module>deegree-services/deegree-tomcat-parent</module>
     <module>deegree-core</module>
+    <module>deegree-client</module>
     <module>deegree-layers</module>
     <module>deegree-datastores</module>
-    <module>deegree-misc</module>
     <module>deegree-processproviders</module>
     <module>deegree-services</module>
     <module>deegree-tools</module>

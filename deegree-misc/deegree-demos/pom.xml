@@ -8,10 +8,6 @@
   <version>3.1-pre11-rapideye</version>
   <name>deegree-demos</name>
   <url>http://www.deegree.org</url>
-  <scm>
-    <developerConnection>scm:svn:http://svn.wald.intevation.org/svn/deegree/deegree3/trunk/deegree-misc/deegree-demos</developerConnection>
-    <url>http://svn.wald.intevation.org/svn/deegree/deegree3/trunk/deegree-misc/deegree-demos</url>
-  </scm>
 
   <parent>
     <groupId>org.deegree</groupId>
@@ -21,7 +17,7 @@
 
   <repositories>
     <repository>
-      <id>latlon-repo</id>
+      <id>deegree-repo</id>
       <url>http://repo.deegree.org/content/groups/public/</url>
       <releases>
         <updatePolicy>never</updatePolicy>
@@ -33,12 +29,7 @@
   </repositories>
 
   <modules>
-    <!--module>deegree-wcts</module-->
-    <!--module>deegree-geosciml-demo</module-->
-    <!-- <module>deegree-utah-demo</module> -->
-    <!-- <module>deegree-wps-demo</module> -->
     <module>deegree-csw-demo</module>
-    <!--module>deegree-sos-demo</module-->
   </modules>
 
 </project>

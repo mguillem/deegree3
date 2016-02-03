@@ -7,10 +7,6 @@
   <version>3.1-pre11-rapideye</version>
   <name>deegree-tools-3d</name>
   <url>http://www.deegree.org</url>
-  <scm>
-    <developerConnection>scm:svn:svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/trunk/deegree-3d-tools</developerConnection>
-    <url>svn+ssh://svn.wald.intevation.org/deegree/deegree3/tags/3.1-pre11-rapideye/trunk/deegree-3d-tools</url>
-  </scm>
 
   <parent>
     <groupId>org.deegree</groupId>
@@ -23,7 +19,7 @@
 
   <repositories>
     <repository>
-      <id>latlon-repo</id>
+      <id>deegree-repo</id>
       <url>http://repo.deegree.org/content/groups/public/</url>
       <releases>
         <updatePolicy>never</updatePolicy>
