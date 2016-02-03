@@ -24,11 +24,11 @@
   <distributionManagement>
     <repository>
       <id>latlon-releases</id>
-      <url>http://repo.lat-lon/nexus/content/repositories/releases/</url>
+      <url>TODO</url>
     </repository>
     <snapshotRepository>
       <id>latlon-snapshots</id>
-      <url>http://repo.lat-lon/nexus/content/repositories/snapshots/</url>
+      <url>TODO</url>
     </snapshotRepository>
   </distributionManagement>
 
