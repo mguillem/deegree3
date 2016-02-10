@@ -18,7 +18,7 @@
   <repositories>
     <repository>
       <id>deegree-repo</id>
-      <url>http://repo.deegree.org/nexus/content/groups/public/</url>
+      <url>http://repo.deegree.org/content/groups/public/</url>
     </repository>
   </repositories>
 
@@ -36,7 +36,7 @@
   <pluginRepositories>
     <pluginRepository>
       <id>deegree-repo</id>
-      <url>http://repo.deegree.org/nexus/content/groups/public/</url>
+      <url>http://repo.deegree.org/content/groups/public/</url>
     </pluginRepository>
   </pluginRepositories>
 

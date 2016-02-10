@@ -18,20 +18,9 @@
   <repositories>
     <repository>
       <id>deegree-repo</id>
-      <url>http://repo.deegree.org/nexus/content/groups/public/</url>
+      <url>http://repo.deegree.org/content/groups/public/</url>
     </repository>
   </repositories>
-
-  <distributionManagement>
-    <repository>
-      <id>latlon-releases</id>
-      <url>http://repo.deegree.org/nexus/content/repositories/releases/</url>
-    </repository>
-    <snapshotRepository>
-      <id>latlon-snapshots</id>
-      <url>http://repo.deegree.org/nexus/content/repositories/snapshots/</url>
-    </snapshotRepository>
-  </distributionManagement>
 
   <build>
     <plugins>
