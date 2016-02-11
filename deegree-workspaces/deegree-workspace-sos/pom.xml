@@ -90,7 +90,7 @@
         <executions>
           <execution>
             <id>insertwebclientinfo</id>
-            <phase>compile</phase>
+            <phase>prepare-package</phase>
             <goals>
               <goal>java</goal>
             </goals>
@@ -100,7 +100,7 @@
           </execution>
           <execution>
             <id>replaceclientlink</id>
-            <phase>compile</phase>
+            <phase>prepare-package</phase>
             <goals>
               <goal>java</goal>
             </goals>
@@ -111,11 +111,12 @@
         </executions>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
         <version>1.5</version>
         <executions>
           <execution>
-            <phase>compile</phase>
+            <phase>prepare-package</phase>
             <configuration>
               <target>
                 <copy file="src/main/webapp/WEB-INF/newweb.xml" tofile="src/main/webapp/WEB-INF/web.xml" />
