@@ -34,5 +34,11 @@
       <artifactId>deegree-core-metadata</artifactId>
       <version>3.1-pre11-rapideye</version>
     </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.8.1</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

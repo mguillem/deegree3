@@ -72,6 +72,12 @@
       <groupId>org.deegree</groupId>
       <version>3.1-pre11-rapideye</version>
     </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.8.1</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <profiles>
@@ -82,7 +88,7 @@
           <artifactId>latlon-sqldialect-mssql</artifactId>
           <groupId>de.latlon</groupId>
           <version>3.1-pre11-rapideye</version>
-          <scope>test</scope>
+          <optional>true</optional>
         </dependency>
       </dependencies>
     </profile>
@@ -93,7 +99,7 @@
           <artifactId>deegree-sqldialect-oracle</artifactId>
           <groupId>org.deegree</groupId>
           <version>3.1-pre11-rapideye</version>
-          <scope>test</scope>
+          <optional>true</optional>
         </dependency>
       </dependencies>
     </profile>
