@@ -47,6 +47,7 @@ import static org.deegree.commons.xml.CommonNamespaces.OGCNS;
 import static org.deegree.commons.xml.CommonNamespaces.XLNNS;
 import static org.deegree.commons.xml.XMLAdapter.writeElement;
 import static org.deegree.commons.xml.stax.XMLStreamUtils.skipElement;
+import static org.deegree.feature.Features.findFeaturesAndGeometries;
 import static org.deegree.gml.GMLInputFactory.createGMLStreamReader;
 import static org.deegree.gml.GMLVersion.GML_32;
 import static org.deegree.protocol.wfs.WFSConstants.VERSION_100;
@@ -65,9 +66,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
@@ -110,6 +113,7 @@ import org.deegree.filter.OperatorFilter;
 import org.deegree.filter.version.DefaultResourceIdConverter;
 import org.deegree.filter.version.FeatureMetadata;
 import org.deegree.filter.version.ResourceIdConverter;
+import org.deegree.geometry.Geometry;
 import org.deegree.geometry.GeometryFactory;
 import org.deegree.geometry.validation.CoordinateValidityInspector;
 import org.deegree.gml.GMLInputFactory;
@@ -198,12 +202,14 @@ class TransactionHandler {
      * 
      * @param response
      *            response that is used to write the result
+     * @param queryCRS
+     *            list of all supported CRS
      * @throws OWSException
      *             if a WFS specific exception occurs, e.g. a feature type is not served
      * @throws IOException
      * @throws XMLStreamException
      */
-    void doTransaction( HttpResponseBuffer response )
+    void doTransaction( HttpResponseBuffer response, List<ICRS> queryCRS )
                             throws OWSException, XMLStreamException, IOException {
 
         LOG.debug( "doTransaction: " + request );
@@ -230,7 +236,7 @@ class TransactionHandler {
                     break;
                 }
                 case INSERT: {
-                    doInsert( (Insert) operation );
+                    doInsert( (Insert) operation, queryCRS );
                     break;
                 }
                 case NATIVE: {
@@ -362,7 +368,7 @@ class TransactionHandler {
         }
     }
 
-    private void doInsert( Insert insert )
+    private void doInsert( Insert insert, List<ICRS> queryCRS )
                             throws OWSException {
 
         LOG.debug( "doInsert: " + insert );
@@ -379,17 +385,7 @@ class TransactionHandler {
             throw new OWSException( msg, NO_APPLICABLE_CODE );
         }
 
-        ICRS defaultCRS = null;
-        if ( insert.getSrsName() != null ) {
-            try {
-                defaultCRS = CRSManager.lookup( insert.getSrsName() );
-            } catch ( UnknownCRSException e ) {
-                String msg = "Cannot perform insert. Specified srsName '" + insert.getSrsName()
-                             + "' is not supported by this WFS.";
-                throw new OWSException( msg, INVALID_PARAMETER_VALUE, "srsName" );
-            }
-        }
-
+        ICRS defaultCRS = determineDefaultCrs( insert, queryCRS );
         GMLVersion inputFormat = determineFormat( request.getVersion(), insert.getInputFormat() );
 
         // TODO streaming
@@ -397,6 +393,7 @@ class TransactionHandler {
         try {
             XMLStreamReader xmlStream = insert.getFeatures();
             FeatureCollection fc = parseFeaturesOrCollection( xmlStream, inputFormat, defaultCRS );
+            evaluateSrsNameForFeatureCollection( fc, queryCRS, insert.getHandle() );
             FeatureStore fs = service.getStores()[0];
             ta = acquireTransaction( fs );
             IDGenMode mode = insert.getIdGen();
@@ -411,6 +408,8 @@ class TransactionHandler {
             for ( FeatureMetadata newFeatureMetadata : newFeatureMetadatas ) {
                 inserted.add( newFeatureMetadata, insert.getHandle() );
             }
+        } catch ( OWSException e ) {
+            throw e;
         } catch ( XMLParsingException e ) {
             String exceptionCode = INVALID_PARAMETER_VALUE;
             if ( VERSION_200.equals( request.getVersion() ) ) {
@@ -910,4 +909,60 @@ class TransactionHandler {
     private String createdRid( FeatureMetadata featureMetadata ) {
         return resourceIdConverter.generateResourceId( featureMetadata );
     }
+
+    private ICRS determineDefaultCrs( Insert insert, List<ICRS> queryCRS )
+                            throws OWSException {
+        String srsName = insert.getSrsName();
+        if ( srsName != null ) {
+            try {
+                ICRS defaultCrs = CRSManager.lookup( insert.getSrsName() );
+                if ( !isCrsSupported( defaultCrs, queryCRS ) ) {
+                    String msg = "The value of the srsName parameter is not one of the SRS values the server claims to support in its capabilities document.";
+                    throw new OWSException( msg, INVALID_PARAMETER_VALUE, "srsName" );
+                }
+                return defaultCrs;
+            } catch ( UnknownCRSException e ) {
+                String msg = "Cannot perform insert. Specified srsName '" + srsName + "' is not supported by this WFS.";
+                throw new OWSException( msg, INVALID_PARAMETER_VALUE, "srsName" );
+            }
+        }
+        return null;
+    }
+
+    private void evaluateSrsNameForFeatureCollection( FeatureCollection fc, List<ICRS> queryCRS, String handle )
+                            throws OWSException {
+        for ( Feature feature : fc )
+            evaluateSrsNameForFeature( feature, queryCRS, handle );
+    }
+
+    private void evaluateSrsNameForFeature( Feature feature, List<ICRS> queryCRS, String handle )
+                            throws OWSException {
+        Set<Geometry> geometries = new LinkedHashSet<Geometry>();
+        findFeaturesAndGeometries( feature, geometries, new LinkedHashSet<Feature>(), new LinkedHashSet<String>(),
+                                   new LinkedHashSet<String>() );
+        for ( Geometry geometry : geometries ) {
+            ICRS crs = geometry.getCoordinateSystem();
+            evaluateSrsName( crs, queryCRS, handle );
+        }
+    }
+
+    private void evaluateSrsName( ICRS crs, List<ICRS> supportedCrs, String handle )
+                            throws OWSException {
+        if ( !isCrsSupported( crs, supportedCrs ) ) {
+            String message = "The value of the at least one geometrie srs is not one of the SRS values "
+                             + "the server claims to support in its capabilities document.";
+            if ( handle == null || "".equals( handle ) )
+                handle = "Transaction";
+            throw new OWSException( message, OWSException.OPERATION_PROCESSING_FAILED, handle );
+        }
+    }
+
+    private boolean isCrsSupported( ICRS crs, List<ICRS> supportedCrs )
+                            throws OWSException {
+        if ( crs != null && supportedCrs != null )
+            if ( !supportedCrs.contains( crs ) )
+                return false;
+        return true;
+    }
+
 }
