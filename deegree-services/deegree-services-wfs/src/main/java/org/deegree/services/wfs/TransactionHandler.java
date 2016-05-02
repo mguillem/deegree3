@@ -113,8 +113,10 @@ import org.deegree.filter.OperatorFilter;
 import org.deegree.filter.version.DefaultResourceIdConverter;
 import org.deegree.filter.version.FeatureMetadata;
 import org.deegree.filter.version.ResourceIdConverter;
+import org.deegree.geometry.Envelope;
 import org.deegree.geometry.Geometry;
 import org.deegree.geometry.GeometryFactory;
+import org.deegree.geometry.SimpleGeometryFactory;
 import org.deegree.geometry.validation.CoordinateValidityInspector;
 import org.deegree.gml.GMLInputFactory;
 import org.deegree.gml.GMLStreamReader;
@@ -156,6 +158,8 @@ import org.slf4j.LoggerFactory;
 class TransactionHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger( TransactionHandler.class );
+
+    private static final SimpleGeometryFactory GEOM_FACTORY = new SimpleGeometryFactory();
 
     private final WebFeatureService master;
 
@@ -943,6 +947,7 @@ class TransactionHandler {
         for ( Geometry geometry : geometries ) {
             ICRS crs = geometry.getCoordinateSystem();
             evaluateSrsName( crs, queryCRS, handle );
+            evaluateValidDomain( crs, geometry, handle );
         }
     }
 
@@ -951,6 +956,24 @@ class TransactionHandler {
         if ( !isCrsSupported( crs, supportedCrs ) ) {
             String message = "The value of the at least one geometrie srs is not one of the SRS values "
                              + "the server claims to support in its capabilities document.";
+            if ( handle == null || "".equals( handle ) )
+                handle = "Transaction";
+            throw new OWSException( message, OWSException.OPERATION_PROCESSING_FAILED, handle );
+        }
+    }
+
+    private void evaluateValidDomain( ICRS crs, Geometry geometry, String handle )
+                            throws OWSException {
+        double[] validDomain = crs.getValidDomain();
+        if ( validDomain == null ) {
+            LOG.warn( "Valid domain of crs {} is not available. Check if geometry is inside the valid "
+                      + "domain not possible. The check is skipped and insert processed.", crs.getAlias() );
+            return;
+        }
+        Envelope validDomainBbox = GEOM_FACTORY.createEnvelope( validDomain[0], validDomain[1], validDomain[2],
+                                                                validDomain[3], crs );
+        if ( !geometry.isWithin( validDomainBbox ) ) {
+            String message = "At least one geometry is not in the valid domain of the srs.";
             if ( handle == null || "".equals( handle ) )
                 handle = "Transaction";
             throw new OWSException( message, OWSException.OPERATION_PROCESSING_FAILED, handle );
