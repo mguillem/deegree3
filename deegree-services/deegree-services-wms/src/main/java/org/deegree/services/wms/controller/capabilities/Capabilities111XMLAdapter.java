@@ -40,6 +40,7 @@ import static org.deegree.commons.xml.CommonNamespaces.XLINK_PREFIX;
 import static org.deegree.commons.xml.CommonNamespaces.XLNNS;
 import static org.deegree.layer.dims.Dimension.formatDimensionValueList;
 import static org.deegree.services.wms.controller.capabilities.WmsCapabilities111SpatialMetadataWriter.writeSrsAndEnvelope;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.List;
 import java.util.Map;
@@ -55,7 +56,6 @@ import org.deegree.commons.utils.Pair;
 import org.deegree.commons.xml.XMLAdapter;
 import org.deegree.geometry.metadata.SpatialMetadata;
 import org.deegree.layer.dims.Dimension;
-import org.deegree.layer.metadata.LayerMetadata;
 import org.deegree.protocol.wms.WMSConstants;
 import org.deegree.services.metadata.OWSMetadataProvider;
 import org.deegree.services.wms.MapService;
@@ -65,6 +65,7 @@ import org.deegree.services.wms.controller.exceptions.ExceptionsManager;
 import org.deegree.style.se.unevaluated.Style;
 import org.deegree.theme.Theme;
 import org.deegree.theme.Themes;
+import org.slf4j.Logger;
 
 /**
  * <code>Capabilities111XMLAdapter</code>
@@ -76,6 +77,8 @@ import org.deegree.theme.Themes;
  */
 @LoggingNotes(warn = "logs problems with CRS when outputting 1.1.1 capabilities", trace = "logs stack traces")
 public class Capabilities111XMLAdapter extends XMLAdapter {
+
+    private static final Logger LOG = getLogger( Capabilities111XMLAdapter.class );
 
     private static final String MD_URL_REQUEST_CSW = "service=CSW&request=GetRecordById&version=2.0.2&outputSchema=http%3A//www.isotc211.org/2005/gmd&elementSetName=full&id=${metadataSetId}";
 
@@ -162,6 +165,7 @@ public class Capabilities111XMLAdapter extends XMLAdapter {
 
     private void writeThemes( XMLStreamWriter writer, List<Theme> themes )
                             throws XMLStreamException {
+        LOG.debug( "Write themes section for {} theme.", themes.size() );
         if ( themes.size() == 1 ) {
             themeWriter.writeTheme( writer, themes.get( 0 ) );
         } else {
@@ -170,18 +174,8 @@ public class Capabilities111XMLAdapter extends XMLAdapter {
             writeElement( writer, "Title", "Root" );
 
             // TODO think about a push approach instead of a pull approach
-            LayerMetadata lmd = null;
-            for ( Theme t : themes ) {
-                for ( org.deegree.layer.Layer l : Themes.getAllLayers( t ) ) {
-                    if ( lmd == null ) {
-                        lmd = l.getMetadata();
-                    } else {
-                        lmd.merge( l.getMetadata() );
-                    }
-                }
-            }
-            if ( lmd != null ) {
-                SpatialMetadata smd = lmd.getSpatialMetadata();
+            SpatialMetadata smd = mergeSpatialMetadata( themes );
+            if ( smd != null ) {
                 writeSrsAndEnvelope( writer, smd.getCoordinateSystems(), smd.getEnvelope() );
             }
 
@@ -222,7 +216,7 @@ public class Capabilities111XMLAdapter extends XMLAdapter {
 
     public void writeStyle( XMLStreamWriter writer, String name, String title, Pair<Integer, Integer> legendSize,
                             String layerName, Style style )
-                            throws XMLStreamException {
+                                                    throws XMLStreamException {
         writer.writeStartElement( "Style" );
         writeElement( writer, "Name", name );
         writeElement( writer, "Title", title );
@@ -236,9 +230,9 @@ public class Capabilities111XMLAdapter extends XMLAdapter {
             writer.writeAttribute( XLNNS, "type", "simple" );
             if ( style.getLegendURL() == null || style.prefersGetLegendGraphicUrl() ) {
                 String styleName = style.getName() == null ? "" : ( "&style=" + style.getName() );
-                writer.writeAttribute( XLNNS, "href", getUrl
-                                                      + "?request=GetLegendGraphic&version=1.1.1&service=WMS&layer="
-                                                      + layerName + styleName + "&format=image/png" );
+                writer.writeAttribute( XLNNS, "href",
+                                       getUrl + "?request=GetLegendGraphic&version=1.1.1&service=WMS&layer=" + layerName
+                                                      + styleName + "&format=image/png" );
             } else {
                 writer.writeAttribute( XLNNS, "href", style.getLegendURL().toExternalForm() );
             }
@@ -254,6 +248,18 @@ public class Capabilities111XMLAdapter extends XMLAdapter {
         for ( String format : exceptionsManager.getSupportedFormats( WMSConstants.VERSION_111 ) ) {
             writeElement( writer, "Format", format );
         }
+    }
+
+    private SpatialMetadata mergeSpatialMetadata( List<Theme> themes ) {
+        if ( themes.isEmpty() )
+            return null;
+        SpatialMetadata smd = new SpatialMetadata();
+        for ( Theme t : themes ) {
+            for ( org.deegree.layer.Layer l : Themes.getAllLayers( t ) ) {
+                smd = smd.merge( l.getMetadata().getSpatialMetadata() );
+            }
+        }
+        return smd;
     }
 
 }

@@ -152,10 +152,9 @@ public class Capabilities130XMLAdapter {
         writer.writeNamespace( "xlink", XLNNS );
         writer.writeNamespace( "sld", SLDNS );
 
-        writer.writeAttribute( XSINS,
-                               "schemaLocation",
+        writer.writeAttribute( XSINS, "schemaLocation",
                                "http://www.opengis.net/wms http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd "
-                                                       + "http://www.opengis.net/sld http://schemas.opengis.net/sld/1.1.0/sld_capabilities.xsd" );
+                                                        + "http://www.opengis.net/sld http://schemas.opengis.net/sld/1.1.0/sld_capabilities.xsd" );
 
         metadataWriter.writeService( writer );
 
@@ -228,8 +227,8 @@ public class Capabilities130XMLAdapter {
             writer.writeAttribute( "units", dim.getUnits() == null ? "CRS:88" : dim.getUnits() );
             writer.writeAttribute( "unitSymbol", dim.getUnitSymbol() == null ? "" : dim.getUnitSymbol() );
             if ( dim.getDefaultValue() != null ) {
-                writer.writeAttribute( "default",
-                                       formatDimensionValueList( dim.getDefaultValue(), "time".equals( entry.getKey() ) ) );
+                writer.writeAttribute( "default", formatDimensionValueList( dim.getDefaultValue(),
+                                                                            "time".equals( entry.getKey() ) ) );
             }
             if ( dim.getNearestValue() ) {
                 writer.writeAttribute( "nearestValue", "1" );
@@ -247,7 +246,7 @@ public class Capabilities130XMLAdapter {
 
     public void writeStyle( XMLStreamWriter writer, String name, String title, Pair<Integer, Integer> legendSize,
                             String layerName, Style style )
-                            throws XMLStreamException {
+                                                    throws XMLStreamException {
         writer.writeStartElement( WMSNS, "Style" );
         writeElement( writer, WMSNS, "Name", name );
         writeElement( writer, WMSNS, "Title", title );
@@ -260,9 +259,9 @@ public class Capabilities130XMLAdapter {
             writer.writeAttribute( XLNNS, "type", "simple" );
             if ( style.getLegendURL() == null || style.prefersGetLegendGraphicUrl() ) {
                 String styleName = style.getName() == null ? "" : ( "&style=" + style.getName() );
-                writer.writeAttribute( XLNNS, "href", getUrl
-                                                      + "?request=GetLegendGraphic&version=1.3.0&service=WMS&layer="
-                                                      + layerName + styleName + "&format=image/png" );
+                writer.writeAttribute( XLNNS, "href",
+                                       getUrl + "?request=GetLegendGraphic&version=1.3.0&service=WMS&layer=" + layerName
+                                                      + styleName + "&format=image/png" );
             } else {
                 writer.writeAttribute( XLNNS, "href", style.getLegendURL().toExternalForm() );
             }
@@ -286,7 +285,7 @@ public class Capabilities130XMLAdapter {
         SpatialMetadata smd = new SpatialMetadata();
         for ( Theme t : themes ) {
             for ( org.deegree.layer.Layer l : Themes.getAllLayers( t ) ) {
-                smd.merge( l.getMetadata().getSpatialMetadata() );
+                smd = smd.merge( l.getMetadata().getSpatialMetadata() );
             }
         }
         return smd;
