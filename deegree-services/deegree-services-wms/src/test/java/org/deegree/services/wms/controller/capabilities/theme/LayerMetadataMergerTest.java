@@ -42,10 +42,14 @@ package org.deegree.services.wms.controller.capabilities.theme;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static org.hamcrest.CoreMatchers.either;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -61,7 +65,7 @@ import org.deegree.geometry.GeometryFactory;
 import org.deegree.geometry.metadata.SpatialMetadata;
 import org.deegree.layer.Layer;
 import org.deegree.layer.metadata.LayerMetadata;
-import org.deegree.services.wms.controller.capabilities.theme.LayerMetadataMerger;
+import org.deegree.layer.metadata.MetadataUrl;
 import org.deegree.theme.Theme;
 import org.deegree.theme.persistence.standard.StandardTheme;
 import org.junit.Test;
@@ -158,6 +162,27 @@ public class LayerMetadataMergerTest {
         assertEquals( -90.0, spatialMetadata.getEnvelope().getMin().get1(), 0.0000001 );
         assertEquals( 180.0, spatialMetadata.getEnvelope().getMax().get0(), 0.0000001 );
         assertEquals( 90.0, spatialMetadata.getEnvelope().getMax().get1(), 0.0000001 );
+    }
+
+    @Test
+    public void mergeThemeWithMetadataUrlsLayers()
+                            throws Exception {
+        final Theme theme = createThemeWithoutMetadata( "Theme", null, null );
+        List<MetadataUrl> metadataUrls = new ArrayList<MetadataUrl>();
+        MetadataUrl metadataUrl1 = new MetadataUrl( "format1", "type1", new URL( "http://onlineResource1.de" ) );
+        MetadataUrl metadataUrl2 = new MetadataUrl( "format2", "type2", new URL( "http://onlineResource2.de" ) );
+        metadataUrls.add( metadataUrl1 );
+        metadataUrls.add( metadataUrl2 );
+        theme.getLayerMetadata().setMetadataUrls( metadataUrls );
+
+        final LayerMetadata merged = merger.merge( theme );
+
+        List<MetadataUrl> mergedMetadataUrls = merged.getMetadataUrls();
+        assertThat( mergedMetadataUrls.size(), is( 2 ) );
+        assertThat( mergedMetadataUrls.get( 0 ).getFormat(),
+                    either( is( metadataUrl1.getFormat() ) ).or( is( metadataUrl2.getFormat() ) ) );
+        assertThat( mergedMetadataUrls.get( 1 ).getFormat(),
+                    either( is( metadataUrl1.getFormat() ) ).or( is( metadataUrl2.getFormat() ) ) );
     }
 
     private Theme createThemeWithoutMetadata( final String name, final List<Layer> layers, final List<Theme> themes ) {

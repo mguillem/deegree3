@@ -48,7 +48,10 @@ import static org.deegree.commons.xml.CommonNamespaces.WMSNS;
 import static org.deegree.commons.xml.CommonNamespaces.XLNNS;
 import static org.deegree.services.wms.controller.capabilities.theme.XMLAssert.assertValidity;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
+import static org.xmlmatchers.XmlMatchers.isEquivalentTo;
+import static org.xmlmatchers.transform.XmlConverters.the;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -145,7 +148,7 @@ public class WmsCapabilities130ThemeWriterTest {
         final InputStream is = WmsCapabilities130ThemeWriterTest.class.getResourceAsStream( "wms130_layer_full.xml" );
         final byte[] expected = IOUtils.readBytesAndClose( is, -1 );
         assertValidity( new ByteArrayInputStream( bos.toByteArray() ), SCHEMA_URL );
-        assertArrayEquals( expected, bos.toByteArray() );
+        assertThat( the( new String( bos.toByteArray() ) ), isEquivalentTo( the( new String( expected ) ) ) );
     }
 
     @Test
@@ -165,7 +168,7 @@ public class WmsCapabilities130ThemeWriterTest {
         mds.add( createDatasetMetadata( "http://url1", "http://url2" ) );
         mds.add( createDatasetMetadata( "http://url3" ) );
         when( provider.getAllDatasetMetadata( Mockito.any( QName.class ) ) ).thenReturn( mds );
-        
+
         WmsCapabilities130ThemeWriter themeWriter = new WmsCapabilities130ThemeWriter( provider, null, mdurlTemplate );
 
         Theme theme = new StandardTheme( layerMetadata, Collections.<Theme> emptyList(),
@@ -177,7 +180,7 @@ public class WmsCapabilities130ThemeWriterTest {
         final InputStream is = WmsCapabilities130ThemeWriterTest.class.getResourceAsStream( "wms130_layer_multipleMetadataUrls.xml" );
         final byte[] expected = IOUtils.readBytesAndClose( is, -1 );
         assertValidity( new ByteArrayInputStream( bos.toByteArray() ), SCHEMA_URL );
-        assertArrayEquals( expected, bos.toByteArray() );
+        assertThat( the( new String( bos.toByteArray() ) ), isEquivalentTo( the( new String( expected ) ) ) );
     }
 
     private DatasetMetadata createDatasetMetadataMinimal() {
