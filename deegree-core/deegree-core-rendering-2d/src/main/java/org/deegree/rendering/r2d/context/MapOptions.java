@@ -48,9 +48,9 @@ public class MapOptions {
 
     private Antialias antialias;
 
-    private int maxFeatures;
+    private int maxFeatures = -1;
 
-    private int featureInfoRadius;
+    private int featureInfoRadius = -1;
 
     public MapOptions( Quality quality, Interpolation interpol, Antialias antialias, int maxFeatures,
                        int featureInfoRadius ) {
@@ -59,6 +59,22 @@ public class MapOptions {
         this.antialias = antialias;
         this.maxFeatures = maxFeatures;
         this.featureInfoRadius = featureInfoRadius;
+    }
+
+    /**
+     * Creates a new {@link MapOptions) as copy of the passed.
+     * 
+     * @param mapOptions
+     *            to copy, never <code>null</code>
+     */
+    public MapOptions( MapOptions mapOptions ) {
+        if ( mapOptions != null ) {
+            this.quality = mapOptions.getQuality();
+            this.interpol = mapOptions.getInterpolation();
+            this.antialias = mapOptions.getAntialias();
+            this.maxFeatures = mapOptions.getMaxFeatures();
+            this.featureInfoRadius = mapOptions.getFeatureInfoRadius();
+        }
     }
 
     /**
@@ -146,8 +162,10 @@ public class MapOptions {
      */
     public static enum Quality {
         /***/
-        LOW, /***/
-        NORMAL, /***/
+        LOW,
+        /***/
+        NORMAL,
+        /***/
         HIGH
     }
 
@@ -161,9 +179,12 @@ public class MapOptions {
      */
     public static enum Interpolation {
         /***/
-        NEARESTNEIGHBOR, /***/
-        NEARESTNEIGHBOUR, /***/
-        BILINEAR, /***/
+        NEARESTNEIGHBOR,
+        /***/
+        NEARESTNEIGHBOUR,
+        /***/
+        BILINEAR,
+        /***/
         BICUBIC
     }
 
@@ -177,9 +198,12 @@ public class MapOptions {
      */
     public static enum Antialias {
         /***/
-        IMAGE, /***/
-        TEXT, /***/
-        BOTH, /***/
+        IMAGE,
+        /***/
+        TEXT,
+        /***/
+        BOTH,
+        /***/
         NONE
     }
 

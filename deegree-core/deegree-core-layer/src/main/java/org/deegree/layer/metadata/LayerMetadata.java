@@ -103,6 +103,32 @@ public class LayerMetadata {
         this.authorities = authorities;
     }
 
+    public LayerMetadata( LayerMetadata layerMetadata ) {
+        this.name = layerMetadata.getName();
+        this.description = layerMetadata.getDescription();
+        this.metadataId = layerMetadata.getMetadataId();
+        this.scaleDenominators = layerMetadata.getScaleDenominators();
+        this.cascaded = layerMetadata.getCascaded();
+        this.requestable = layerMetadata.isRequestable();
+        this.mapOptions = new MapOptions( layerMetadata.getMapOptions() );
+        if ( layerMetadata.getFeatureTypes() != null )
+            this.featureTypes.addAll( layerMetadata.getFeatureTypes() );
+        if ( layerMetadata.getDimensions() != null )
+            this.dimensions.putAll( layerMetadata.getDimensions() );
+        if ( layerMetadata.getStyles() != null )
+            this.styles.putAll( layerMetadata.getStyles() );
+        if ( layerMetadata.getLegendStyles() != null )
+            this.legendStyles.putAll( layerMetadata.getLegendStyles() );
+        if ( layerMetadata.getSpatialMetadata() != null )
+            this.spatialMetadata = new SpatialMetadata( layerMetadata.getSpatialMetadata() );
+        if ( layerMetadata.getMetadataUrls() != null )
+            this.metadataUrls.addAll( layerMetadata.getMetadataUrls() );
+        if ( layerMetadata.getIdentifiers() != null )
+            this.identifiers.addAll( layerMetadata.getIdentifiers() );
+        if ( layerMetadata.getAuthorities() != null )
+            this.authorities.addAll( layerMetadata.getAuthorities() );
+    }
+
     public void setDescription( Description description ) {
         this.description = description;
     }
@@ -228,6 +254,7 @@ public class LayerMetadata {
         } else {
             mergeDescription( md.getDescription() );
         }
+
         if ( spatialMetadata == null && md.getSpatialMetadata() != null ) {
             spatialMetadata = new SpatialMetadata( md.getSpatialMetadata() );
         } else if ( spatialMetadata != null && md.getSpatialMetadata() == null ) {

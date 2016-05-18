@@ -48,7 +48,6 @@ import java.util.List;
 import org.deegree.commons.utils.DoublePair;
 import org.deegree.layer.Layer;
 import org.deegree.layer.metadata.LayerMetadata;
-import org.deegree.rendering.r2d.context.MapOptions;
 import org.deegree.theme.Theme;
 import org.deegree.theme.Themes;
 
@@ -79,27 +78,22 @@ class LayerMetadataMerger {
      */
     LayerMetadata merge( final Theme theme ) {
         final LayerMetadata themeMetadata = theme.getLayerMetadata();
-        LayerMetadata layerMetadata = new LayerMetadata( null, null, null );
+        LayerMetadata mergedLayerMetadata = new LayerMetadata( themeMetadata );
 
         int queryable = 0;
 
         for ( final Layer l : Themes.getAllLayers( theme ) ) {
             queryable |= analyseQueryable( l.getMetadata() );
-            layerMetadata.merge( l.getMetadata() );
-        }
-        themeMetadata.merge( layerMetadata );
-
-        if ( themeMetadata.getMapOptions() == null ) {
-            themeMetadata.setMapOptions( new MapOptions( null, null, null, -1, -1 ) );
+            mergedLayerMetadata.merge( l.getMetadata() );
         }
 
         if ( queryable == QUERYABLE_DISABLED_MASK ) {
-            themeMetadata.getMapOptions().setFeatureInfoRadius( 0 );
+            mergedLayerMetadata.getMapOptions().setFeatureInfoRadius( 0 );
         } else {
-            themeMetadata.getMapOptions().setFeatureInfoRadius( -1 );
+            mergedLayerMetadata.getMapOptions().setFeatureInfoRadius( -1 );
         }
 
-        return themeMetadata;
+        return mergedLayerMetadata;
     }
 
     /**
@@ -149,4 +143,5 @@ class LayerMetadataMerger {
         else
             return QUERYABLE_ENABLED_MASK;
     }
+
 }
