@@ -507,12 +507,23 @@ public class DefaultWorkspace implements Workspace {
 
     @Override
     public <T extends Resource> void destroy( ResourceIdentifier<T> id ) {
+        destroy( id, true );
+    }
+
+    @Override
+    public <T extends Resource> void destroyResource( ResourceIdentifier<T> id ) {
+        destroy( id, false );
+    }
+
+    private <T extends Resource> void destroy( ResourceIdentifier<T> id, boolean includeDependents ) {
         ResourceNode<T> node = graph.getNode( id );
         if ( node == null ) {
             return;
         }
-        for ( ResourceNode<? extends Resource> n : node.getDependents() ) {
-            destroy( n.getMetadata().getIdentifier() );
+        if ( includeDependents ) {
+            for ( ResourceNode<? extends Resource> n : node.getDependents() ) {
+                destroy( (ResourceIdentifier<T>) n.getMetadata().getIdentifier() );
+            }
         }
         T res = (T) resources.get( id );
         if ( res != null ) {
