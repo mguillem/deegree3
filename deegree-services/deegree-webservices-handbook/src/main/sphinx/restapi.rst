@@ -30,6 +30,10 @@ Here's an example output::
    GET /config/list/wsname[/path]                               - list workspace with name <wsname> or directory in workspace
    GET /config/invalidate/datasources/tile/id/matrixset[?bbox=] - invalidate part or all of a tile store cache's tile matrix set
    GET /config/crs/list                                         - list available CRS definitions
+   GET /config/validate[/path]                                  - validate currently running workspace or file in workspace
+   GET /config/validate/wsname[/path]                           - validate workspace with name <wsname> or file in workspace
+   GET /config/update/bboxcache[?featureStoreId=]               - recalculates the bounding boxes of all feature stores of the currently running workspace, with the parameter 'featureStoreId' a comma separated list of feature stores to update can be passed
+   GET /config/update/bboxcache/wsname[?featureStoreId=]        - recalculates the bounding boxes of all feature stores of the workspace with name <wsname>, with the parameter 'featureStoreId' a comma separated list of feature stores to update can be passed
    POST /config/crs/getcodes with wkt=<wkt>                     - retrieves a list of CRS codes corresponding to the WKT (POSTed KVP)
    GET /config/crs/<code>                                       - checks if a CRS definition is available, returns true/false
    PUT /config/upload/wsname.zip                                - upload workspace <wsname>
@@ -99,3 +103,17 @@ CRS queries
 ________________
 
 You can get a list of all available CRS definitions by requesting ``http://localhost:8080/deegree-webservices/config/crs/list``. Check if a specific CRS is configured in deegree by requesting ``http://localhost:8080/deegree-webservices/config/crs/EPSG:12345``. The response will be the text ``true`` or ``false``, depending whether the CRS is defined or not. If you have a WKT CRS definition, you can POST against ``http://localhost:8080/deegree-webservices/config/crs/getcodes`` to get a list of corresponding identifiers (experimental). Use the ``wkt`` parameter when posting to send the WKT definition.
+
+________________
+Validation
+________________
+
+You can validate the currently running workspace using ``http://localhost:8080/deegree-webservices/config/validate`` or a single resources using ``http://localhost:8080/deegree-webservices/config/validate/services/wms.xml`` which validates the file wms.xml.
+To use a different workspace instead of the currently running one, use ``http://localhost:8080/deegree-webservices/config/validate/otherworkspace`` (you may also specify a file within that workspace).
+
+________________________________
+Recalculation of Bounding Boxes
+________________________________
+
+You can recalculate the bounding boxes of all feature stores of the currently running workspace using ``http://localhost:8080/deegree-webservices/config/update/bboxcache``  or a single feature store using ``http://localhost:8080/deegree-webservices/config/update/bboxcache?featureStoreId=myFeatureStore`` which recalculates the bounding boxes of the feature store with id 'myFeatureStore'. To update the bounding boxes of multiple feature stores ids, pass them as comma separated list like 'myFeatureStore1,myFeatureStore2'.
+To use a different workspace instead of the currently running one, use ``http://localhost:8080/deegree-webservices/config/update/bboxcache/otherworkspace`` (you may also specify the feature stores within that workspace).

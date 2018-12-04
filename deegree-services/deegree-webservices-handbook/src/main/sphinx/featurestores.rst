@@ -271,6 +271,9 @@ SQL feature store
 
 The SQL feature store allows to configure highly flexible mappings between feature types and database tables. It can be used for simple mapping tasks (mapping a single database table to a feature type) as well as sophisticated ones (mapping a complete INSPIRE Data Theme to dozens or hundreds of database tables). As an alternative to relational mapping, it additionally offers so-called BLOB mapping which stores any kind of rich feature using a fixed and very simple database schema. In contrast to the simple SQL feature store, the SQL feature store is transaction capable (even for complex mappings) and ideally suited for mapping rich GML application schemas.
 
+.. tip::
+SQLFeatureStore configurations can be filed in sub directories. To reference a feature store the id must include the directory. Example: 'dir/featureStore' if the SQLFeatureStore configuration file 'featureStore.xml' is filed in the directory 'dir'.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Minimal configuration example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
