@@ -41,11 +41,15 @@
  ----------------------------------------------------------------------------*/
 package org.deegree.workspace;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 import java.io.File;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.deegree.workspace.graph.ResourceGraph;
@@ -53,6 +57,7 @@ import org.deegree.workspace.graph.ResourceNode;
 import org.deegree.workspace.standard.DefaultResourceIdentifier;
 import org.deegree.workspace.standard.DefaultResourceLocation;
 import org.deegree.workspace.standard.IncorporealResourceLocation;
+import org.slf4j.Logger;
 
 /**
  * Utility methods to work with workspaces and its resources.
@@ -62,6 +67,8 @@ import org.deegree.workspace.standard.IncorporealResourceLocation;
  * @since 3.4
  */
 public class WorkspaceUtils {
+
+    private static final Logger LOG = getLogger( WorkspaceUtils.class );
 
     /**
      * Destroys and initializes all resources connected to the resource with the given id.
@@ -73,25 +80,17 @@ public class WorkspaceUtils {
      * @return a list of identifiers of the initialized resources, never <code>null</code>
      */
     public static List<String> reinitializeChain( Workspace workspace, ResourceIdentifier<? extends Resource> id ) {
-        List<String> initialisedIdentifiers = new ArrayList<>();
-        ResourceNode<? extends Resource> node = workspace.getDependencyGraph().getNode( id );
-        List<ResourceMetadata<? extends Resource>> list = new ArrayList<ResourceMetadata<? extends Resource>>();
+
         ResourceMetadata<? extends Resource> meta = workspace.getResourceMetadata( id.getProvider(), id.getId() );
         if ( meta != null ) {
-            list.add( meta );
-            collectDependencies( list, node );
-            collectDependents( list, node );
-            ResourceGraph g = new ResourceGraph( list );
-            list = g.toSortedList();
-            for ( ResourceMetadata<? extends Resource> md : list ) {
-                ResourceIdentifier<? extends Resource> identifier = md.getIdentifier();
-                workspace.destroyResource( identifier );
-                workspace.add( md.getLocation() );
-                workspace.init( identifier, null );
-                initialisedIdentifiers.add( identifier.getId() );
-            }
+            List<ResourceMetadata<? extends Resource>> preparedResourceMetadata = new ArrayList<>();
+            prepareDependencies( workspace, preparedResourceMetadata, meta );
+
+            List<String> initialisedIdentifiers = initDependencies( workspace, preparedResourceMetadata );
+            initialisedIdentifiers.sort( String.CASE_INSENSITIVE_ORDER );
+            return initialisedIdentifiers;
         }
-        return initialisedIdentifiers;
+        return Collections.emptyList();
     }
 
     /**
@@ -259,4 +258,43 @@ public class WorkspaceUtils {
         }
     }
 
+    private static void prepareDependencies( Workspace workspace,
+                                             List<ResourceMetadata<? extends Resource>> preparedResourceMetadata,
+                                             ResourceMetadata<? extends Resource> meta ) {
+        meta.prepare();
+        prepareDependencies( workspace, preparedResourceMetadata, meta.getDependencies() );
+        prepareDependencies( workspace, preparedResourceMetadata, meta.getSoftDependencies() );
+    }
+
+    private static void prepareDependencies( Workspace workspace,
+                                             List<ResourceMetadata<? extends Resource>> preparedResourceMetadata,
+                                             Set<ResourceIdentifier<? extends Resource>> ids ) {
+        for ( ResourceIdentifier<? extends Resource> id : ids ) {
+            workspace.prepare( id );
+            ResourceMetadata<? extends Resource> meta = workspace.getResourceMetadata( id.getProvider(), id.getId() );
+            if ( meta != null ) {
+                workspace.destroyResource( id );
+                workspace.add( meta.getLocation() );
+                preparedResourceMetadata.add( meta );
+                prepareDependencies( workspace, preparedResourceMetadata, meta );
+            }
+        }
+    }
+
+    private static List<String> initDependencies( Workspace workspace, List<ResourceMetadata<? extends Resource>> preparedResourceMetadata ) {
+        List<String> initialisedIdentifiers = new ArrayList<>();
+
+        ResourceGraph g = new ResourceGraph( preparedResourceMetadata );
+        List<ResourceMetadata<? extends Resource>> sortedResourceMetadata = g.toSortedList();
+        for ( ResourceMetadata<? extends Resource> resourceMetadata : sortedResourceMetadata ) {
+            ResourceIdentifier<? extends Resource> id = resourceMetadata.getIdentifier();
+            try {
+                workspace.init( id, null );
+                initialisedIdentifiers.add( id.toString() );
+            } catch ( ResourceInitException e ){
+                LOG.warn( "Initializing of resource " + id + " failed: " + e.getMessage() );
+            }
+        }
+        return initialisedIdentifiers;
+    }
 }

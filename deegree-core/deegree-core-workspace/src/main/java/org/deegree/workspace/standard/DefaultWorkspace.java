@@ -453,14 +453,7 @@ public class DefaultWorkspace implements Workspace {
         LOG.info( "--------------------------------------------------------------------------------" );
 
         for ( ResourceManager<? extends Resource> mgr : resourceManagers.values() ) {
-            mgr.find();
-            Collection<? extends ResourceMetadata<? extends Resource>> mds = mgr.getResourceMetadata();
-            for ( ResourceMetadata<? extends Resource> md : mds ) {
-                resourceMetadata.put( md.getIdentifier(), md );
-                if ( states.getState( md.getIdentifier() ) != Deactivated ) {
-                    states.setState( md.getIdentifier(), Scanned );
-                }
-            }
+            scan( mgr );
         }
     }
 
@@ -470,7 +463,11 @@ public class DefaultWorkspace implements Workspace {
             return null;
         }
         LOG.info( "Preparing {}", id );
-        ResourceMetadata<T> md = (ResourceMetadata) resourceMetadata.get( id );
+        ResourceMetadata<T> md = getMetadata( id );
+        if ( md == null ) {
+            LOG.warn( "Resource with ID {} is not available", id );
+            return null;
+        }
         ResourceBuilder<T> builder = md.prepare();
         if ( builder == null ) {
             states.setState( id, Error );
@@ -479,6 +476,25 @@ public class DefaultWorkspace implements Workspace {
             states.setState( id, Prepared );
         }
         return builder;
+    }
+
+    private <T extends Resource> ResourceMetadata getMetadata( ResourceIdentifier<T> id ) {
+        if ( !resourceMetadata.containsKey( id ) ) {
+            ResourceManager<? extends Resource> resourceManager = resourceManagers.get( id.getProvider() );
+            scan( resourceManager );
+        }
+        return resourceMetadata.get( id );
+    }
+
+    private void scan( ResourceManager<? extends Resource> mgr ) {
+        mgr.find();
+        Collection<? extends ResourceMetadata<? extends Resource>> mds = mgr.getResourceMetadata();
+        for ( ResourceMetadata<? extends Resource> md : mds ) {
+            resourceMetadata.put( md.getIdentifier(), md );
+            if ( states.getState( md.getIdentifier() ) != Deactivated ) {
+                states.setState( md.getIdentifier(), Scanned );
+            }
+        }
     }
 
     @Override

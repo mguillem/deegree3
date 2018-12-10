@@ -37,6 +37,7 @@ package org.deegree.services.config.actions;
 
 import static org.apache.commons.io.IOUtils.write;
 import static org.deegree.services.config.actions.Utils.getWorkspaceAndPath;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -52,6 +53,7 @@ import org.deegree.services.controller.OGCFrontController;
 import org.deegree.workspace.ResourceIdentifier;
 import org.deegree.workspace.Workspace;
 import org.deegree.workspace.WorkspaceUtils;
+import org.slf4j.Logger;
 
 /**
  * 
@@ -61,6 +63,8 @@ import org.deegree.workspace.WorkspaceUtils;
  * @version $Revision$, $Date$
  */
 public class Restart {
+
+    private static final Logger LOG = getLogger( Restart.class );
 
     public static void restart( String path, HttpServletResponse resp )
                             throws IOException {
@@ -76,6 +80,7 @@ public class Restart {
             }
         } catch ( Exception e ) {
             write( "Error while reloading: " + e.getLocalizedMessage() + "\n", resp.getOutputStream() );
+            LOG.error( "Error while reloading: " + e.getMessage(), e );
             return;
         }
 
