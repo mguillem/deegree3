@@ -111,6 +111,8 @@ public class GMLFeatureReader extends AbstractGMLObjectReader {
 
 	public static final QName BOUNDED_BY_GML32 = new QName(GML3_2_NS, "boundedBy", "gml");
 
+	private final List<FeatureInspector> inspectors;
+
 	/**
 	 * Creates a new {@link GMLFeatureReader} instance that is configured from the given
 	 * {@link GMLStreamReader}.
@@ -118,6 +120,7 @@ public class GMLFeatureReader extends AbstractGMLObjectReader {
 	 */
 	public GMLFeatureReader(GMLStreamReader gmlStreamReader) {
 		super(gmlStreamReader);
+		this.inspectors = gmlStreamReader.getInspectors();
 	}
 
 	/**
@@ -247,7 +250,7 @@ public class GMLFeatureReader extends AbstractGMLObjectReader {
 			}
 			idContext.addObject(feature);
 		}
-
+		inspect(feature);
 		return feature;
 	}
 
@@ -326,8 +329,6 @@ public class GMLFeatureReader extends AbstractGMLObjectReader {
 
 	private Feature parseFeatureStatic(XMLStreamReaderWrapper xmlStream, ICRS crs)
 			throws XMLStreamException, XMLParsingException, UnknownCRSException {
-
-		Feature feature = null;
 		String fid = parseFeatureId(xmlStream);
 
 		QName featureName = xmlStream.getName();
@@ -359,8 +360,7 @@ public class GMLFeatureReader extends AbstractGMLObjectReader {
 		if (extraPropertyList != null) {
 			extraProps = new ExtraProps(extraPropertyList.toArray(new Property[extraPropertyList.size()]));
 		}
-		feature = ft.newFeature(fid, propertyList, extraProps);
-
+		Feature feature = ft.newFeature(fid, propertyList, extraProps);
 		if (fid != null && !"".equals(fid)) {
 			if (idContext.getObject(fid) != null) {
 				String msg = Messages.getMessage("ERROR_FEATURE_ID_NOT_UNIQUE", fid);
@@ -368,6 +368,7 @@ public class GMLFeatureReader extends AbstractGMLObjectReader {
 			}
 			idContext.addObject(feature);
 		}
+		inspect(feature);
 		return feature;
 	}
 
@@ -575,6 +576,14 @@ public class GMLFeatureReader extends AbstractGMLObjectReader {
 			throw new IllegalArgumentException(msg);
 		}
 		return fid;
+	}
+
+	private Feature inspect(Feature feature) {
+		Feature inspected = feature;
+		for (FeatureInspector inspector : inspectors) {
+			inspected = inspector.inspect(inspected);
+		}
+		return inspected;
 	}
 
 }
