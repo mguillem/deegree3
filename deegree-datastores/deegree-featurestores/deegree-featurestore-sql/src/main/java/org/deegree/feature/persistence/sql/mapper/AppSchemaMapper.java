@@ -254,7 +254,7 @@ public class AppSchemaMapper {
             }
         }
 
-        return new FeatureTypeMapping( ft.getName(), table, fidMapping, mappings );
+        return new FeatureTypeMapping( ft.getName(), table, fidMapping, mappings, Collections.emptyList() );
     }
 
     private List<Mapping> generatePropMapping( PropertyType pt, MappingContext mc ) {
