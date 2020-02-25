@@ -46,12 +46,18 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import org.deegree.commons.utils.math.MathUtils;
 import org.deegree.geometry.Envelope;
 import org.deegree.tile.Tile;
 import org.deegree.tile.TileIOException;
 import org.slf4j.Logger;
+
+import javax.imageio.ImageIO;
 
 /**
  * <code>Java2DTileRenderer</code>
@@ -87,22 +93,27 @@ public class Java2DTileRenderer implements TileRenderer {
             LOG.debug( "Not rendering null tile." );
             return;
         }
-        int minx, miny, maxx, maxy;
         Envelope env = tile.getEnvelope();
-        Point2D.Double p = (Point2D.Double) worldToScreen.transform( new Point2D.Double( env.getMin().get0(),
+        Point2D.Double pmin = (Point2D.Double) worldToScreen.transform( new Point2D.Double( env.getMin().get0(),
                                                                                          env.getMin().get1() ), null );
-        minx = MathUtils.round( p.x );
-        miny = MathUtils.round( p.y );
-        p = (Point2D.Double) worldToScreen.transform( new Point2D.Double( env.getMax().get0(), env.getMax().get1() ),
+        Point2D.Double pmax = (Point2D.Double) worldToScreen.transform( new Point2D.Double( env.getMax().get0(), env.getMax().get1() ),
                                                       null );
-        maxx = MathUtils.round( p.x );
-        maxy = MathUtils.round( p.y );
+        boolean maxYIsLessThanMinY = pmin.y > pmax.y;
+
+        int minx = MathUtils.floor( pmin.x );
+        int miny = maxYIsLessThanMinY ? MathUtils.ceil( pmin.y ) : MathUtils.floor( pmin.y );
+
+        int maxx = MathUtils.ceil( pmax.x );
+        int maxy = maxYIsLessThanMinY ? MathUtils.floor( pmax.y ): MathUtils.ceil( pmax.y );
+
+        int width = maxx - minx;
+        int height = maxy - miny;
         try {
-            graphics.drawImage( tile.getAsImage(), minx, miny, maxx - minx, maxy - miny, null );
+            graphics.drawImage( tile.getAsImage(), minx, miny, width, height, null );
         } catch ( TileIOException e ) {
             LOG.debug( "Error retrieving tile image: " + e.getMessage() );
             graphics.setColor( RED );
-            graphics.fillRect( minx, miny, maxx - minx, maxy - miny );
+            graphics.fillRect( minx, miny, width, height );
         }
     }
 }

@@ -69,6 +69,26 @@ public class MathUtils {
     }
 
     /**
+     * Helper to ceil a double value to an int without the need to cast.
+     *
+     * @param v
+     * @return a rounded int
+     */
+    public static int ceil( double v ) {
+        return (int) Math.ceil( v );
+    }
+
+    /**
+     * Helper to floor a double value to an int without the need to cast.
+     *
+     * @param v
+     * @return a rounded int
+     */
+    public static int floor( double v ) {
+        return (int) Math.floor( v );
+    }
+
+    /**
      * @param v
      * @return true, if abs(v) &lt; EPSILON.
      */
