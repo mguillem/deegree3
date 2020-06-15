@@ -52,22 +52,30 @@ public class MapOptions {
 
     private int featureInfoRadius;
 
+    private boolean opaque;
+
     /**
      * Instantiates {@link MapOptions} with default values (quality = null, interpol = null, antialias = null,
      * maxFeatures = -1, featureInfoRadius = -1)
-     * 
+     *
      */
     public MapOptions() {
         this( null, null, null, -1, -1 );
     }
 
-    private MapOptions( Quality quality, Interpolation interpol, Antialias antialias, int maxFeatures,
-                        int featureInfoRadius ) {
+    public MapOptions( Quality quality, Interpolation interpol, Antialias antialias, int maxFeatures,
+                       int featureInfoRadius ) {
+        this( quality, interpol, antialias, maxFeatures, featureInfoRadius, false );
+    }
+
+    public MapOptions( Quality quality, Interpolation interpol, Antialias antialias, int maxFeatures,
+                       int featureInfoRadius, boolean opaque ) {
         this.quality = quality;
         this.interpol = interpol;
         this.antialias = antialias;
         this.maxFeatures = maxFeatures;
         this.featureInfoRadius = featureInfoRadius;
+        this.opaque = opaque;
     }
 
     /**
@@ -146,6 +154,21 @@ public class MapOptions {
     }
 
     /**
+     * @return if layer is opaque
+     */
+    public boolean isOpaque() {
+        return opaque;
+    }
+
+    /**
+     * @param opaque
+     *            set if layer is opaque
+     */
+    public void setOpaque( boolean opaque ) {
+        this.opaque = opaque;
+    }
+
+    /**
      * <code>Quality</code>
      * 
      * @author <a href="mailto:schmitz@lat-lon.de">Andreas Schmitz</a>
@@ -155,10 +178,8 @@ public class MapOptions {
      */
     public static enum Quality {
         /***/
-        LOW,
-        /***/
-        NORMAL,
-        /***/
+        LOW, /***/
+        NORMAL, /***/
         HIGH
     }
 
@@ -172,12 +193,9 @@ public class MapOptions {
      */
     public static enum Interpolation {
         /***/
-        NEARESTNEIGHBOR,
-        /***/
-        NEARESTNEIGHBOUR,
-        /***/
-        BILINEAR,
-        /***/
+        NEARESTNEIGHBOR, /***/
+        NEARESTNEIGHBOUR, /***/
+        BILINEAR, /***/
         BICUBIC
     }
 
@@ -191,12 +209,9 @@ public class MapOptions {
      */
     public static enum Antialias {
         /***/
-        IMAGE,
-        /***/
-        TEXT,
-        /***/
-        BOTH,
-        /***/
+        IMAGE, /***/
+        TEXT, /***/
+        BOTH, /***/
         NONE
     }
 
