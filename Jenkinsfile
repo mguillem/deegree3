@@ -38,9 +38,6 @@ pipeline {
             }
         }
         stage ('Quality Checks') {
-            when {
-                branch 'master'
-            }
             steps {
                 echo 'Quality checking'
                 sh 'mvn -B -C -fae -Poracle,mssql findbugs:findbugs checkstyle:checkstyle javadoc:javadoc'
