@@ -104,7 +104,7 @@ public class ResourceGraph {
         return node;
     }
 
-    public <T extends Resource> void removeNode (ResourceIdentifier<T> id) {
+    public synchronized <T extends Resource> void removeNode (ResourceIdentifier<T> id) {
         nodeMap.remove( id );
         updateDependencies();
     }
