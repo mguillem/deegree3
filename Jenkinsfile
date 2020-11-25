@@ -1,11 +1,9 @@
 pipeline {
-    agent {
-        label 'openjdk8bot'
-    }
+    agent any
 
     tools {
         maven 'maven-3.6'
-        jdk 'adoptopenjdk-jdk8'
+        jdk 'openjdk11'
     }
     environment {
         MAVEN_OPTS='-Djava.awt.headless=true -Xmx2048m'
