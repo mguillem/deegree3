@@ -46,6 +46,7 @@ pipeline {
                 success {
                     findbugs canComputeNew: false, defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', pattern: '**/spotbugsXml.xml', unHealthy: ''
                     checkstyle canComputeNew: false, canRunOnFailed: true, defaultEncoding: '', healthy: '', pattern: '**/checkstyle-result.xml', unHealthy: ''
+                    javadoc javadocDir: 'target/site/apidocs/', keepAll: false
                 }
             }
         }
