@@ -42,11 +42,13 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-mdstore-commons</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-services-commons</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>

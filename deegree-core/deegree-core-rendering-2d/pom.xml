@@ -33,11 +33,13 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-core-tile</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-core-style</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>jai</groupId>

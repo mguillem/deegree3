@@ -38,11 +38,13 @@
             <groupId>org.deegree</groupId>
             <artifactId>deegree-core-commons</artifactId>
             <version>${project.version}</version>
+<classifier>jdk11</classifier>
           </dependency>
           <dependency>
             <groupId>org.deegree</groupId>
             <artifactId>deegree-core-geometry</artifactId>
             <version>${project.version}</version>
+<classifier>jdk11</classifier>
           </dependency>
         </dependencies>
       </plugin>
@@ -54,11 +56,13 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-core-commons</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-core-layer</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
     </dependency>
   </dependencies>
 

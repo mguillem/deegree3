@@ -39,6 +39,7 @@
             <groupId>org.deegree</groupId>
             <artifactId>deegree-tilestore-commons</artifactId>
             <version>${project.version}</version>
+<classifier>jdk11</classifier>
           </dependency>
         </dependencies>
       </plugin>
@@ -50,6 +51,7 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-tilestore-commons</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>jai</groupId>

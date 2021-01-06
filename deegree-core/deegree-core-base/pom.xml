@@ -33,6 +33,7 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-core-coverage</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>commons-codec</groupId>

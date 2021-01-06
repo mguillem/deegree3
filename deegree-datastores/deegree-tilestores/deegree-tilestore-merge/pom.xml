@@ -42,11 +42,13 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-tilestore-commons</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-core-coverage</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

@@ -33,6 +33,7 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-services-wms</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
       <exclusions>
         <exclusion>
           <groupId>xalan</groupId>
@@ -44,16 +45,19 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-services-wcs</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-layers-feature</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-layers-coverage</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
       <exclusions>
         <exclusion>
           <groupId>com.h2database</groupId>

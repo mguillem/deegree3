@@ -42,6 +42,7 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-tilestore-commons</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>net.sf.ehcache</groupId>

@@ -69,6 +69,7 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-testservice</artifactId>
       <version>${project.version}</version>
+<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
