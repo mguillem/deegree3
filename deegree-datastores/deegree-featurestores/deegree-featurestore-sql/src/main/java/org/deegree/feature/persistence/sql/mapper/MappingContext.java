@@ -39,19 +39,20 @@ import org.deegree.feature.types.FeatureType;
 
 /**
  * Represents a specific position during the mapping of a {@link FeatureType} to a relational model (tables, columns).
- * 
+ *
  * @author <a href="mailto:schneider@lat-lon.de">Markus Schneider</a>
  * @author last edited by: $Author$
- * 
  * @version $Revision$, $Date$
  */
-public class MappingContext {    
-    
+public class MappingContext {
+
     private final String table;
-    
+
     private final String idColumn;
 
     private final String column;
+
+    private int currentOccurence = -1;
 
     MappingContext( String table, String idColumn ) {
         this.table = table;
@@ -70,10 +71,16 @@ public class MappingContext {
     }
 
     public String getColumn() {
+        if ( currentOccurence > 0 )
+            return column + "_" + currentOccurence;
         return column;
     }
-    
-    public String getIdColumn () {
+
+    public String getIdColumn() {
         return idColumn;
+    }
+
+    public void setCurrentOccurence( int currentOccurence ) {
+        this.currentOccurence = currentOccurence;
     }
 }

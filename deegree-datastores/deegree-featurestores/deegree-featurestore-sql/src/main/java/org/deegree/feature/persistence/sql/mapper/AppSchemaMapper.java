@@ -691,6 +691,8 @@ public class AppSchemaMapper {
                 childElMappings.addAll( generateMapping( particle.getTerm(), -1, mc, cycleAnalyser ) );
             } else {
                 for ( int i = 1; i <= particle.getMaxOccurs(); i++ ) {
+                    if ( particle.getMaxOccurs() > 1 )
+                        mc.setCurrentOccurence( i );
                     childElMappings.addAll( generateMapping( particle.getTerm(), i, mc, cycleAnalyser ) );
                 }
             }
