@@ -31,12 +31,12 @@
 
   <distributionManagement>
     <repository>
-      <url>http://repo.deegree.org/content/repositories/releases/</url>
       <id>latlon-releases</id>
+      <url>https://repo.lat-lon.de/repository/deegree-releases/</url>
     </repository>
     <snapshotRepository>
-      <url>http://repo.deegree.org/content/repositories/snapshots/</url>
       <id>latlon-snapshots</id>
+      <url>https://repo.lat-lon.de/repository/deegree-snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
 
