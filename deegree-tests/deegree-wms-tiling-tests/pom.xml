@@ -90,7 +90,6 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-services-wms</artifactId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
       <exclusions>
         <exclusion>
           <groupId>xalan</groupId>
@@ -102,7 +101,6 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-layers-tile</artifactId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

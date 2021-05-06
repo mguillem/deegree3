@@ -37,7 +37,6 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-services-wps</artifactId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
     </dependency>
   </dependencies>
 

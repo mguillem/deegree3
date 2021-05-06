@@ -20,13 +20,11 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-core-filterfunctions</artifactId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-core-db</artifactId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.apache.xmlgraphics</groupId>

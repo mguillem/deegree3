@@ -83,13 +83,11 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-services-wms</artifactId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-layers-feature</artifactId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

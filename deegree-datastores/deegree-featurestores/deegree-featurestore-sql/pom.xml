@@ -40,13 +40,11 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-featurestore-commons</artifactId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <artifactId>deegree-sqldialect-postgis</artifactId>
       <groupId>org.deegree</groupId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -85,7 +83,6 @@
           <artifactId>deegree-sqldialect-mssql</artifactId>
           <groupId>org.deegree</groupId>
           <version>${project.version}</version>
-<classifier>jdk11</classifier>
           <scope>test</scope>
         </dependency>
       </dependencies>
@@ -104,7 +101,6 @@
           <artifactId>deegree-sqldialect-oracle</artifactId>
           <groupId>org.deegree</groupId>
           <version>${project.version}</version>
-<classifier>jdk11</classifier>
           <scope>test</scope>
         </dependency>
       </dependencies>

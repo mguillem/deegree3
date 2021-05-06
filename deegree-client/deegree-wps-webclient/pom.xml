@@ -24,13 +24,11 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-protocol-commons</artifactId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-jsf-core</artifactId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.apache.tomcat</groupId>

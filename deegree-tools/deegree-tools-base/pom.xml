@@ -29,25 +29,21 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-core-rendering-2d</artifactId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-featurestore-sql</artifactId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-mdstore-iso</artifactId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
       <artifactId>deegree-protocol-csw</artifactId>
       <version>${project.version}</version>
-<classifier>jdk11</classifier>
     </dependency>
   </dependencies>
 
