@@ -1162,10 +1162,14 @@ public class SQLFeatureStore implements FeatureStore {
             BlobMapping blobMapping = getSchema().getBlobMapping();
             FeatureBuilder builder = new FeatureBuilderBlob( this, blobMapping );
             List<String> columns = builder.getInitialSelectList();
-            if ( query.getPrefilterBBox() != null ) {
-                OperatorFilter bboxFilter = new OperatorFilter( query.getPrefilterBBox() );
+            BBOX prefilterBBox = query.getPrefilterBBox();
+            if ( prefilterBBox != null ) {
+                OperatorFilter bboxFilter = new OperatorFilter( prefilterBBox );
                 wb = getWhereBuilderBlob( bboxFilter, conn );
                 LOG.debug( "WHERE clause: " + wb.getWhere() );
+                if ( filter.getOperator() instanceof BBOX && prefilterBBox == filter.getOperator() ) {
+                    filter = null;
+                }
             }
             String alias = wb != null ? wb.getAliasManager().getRootTableAlias() : "X1";
 
