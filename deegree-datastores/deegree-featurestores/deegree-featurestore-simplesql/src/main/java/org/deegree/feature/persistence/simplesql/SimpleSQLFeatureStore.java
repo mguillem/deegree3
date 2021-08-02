@@ -117,7 +117,7 @@ public class SimpleSQLFeatureStore implements FeatureStore {
 
     private boolean available = false;
 
-    ICRS crs;
+    ICRS storageCrs;
 
     private AppSchema schema;
 
@@ -141,7 +141,7 @@ public class SimpleSQLFeatureStore implements FeatureStore {
 
     /**
      * @param connId
-     * @param crs
+     * @param storageCrs
      * @param sql
      * @param ftLocalName
      * @param ftNamespace
@@ -150,7 +150,7 @@ public class SimpleSQLFeatureStore implements FeatureStore {
      * @param lods
      * @param metadata
      */
-    public SimpleSQLFeatureStore( ConnectionProvider connProvider, String crs, String sql, String ftLocalName,
+    public SimpleSQLFeatureStore( ConnectionProvider connProvider, String storageCrs, String sql, String ftLocalName,
                                   String ftNamespace, String ftPrefix, String bbox, List<Pair<Integer, String>> lods,
                                   ResourceMetadata<FeatureStore> metadata ) {
         this.connProvider = connProvider;
@@ -170,13 +170,13 @@ public class SimpleSQLFeatureStore implements FeatureStore {
         this.ftName = new QName( ftNamespace, ftLocalName, ftPrefix );
 
         try {
-            this.crs = CRSManager.lookup( crs );
-            transformer = new GeometryTransformer( this.crs );
+            this.storageCrs = CRSManager.lookup( storageCrs );
+            transformer = new GeometryTransformer( this.storageCrs );
         } catch ( IllegalArgumentException e ) {
-            LOG.error( "The invalid crs '{}' was specified for the simple SQL data store.", crs );
+            LOG.error( "The invalid crs '{}' was specified for the simple SQL data store.", storageCrs );
             LOG.trace( "Stack trace:", e );
         } catch ( UnknownCRSException e ) {
-            LOG.error( "The invalid crs '{}' was specified for the simple SQL data store.", crs );
+            LOG.error( "The invalid crs '{}' was specified for the simple SQL data store.", storageCrs );
             LOG.trace( "Stack trace:", e );
         }
         this.lods = new TreeMap<Integer, String>();
@@ -218,7 +218,7 @@ public class SimpleSQLFeatureStore implements FeatureStore {
                         LOG.info( "Could not determine envelope of database table, using world bbox instead." );
                         return fac.createEnvelope( -180, -90, 180, 90, CRSUtils.EPSG_4326 );
                     }
-                    Geometry g = new WKTReader( crs ).read( bboxString );
+                    Geometry g = new WKTReader( storageCrs ).read( bboxString );
                     cachedEnvelope.first = current;
                     cachedEnvelope.second = g.getEnvelope();
                     return cachedEnvelope.second;
@@ -359,7 +359,8 @@ public class SimpleSQLFeatureStore implements FeatureStore {
                                                                       byte[] bs = rs.getBytes( pt.getName().getLocalPart() );
                                                                       if ( bs != null ) {
                                                                           try {
-                                                                              Geometry geom = WKBReader.read( bs, crs );
+                                                                              Geometry geom = WKBReader.read( bs,
+                                                                                                              storageCrs );
                                                                               props.add( new GenericProperty( pt, geom ) );
                                                                           } catch ( ParseException e ) {
                                                                               LOG.info( "WKB from the DB could not be parsed: '{}'.",
@@ -419,8 +420,9 @@ public class SimpleSQLFeatureStore implements FeatureStore {
      * 
      * @return the CRS of the geometry column, never <code>null</code>
      */
-    public ICRS getStorageCRS() {
-        return crs;
+    @Override
+    public ICRS getStorageCrs() {
+        return storageCrs;
     }
 
     @Override

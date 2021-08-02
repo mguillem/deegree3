@@ -51,7 +51,7 @@ import org.deegree.feature.persistence.sql.mapper.AppSchemaMapper;
 import org.deegree.feature.types.AppSchema;
 import org.deegree.gml.schema.GMLAppSchemaReader;
 import org.deegree.sqldialect.SQLDialect;
-import org.deegree.sqldialect.oracle.OracleDialect;
+//import org.deegree.sqldialect.oracle.OracleDialect;
 import org.deegree.sqldialect.postgis.PostGISDialect;
 
 /**
@@ -201,8 +201,9 @@ public class SqlFeatureStoreConfigCreator {
     }
 
     private static SQLDialect instantiateDialect( String dialect ) {
-        if ( dialect != null && "oracle".equalsIgnoreCase( dialect ) )
+       /* if ( dialect != null && "oracle".equalsIgnoreCase( dialect ) )
             return new OracleDialect( "", 11, 2 );
+        */
         return new PostGISDialect( "2.0.0" );
     }
 
