@@ -601,6 +601,11 @@ public class ShapeFeatureStore implements FeatureStore {
         return schema.getFeatureType( ftName ) != null;
     }
 
+    @Override
+    public boolean isMaxFeaturesAndStartIndexApplicable( Query[] queries ) {
+        return false;
+    }
+
     /**
      * Returns the CRS used by the shape file.
      * 
