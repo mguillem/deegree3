@@ -58,6 +58,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
+import org.deegree.services.config.ApiKey;
 import org.slf4j.Logger;
 
 /**
@@ -72,6 +73,8 @@ public class ConfigServlet extends HttpServlet {
     private static final long serialVersionUID = -4412872621677620591L;
 
     private static final Logger LOG = getLogger( ConfigServlet.class );
+    
+    private static ApiKey token = new ApiKey();
 
     @Override
     public void init()
@@ -130,6 +133,8 @@ public class ConfigServlet extends HttpServlet {
 
     private void dispatch( String path, HttpServletRequest req, HttpServletResponse resp )
                             throws IOException, ServletException {
+        token.validate( req );
+        
         if ( path.toLowerCase().startsWith( "/download" ) ) {
             download( path.substring( 9 ), resp );
         }
@@ -199,5 +204,4 @@ public class ConfigServlet extends HttpServlet {
             dispatch( path, req, resp );
         }
     }
-
 }
