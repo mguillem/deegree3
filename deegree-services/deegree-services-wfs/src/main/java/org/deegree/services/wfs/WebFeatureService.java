@@ -142,6 +142,7 @@ import org.deegree.services.ows.OWS110ExceptionReportSerializer;
 import org.deegree.services.ows.PreOWSExceptionReportSerializer;
 import org.deegree.services.wfs.format.Format;
 import org.deegree.services.wfs.format.geojson.GeoJsonFormat;
+import org.deegree.services.wfs.format.csv.CsvFormat;
 import org.deegree.services.wfs.query.StoredQueryHandler;
 import org.deegree.workspace.ResourceIdentifier;
 import org.deegree.workspace.ResourceInitException;
@@ -236,7 +237,7 @@ public class WebFeatureService extends AbstractOWS {
     private static final Logger LOG = LoggerFactory.getLogger( WebFeatureService.class );
 
     private static final int DEFAULT_MAX_FEATURES = 15000;
-    
+
     private WfsFeatureStoreManager service;
 
     private LockFeatureHandler lockFeatureHandler;
@@ -578,6 +579,7 @@ public class WebFeatureService extends AbstractOWS {
             mimeTypeToFormat.put( "text/xml; subtype=\"gml/3.2.1\"", gml32 );
             mimeTypeToFormat.put( "text/xml; subtype=\"gml/3.2.2\"", gml32 );
             mimeTypeToFormat.put( "application/geo+json", new GeoJsonFormat( this ) );
+            mimeTypeToFormat.put( "text/csv", new CsvFormat( this ) );
         } else {
             LOG.debug( "Using customized format configuration." );
             for ( JAXBElement<? extends AbstractFormatType> formatEl : formatList ) {
@@ -589,6 +591,8 @@ public class WebFeatureService extends AbstractOWS {
                 } else if (formatDef instanceof  GeoJSONFormat ){
                     boolean allowOtherCrsThanWGS84 = ((GeoJSONFormat) formatDef).isAllowOtherCrsThanWGS84();
                     format = new GeoJsonFormat( this, allowOtherCrsThanWGS84 );
+                } else if (formatDef instanceof org.deegree.services.jaxb.wfs.CsvFormat ){
+                    format = new CsvFormat( this );
                 } else if ( formatDef instanceof CustomFormat ) {
                     CustomFormat cf = (CustomFormat) formatDef;
                     String className = cf.getJavaClass();
