@@ -136,7 +136,7 @@ public class DeegreeWorkspaceUpdater {
         fileStatusMap.clear();
         final List<File> allFiles = new ArrayList<File>();
         collectFiles( wsDir, allFiles );
-        for ( File file : allFiles ) {       
+        for ( File file : allFiles ) {
             fileStatusMap.put( file, file.lastModified() );
         }
     }
@@ -363,8 +363,8 @@ public class DeegreeWorkspaceUpdater {
     private File getResourceFile( ResourceMetadata<? extends Resource> md ) {
         if ( md.getLocation() instanceof DefaultResourceLocation<?> ) {
             DefaultResourceLocation<?> defaultResourceLocation = (DefaultResourceLocation<Resource>) md.getLocation();
-            if ( defaultResourceLocation.getFile() != null ) {
-                return defaultResourceLocation.getFile();
+            if ( defaultResourceLocation.getAsFile() != null ) {
+                return defaultResourceLocation.getAsFile();
             }
         }
         return null;

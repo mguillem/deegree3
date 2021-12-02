@@ -294,8 +294,8 @@ BOTH, default is BOTH
 |RenderingQuality |0..1 |String |Whether to render LOW, NORMAL or HIGH
 quality, default is HIGH
 
-|Interpolation |0..1 |String |Whether to use BILINEAR, NEAREST_NEIGHBOUR
-or BICUBIC interpolation, default is NEAREST_NEIGHBOUR
+|Interpolation |0..1 |String |Whether to use BILINEAR, NEARESTNEIGHBOUR
+or BICUBIC interpolation, default is NEARESTNEIGHBOUR
 
 |MaxFeatures |0..1 |Integer |Maximum number of features to render at
 once, default is 10000
@@ -340,7 +340,7 @@ and optionally, what styles. Let's have a look at an example:
                xmlns:d='http://www.deegree.org/metadata/description'
                xmlns:s='http://www.deegree.org/metadata/spatial'
                xmlns:l='http://www.deegree.org/layers/base'
-               configVersion='3.2.0'>
+               configVersion='3.4.0'>
 
   <AutoLayers>
     <FeatureStoreId>myfeaturestore</FeatureStoreId>
@@ -371,7 +371,7 @@ The basic structure of a manual configuration looks like this:
                xmlns:d='http://www.deegree.org/metadata/description'
                xmlns:s='http://www.deegree.org/metadata/spatial'
                xmlns:l='http://www.deegree.org/layers/base'
-               configVersion='3.2.0'>
+               configVersion='3.4.0'>
   <FeatureStoreId>myfeaturestore</FeatureStoreId>
   <FeatureLayer>
   ...

@@ -17,10 +17,10 @@ import org.deegree.workspace.Workspace;
 import org.deegree.workspace.WorkspaceUtils;
 
 /**
- * 
+ *
  * @author <a href="mailto:markus@beefcafe.de">Markus Schneider</a>
  * @author last edited by: $Author$
- * 
+ *
  * @version $Revision$, $Date$
  */
 public class Update {

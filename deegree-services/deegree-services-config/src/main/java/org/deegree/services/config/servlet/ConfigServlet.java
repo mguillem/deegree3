@@ -90,6 +90,7 @@ public class ConfigServlet extends HttpServlet {
             data.append( "GET /config/restart[/path]                                   - restarts all resources connected to the specified one\n" );
             data.append( "GET /config/restart/wsname                                   - restart with workspace <wsname>\n" );
             data.append( "GET /config/update                                           - rescan config files and update resources\n" );
+            data.append( "GET /config/update/wsname                                    - update with workspace <wsname>, rescan config files and update resources\n" );
             data.append( "GET /config/listworkspaces                                   - list available workspace names\n" );
             data.append( "GET /config/list[/path]                                      - list currently running workspace or directory in workspace\n" );
             data.append( "GET /config/list/wsname[/path]                               - list workspace with name <wsname> or directory in workspace\n" );
