@@ -237,7 +237,7 @@ public class WebFeatureService extends AbstractOWS {
     private static final Logger LOG = LoggerFactory.getLogger( WebFeatureService.class );
 
     private static final int DEFAULT_MAX_FEATURES = 15000;
-
+    
     private WfsFeatureStoreManager service;
 
     private LockFeatureHandler lockFeatureHandler;
@@ -274,6 +274,8 @@ public class WebFeatureService extends AbstractOWS {
 
     private ReferencePatternMatcher referencePatternMatcher;
 
+    private boolean isStrict;
+
     public WebFeatureService( ResourceMetadata<OWS> metadata, Workspace workspace, Object jaxbConfig ) {
         super( metadata, workspace, jaxbConfig );
     }
@@ -287,6 +289,7 @@ public class WebFeatureService extends AbstractOWS {
         DeegreeWFS jaxbConfig = (DeegreeWFS) controllerConf;
         initOfferedVersions( jaxbConfig.getSupportedVersions() );
 
+        isStrict = jaxbConfig.isStrict() != null ? jaxbConfig.isStrict() : false;
         EnableTransactions enableTransactions = jaxbConfig.getEnableTransactions();
         if ( enableTransactions != null ) {
             this.enableTransactions = enableTransactions.isValue();
@@ -1474,6 +1477,13 @@ public class WebFeatureService extends AbstractOWS {
     }
 
     /**
+     * @return <code>true</code> if the service should behave strict, <code>false</code> otherwise
+     */
+    public boolean isStrict() {
+        return isStrict;
+    }
+
+    /**
      * Checks if a request version can be handled by this controller (i.e. if is supported by the implementation *and*
      * offered by the current configuration).
      * <p>
@@ -1511,5 +1521,4 @@ public class WebFeatureService extends AbstractOWS {
             throw new InvalidParameterValueException(
                                                       "ResultType 'hits' is not allowed in GetFeatureWithLock requests!" );
     }
-
 }

@@ -100,6 +100,8 @@ public class RemoteWFSFeatureStore implements FeatureStore {
 
     private AppSchema appSchema;
 
+    private boolean strict;
+
     /**
      * Creates a new {@link RemoteWFSFeatureStore} for the given capabilities URL.
      * 
