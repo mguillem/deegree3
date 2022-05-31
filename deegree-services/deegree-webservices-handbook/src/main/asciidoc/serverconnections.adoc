@@ -243,8 +243,7 @@ creating an Oracle UCP connection pool.
 
 The database connection config file format is defined by schema file
 http://schemas.deegree.org/3.5/jdbc/datasource/datasource.xsd. The
-root element is _DataSourceConnectionProvider_ and the config
-attribute must be _3.4.0_. The following table lists the available
+root element is _DataSourceConnectionProvider_, the following table lists the available
 configuration options. When specifiying them, their order must be
 respected.
 
@@ -391,7 +390,7 @@ is called 'inspire', the database user is 'postgres' and password is
 
 The legacy connection config file format is defined by schema file
 http://schemas.deegree.org/3.5/jdbc/jdbc.xsd. The root element is
-_JDBCConnection_ and the config attribute must be _3.0.0_. The
+_JDBCConnection_, the
 following table lists the available configuration options. When
 specifiying them, their order must be respected.
 
