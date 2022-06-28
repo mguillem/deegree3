@@ -144,7 +144,11 @@ public class ConfigServlet extends HttpServlet {
         }
 
         if ( path.toLowerCase().startsWith( "/update" ) ) {
-            update( path.substring( 7 ), resp );
+            if ( path.toLowerCase().startsWith( "/update/bboxcache" ) ) {
+                updateBboxCache( path.substring( 17 ), req.getQueryString(), resp );
+            } else {
+                update( path.substring( 7 ), resp );
+            }
         }
 
         if ( path.toLowerCase().startsWith( "/listworkspaces" ) ) {
@@ -171,9 +175,6 @@ public class ConfigServlet extends HttpServlet {
 
         if ( path.toLowerCase().startsWith( "/validate" ) ) {
             validate( path.substring( 9 ), resp );
-        }
-        if ( path.toLowerCase().startsWith( "/update/bboxcache" ) ) {
-            updateBboxCache( path.substring( 17 ), req.getQueryString(), resp );
         }
     }
 
