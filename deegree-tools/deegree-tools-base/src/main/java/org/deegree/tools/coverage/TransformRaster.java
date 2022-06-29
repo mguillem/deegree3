@@ -45,8 +45,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.coverage.raster.AbstractRaster;
 import org.deegree.coverage.raster.RasterTransformer;
 import org.deegree.coverage.raster.TiledRaster;
@@ -56,6 +55,8 @@ import org.deegree.coverage.raster.interpolation.InterpolationType;
 import org.deegree.coverage.raster.io.RasterIOOptions;
 import org.deegree.coverage.raster.utils.RasterFactory;
 import org.deegree.cs.persistence.CRSManager;
+import org.deegree.tools.commons.ToolboxTool;
+import org.springframework.stereotype.Component;
 
 /**
  * This is a command line tool to transform raster files between coordinate systems. Multiple input files will be
@@ -67,13 +68,17 @@ import org.deegree.cs.persistence.CRSManager;
  * @version $Revision$, $Date$
  * 
  */
-@Tool("Transforms a raster with the given crs into another crs")
-public class TransformRaster {
+@Component
+public class TransformRaster implements ToolboxTool {
 
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
+    private static final String DESCRIPTION = "Transforms a raster with the given crs into another crs";
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args ) {
         CommandLineParser parser = new PosixParser();
 
         Options options = new Options();

@@ -33,7 +33,7 @@
 
  e-mail: info@deegree.org
  ----------------------------------------------------------------------------*/
-package org.deegree.commons.tools;
+package org.deegree.tools.commons;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

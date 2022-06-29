@@ -47,7 +47,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.deegree.commons.tools.CommandUtils;
 import org.deegree.commons.utils.FileUtils;
 import org.deegree.coverage.AbstractCoverage;
 import org.deegree.coverage.raster.cache.RasterCache;
@@ -55,6 +54,7 @@ import org.deegree.coverage.raster.data.info.DataType;
 import org.deegree.coverage.raster.geom.RasterGeoReference.OriginLocation;
 import org.deegree.coverage.raster.io.RasterIOOptions;
 import org.deegree.coverage.raster.utils.RasterBuilder;
+import org.deegree.tools.commons.CommandUtils;
 import org.slf4j.Logger;
 
 /**

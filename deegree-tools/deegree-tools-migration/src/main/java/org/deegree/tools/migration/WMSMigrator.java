@@ -37,9 +37,10 @@ package org.deegree.tools.migration;
 
 import java.io.File;
 
-import org.deegree.commons.annotations.Tool;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.workspace.Workspace;
 import org.deegree.workspace.standard.DefaultWorkspace;
+import org.springframework.stereotype.Component;
 
 /**
  * 
@@ -48,10 +49,17 @@ import org.deegree.workspace.standard.DefaultWorkspace;
  * 
  * @version $Revision: $, $Date: $
  */
-@Tool(value = "Converts a 3.1 or earlier WMS configuration to 3.2 style configurations. Currently only works for feature layers.")
-public class WMSMigrator {
+@Component
+public class WMSMigrator implements ToolboxTool {
 
-    public static void main( String[] args ) {
+    private static final String DESCRIPTION = "Converts a 3.1 or earlier WMS configuration to 3.2 style configurations. Currently only works for feature layers.";
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args ) {
         if ( args.length == 0 ) {
             System.out.println( "You must specify the workspace location." );
             return;

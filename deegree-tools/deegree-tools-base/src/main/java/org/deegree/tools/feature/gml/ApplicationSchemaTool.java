@@ -64,10 +64,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
 import org.deegree.commons.tom.gml.property.PropertyType;
 import org.deegree.commons.tom.primitive.BaseType;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.feature.persistence.FeatureStore;
 import org.deegree.feature.persistence.FeatureStoreProvider;
 import org.deegree.feature.persistence.sql.FeatureTypeMapping;
@@ -77,6 +76,7 @@ import org.deegree.feature.types.AppSchema;
 import org.deegree.feature.types.FeatureType;
 import org.deegree.gml.GMLVersion;
 import org.deegree.gml.schema.GMLAppSchemaReader;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.tools.i18n.Messages;
 import org.deegree.workspace.ResourceIdentifier;
 import org.deegree.workspace.ResourceInitException;
@@ -84,6 +84,7 @@ import org.deegree.workspace.Workspace;
 import org.deegree.workspace.standard.DefaultResourceIdentifier;
 import org.deegree.workspace.standard.DefaultResourceLocation;
 import org.deegree.workspace.standard.DefaultWorkspace;
+import org.springframework.stereotype.Component;
 
 /**
  * Swiss Army knife for GML/deegree application schemas.
@@ -93,8 +94,10 @@ import org.deegree.workspace.standard.DefaultWorkspace;
  * 
  * @version $Revision$, $Date$
  */
-@Tool("Swiss Army knife for GML/deegree application schemas.")
-public class ApplicationSchemaTool {
+@Component
+public class ApplicationSchemaTool implements ToolboxTool {
+
+    private static final String DESCRIPTION = "Swiss Army knife for GML/deegree application schemas.";
 
     // command line parameters
     private static final String OPT_ACTION = "action";
@@ -522,16 +525,13 @@ public class ApplicationSchemaTool {
         }
     }
 
-    /**
-     * @param args
-     * @throws IllegalAccessException
-     * @throws InstantiationException
-     * @throws ClassNotFoundException
-     * @throws ClassCastException
-     * @throws JAXBException
-     * @throws IOException
-     */
-    public static void main( String[] args )
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+     @Override
+    public void execute( String[] args )
                             throws ClassCastException, ClassNotFoundException, InstantiationException,
                             IllegalAccessException, JAXBException, IOException {
 

@@ -59,7 +59,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
 import org.deegree.coverage.raster.AbstractRaster;
 import org.deegree.coverage.raster.SimpleRaster;
 import org.deegree.coverage.raster.data.RasterData;
@@ -78,11 +77,13 @@ import org.deegree.coverage.tools.RasterOptionsParser;
 import org.deegree.geometry.Envelope;
 import org.deegree.geometry.Geometry;
 import org.deegree.geometry.GeometryFactory;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.tools.coverage.gridifier.index.MultiLevelMemoryTileGridIndex;
 import org.deegree.tools.coverage.gridifier.index.MultiLevelRasterTileIndex;
 import org.deegree.tools.coverage.gridifier.index.MultiResolutionTileGrid;
 import org.deegree.tools.coverage.gridifier.index.TileFile;
+import org.springframework.stereotype.Component;
 
 /**
  * Command line tool for converting a raster tree into a grid of regular, non-overlapping raster cells.
@@ -92,9 +93,11 @@ import org.deegree.tools.coverage.gridifier.index.TileFile;
  * 
  * @version $Revision: $, $Date: $
  */
-@Tool("Converts a deegree 2 raster tree into a grid of regular, non-overlapping raster cells encoded as raw RGB blobs, suitable for the WPVS.")
-public class RasterTreeGridifier {
+@Component
+public class RasterTreeGridifier implements ToolboxTool {
     final static org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger( RasterTreeGridifier.class );
+
+    private static final String DESCRIPTION = "Converts a deegree 2 raster tree into a grid of regular, non-overlapping raster cells encoded as raw RGB blobs, suitable for the WPVS.";
 
     // private static final String OPT_INPUT_DIR = "inputdir";
 
@@ -320,13 +323,13 @@ public class RasterTreeGridifier {
         LOG.info( "done." );
     }
 
-    /**
-     * @param args
-     * @throws SQLException
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    public static void main( String[] args )
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args )
                             throws SQLException, IOException, InterruptedException {
         Options options = initOptions();
 

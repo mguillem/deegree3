@@ -35,9 +35,9 @@
  ----------------------------------------------------------------------------*/
 package org.deegree.tools.coverage;
 
-import static org.deegree.commons.tools.CommandUtils.OPT_VERBOSE;
-import static org.deegree.commons.tools.CommandUtils.getFloatOption;
-import static org.deegree.commons.tools.CommandUtils.getIntOption;
+import static org.deegree.tools.commons.CommandUtils.OPT_VERBOSE;
+import static org.deegree.tools.commons.CommandUtils.getFloatOption;
+import static org.deegree.tools.commons.CommandUtils.getIntOption;
 import static org.deegree.coverage.tools.RasterCommandUtils.getInterpolationType;
 import static org.deegree.coverage.tools.RasterCommandUtils.parseBBOX;
 import static org.deegree.coverage.tools.RasterOptionsParser.OPT_OUTPUT_TYPE;
@@ -55,8 +55,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.coverage.AbstractCoverage;
 import org.deegree.coverage.raster.AbstractRaster;
 import org.deegree.coverage.raster.interpolation.InterpolationType;
@@ -68,7 +67,9 @@ import org.deegree.cs.exceptions.TransformationException;
 import org.deegree.cs.exceptions.UnknownCRSException;
 import org.deegree.cs.persistence.CRSManager;
 import org.deegree.geometry.Envelope;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.tools.coverage.rtb.RasterTreeBuilder;
+import org.springframework.stereotype.Component;
 
 /**
   * This is the commandline interface for the {@link RasterTreeBuilder}.
@@ -78,9 +79,10 @@ import org.deegree.tools.coverage.rtb.RasterTreeBuilder;
  * 
  * @version $Revision$, $Date$
  */
-@Tool("Builds a raster tree from a given set of rasters.")
-public class RTBClient {
+@Component
+public class RTBClient implements ToolboxTool {
 
+    private static final String DESCRIPTION = "Builds a raster tree from a given set of rasters.";
     private static final String OPT_BBOX = "bbox";
 
     private static final String OPT_NUM_THREADS = "num_threads";
@@ -103,10 +105,14 @@ public class RTBClient {
 
     private static final int DEFAULT_TILE_SIZE = 800;
 
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args )
+                    throws Exception {
         CommandLineParser parser = new PosixParser();
 
         Options options = initOptions();

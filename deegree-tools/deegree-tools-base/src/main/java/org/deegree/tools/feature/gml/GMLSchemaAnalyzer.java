@@ -43,10 +43,11 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.xerces.xs.XSElementDeclaration;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.gml.GMLVersion;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.tools.i18n.Messages;
+import org.springframework.stereotype.Component;
 
 /**
  * Prints an analysis of the feature type hierarchy defined in a GML application schema as well as information on the
@@ -57,8 +58,10 @@ import org.deegree.tools.i18n.Messages;
  * 
  * @version $Revision:$, $Date:$
  */
-@Tool("Prints an analysis of the feature type hierarchy defined in a GML application schema as well as information on the geometry element hierarchy.")
-public class GMLSchemaAnalyzer {
+@Component
+public class GMLSchemaAnalyzer implements ToolboxTool {
+
+    private static final String DESCRIPTION = "Prints an analysis of the feature type hierarchy defined in a GML application schema as well as information on the geometry element hierarchy.";
 
     // command line parameters
     private static final String OPT_INPUT_FILE = "inputfile";
@@ -115,15 +118,13 @@ public class GMLSchemaAnalyzer {
         }
     }
 
-    /**
-     * @param args
-     * @throws IllegalAccessException
-     * @throws InstantiationException
-     * @throws ClassNotFoundException
-     * @throws ClassCastException
-     * @throws MalformedURLException
-     */
-    public static void main( String[] args )
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args )
                             throws ClassCastException, ClassNotFoundException, InstantiationException,
                             IllegalAccessException, MalformedURLException {
 

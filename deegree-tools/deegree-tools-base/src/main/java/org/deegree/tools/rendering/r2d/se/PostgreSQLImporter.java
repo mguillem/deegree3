@@ -47,17 +47,18 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.db.ConnectionProvider;
 import org.deegree.db.ConnectionProviderUtils;
 import org.deegree.style.se.parser.PostgreSQLWriter;
 import org.deegree.style.se.parser.SymbologyParser;
 import org.deegree.style.se.unevaluated.Style;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.tools.i18n.Messages;
 import org.deegree.workspace.ResourceLocation;
 import org.deegree.workspace.Workspace;
 import org.deegree.workspace.standard.DefaultWorkspace;
+import org.springframework.stereotype.Component;
 
 /**
  * <code>PostgreSQLImporter</code>
@@ -67,8 +68,11 @@ import org.deegree.workspace.standard.DefaultWorkspace;
  * 
  * @version $Revision$, $Date$
  */
-@Tool(value = "This tool can be used to import SLD/SE files into a WMS styles database.")
-public class PostgreSQLImporter {
+@Component
+public class PostgreSQLImporter implements ToolboxTool {
+
+    private static final String DESCRIPTION = "This tool can be used to import SLD/SE files into a WMS styles database.";
+
     private static Options initOptions() {
         Options opts = new Options();
 
@@ -98,13 +102,13 @@ public class PostgreSQLImporter {
 
     }
 
-    /**
-     * @param args
-     * @throws XMLStreamException
-     * @throws FactoryConfigurationError
-     * @throws IOException
-     */
-    public static void main( String[] args )
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args )
                             throws XMLStreamException, FactoryConfigurationError, IOException {
         Options options = initOptions();
 

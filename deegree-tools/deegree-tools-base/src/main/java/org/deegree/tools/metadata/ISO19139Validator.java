@@ -46,8 +46,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
+import org.deegree.tools.commons.ToolboxTool;
+import org.springframework.stereotype.Component;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -63,9 +64,10 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * 
  * @version $Revision: $, $Date: $
  */
-@Tool(value = "Validates single metadata records or metadata records from directory against the ISO Schema.")
-public class ISO19139Validator {
+@Component
+public class ISO19139Validator implements ToolboxTool {
 
+    private static final String DESCRIPTION = "Validates single metadata records or metadata records from directory against the ISO Schema.";
     private static final String OPT_SRC = "source";
 
     public enum SCHEMAVERSION {
@@ -183,8 +185,13 @@ public class ISO19139Validator {
         }
     }
 
-    public static void main( String[] args )
-                            throws Exception {
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args ) {
 
         if ( args.length == 0 || ( args.length > 0 && ( args[0].contains( "help" ) || args[0].contains( "?" ) ) ) ) {
             printHelp( initOptions() );

@@ -35,8 +35,8 @@
  ----------------------------------------------------------------------------*/
 package org.deegree.tools.coverage.converter;
 
-import static org.deegree.commons.tools.CommandUtils.OPT_VERBOSE;
-import static org.deegree.commons.tools.CommandUtils.getIntOption;
+import static org.deegree.tools.commons.CommandUtils.OPT_VERBOSE;
+import static org.deegree.tools.commons.CommandUtils.getIntOption;
 import static org.deegree.coverage.tools.RasterOptionsParser.OPT_OUTPUT_TYPE;
 import static org.deegree.coverage.tools.RasterOptionsParser.OPT_OUTPUT_TYPE_ABBREV;
 import static org.deegree.coverage.tools.RasterOptionsParser.OPT_RASTER_OUT_LOC;
@@ -56,8 +56,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.commons.utils.FileUtils;
 import org.deegree.coverage.AbstractCoverage;
 import org.deegree.coverage.raster.AbstractRaster;
@@ -72,6 +71,8 @@ import org.deegree.coverage.raster.utils.RasterFactory;
 import org.deegree.coverage.tools.RasterOptionsParser;
 import org.deegree.cs.exceptions.TransformationException;
 import org.deegree.cs.exceptions.UnknownCRSException;
+import org.deegree.tools.commons.ToolboxTool;
+import org.springframework.stereotype.Component;
 
 /**
  * Takes a raster file, or a number of raster files and convert it/them to another raster type.
@@ -81,21 +82,27 @@ import org.deegree.cs.exceptions.UnknownCRSException;
  * 
  * @version $Revision$, $Date$
  */
-@Tool("Converts a raster from one type into another.")
-public class RasterConverter {
+@Component
+public class RasterConverter implements ToolboxTool {
+
+    private static final String DESCRIPTION = "Converts a raster from one type into another.";
 
     private static final String OPT_NUM_THREADS = "num_threads";
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
 
     /**
      * a starter method to transform a given point or a serie of points read from a file.
-     * 
+     *
      * @param args
      * @throws UnknownCRSException
      * @throws IOException
      *             if the buffered reader could not read from the file
      */
-    public static void main( String[] args )
-                            throws UnknownCRSException, IOException {
+    @Override
+    public void execute( String[] args ) {
         CommandLineParser parser = new PosixParser();
 
         Options options = initOptions();

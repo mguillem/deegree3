@@ -47,8 +47,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
 import org.deegree.cs.CRSCodeType;
 import org.deegree.cs.coordinatesystems.ICRS;
 import org.deegree.cs.coordinatesystems.IProjectedCRS;
@@ -60,9 +58,12 @@ import org.deegree.cs.projections.azimuthal.StereographicAzimuthal;
 import org.deegree.cs.projections.conic.LambertConformalConic;
 import org.deegree.cs.projections.cylindric.TransverseMercator;
 import org.deegree.cs.transformations.TransformationFactory.DSTransform;
+import org.deegree.tools.commons.CommandUtils;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.tools.coverage.gridifier.RasterTreeGridifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * The <code>EPSGDBSynchronizer</code> class sets the Codes for CRS Identifiables that do not have such codes (actually,
@@ -88,10 +89,12 @@ import org.slf4j.LoggerFactory;
  * @version $Revision: $, $Date: $
  * 
  */
-@Tool("Connects to the EPSG database at //hurricane/epsg, and for all projections (other objects to be added!) that have no CRS codetype in the CRS database, the codes are fetched from the EPSG database.")
-public class EPSGDBSynchronizer {
+@Component
+public class EPSGDBSynchronizer implements ToolboxTool {
 
     private static Logger LOG = LoggerFactory.getLogger( EPSGDBSynchronizer.class );
+
+    private static final String DESCRIPTION = "Connects to the EPSG database at //hurricane/epsg, and for all projections (other objects to be added!) that have no CRS codetype in the CRS database, the codes are fetched from the EPSG database.";
 
     // private static final String CRS_CONFIG = "org.deegree.cs.configuration.deegree.db.DatabaseCRSProvider";
 
@@ -346,7 +349,13 @@ public class EPSGDBSynchronizer {
         CommandUtils.printHelp( options, RasterTreeGridifier.class.getSimpleName(), null, "file/dir [file/dir(s)]" );
     }
 
-    static public void main( String[] args ) {
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args ){
         EPSGDBSynchronizer sync = new EPSGDBSynchronizer();
 
         Options options = initOptions();

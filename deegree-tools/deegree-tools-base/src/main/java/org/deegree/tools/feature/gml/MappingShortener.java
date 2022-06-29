@@ -36,7 +36,6 @@
 package org.deegree.tools.feature.gml;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -46,18 +45,26 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.tools.i18n.Messages;
+import org.springframework.stereotype.Component;
 
-@Tool("Helps creating readable short versions of feature type / property names for mapping to db.")
-public class MappingShortener { 
+@Component
+public class MappingShortener implements ToolboxTool {
 
+    private static final String DESCRIPTION = "Helps creating readable short versions of feature type / property names for mapping to db.";
     private static final String OPT_INPUT_FILE = "inputfile";
     
     private static final String OPT_RULES_FILE = "rulesfile";
-    
-    public static void main (String [] args) throws FileNotFoundException, IOException {
+
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args ) throws IOException {
         Options options = initOptions();
 
         // for the moment, using the CLI API there is no way to respond to a help argument; see

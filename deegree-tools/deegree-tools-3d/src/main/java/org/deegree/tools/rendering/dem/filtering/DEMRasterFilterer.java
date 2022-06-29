@@ -36,7 +36,7 @@
 package org.deegree.tools.rendering.dem.filtering;
 
 import static java.lang.System.currentTimeMillis;
-import static org.deegree.commons.tools.CommandUtils.OPT_VERBOSE;
+import static org.deegree.tools.commons.CommandUtils.OPT_VERBOSE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
@@ -54,8 +54,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.commons.utils.Pair;
 import org.deegree.coverage.AbstractCoverage;
 import org.deegree.coverage.raster.AbstractRaster;
@@ -74,10 +73,12 @@ import org.deegree.coverage.raster.utils.RasterFactory;
 import org.deegree.coverage.raster.utils.Rasters;
 import org.deegree.coverage.tools.RasterOptionsParser;
 import org.deegree.geometry.Envelope;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.tools.rendering.dem.filtering.filters.DEMFilter;
 import org.deegree.tools.rendering.dem.filtering.filters.SmoothingFilter;
 import org.deegree.tools.rendering.manager.DataManager;
 import org.slf4j.Logger;
+import org.springframework.stereotype.Component;
 
 /**
  * The <code>DEMRasterFilterer</code> applies a filter to a dem by using multiple threads.
@@ -87,10 +88,12 @@ import org.slf4j.Logger;
  * @version $Revision$, $Date$
  * 
  */
-@Tool("Applies a filter to a dem, which is loaded from a raster.")
-public class DEMRasterFilterer {
+@Component
+public class DEMRasterFilterer implements ToolboxTool {
 
     static final Logger LOG = getLogger( DEMRasterFilterer.class );
+
+    private static final String DESCRIPTION = "Applies a filter to a dem, which is loaded from a raster.";
 
     /*
      * Command line options
@@ -262,7 +265,6 @@ public class DEMRasterFilterer {
     }
 
     /**
-     * @param tmpGridFile
      * @throws IOException
      */
     private void outputTiles()
@@ -322,13 +324,20 @@ public class DEMRasterFilterer {
 
     }
 
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
     /**
      * Creates the commandline parser and adds the options.
-     * 
+     *
      * @param args
-     *            passed to the tool
+     *                 passed to the tool
      */
-    public static void main( String[] args ) {
+    @Override
+    public void execute( String[] args )
+                    throws Exception {
         CommandLineParser parser = new PosixParser();
 
         Options options = initOptions();

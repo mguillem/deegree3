@@ -48,9 +48,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
 import org.deegree.commons.config.ResourceInitException;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.commons.xml.XMLParsingException;
 import org.deegree.cs.exceptions.UnknownCRSException;
 import org.deegree.feature.FeatureCollection;
@@ -62,20 +61,24 @@ import org.deegree.gml.GMLInputFactory;
 import org.deegree.gml.GMLStreamReader;
 import org.deegree.gml.GMLVersion;
 import org.deegree.protocol.wfs.transaction.action.IDGenMode;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.tools.i18n.Messages;
 import org.deegree.workspace.Workspace;
 import org.deegree.workspace.standard.DefaultWorkspace;
+import org.springframework.stereotype.Component;
 
 /**
  * Imports feature datasets into a feature store.
- * 
+ *
  * @author <a href="mailto:schneider@lat-lon.de">Markus Schneider </a>
  * @author last edited by: $Author$
- * 
+ *
  * @version $Revision$, $Date$
  */
-@Tool("Imports feature datasets into a feature store")
-public class FeatureStoreLoader {
+@Component
+public class FeatureStoreLoader implements ToolboxTool {
+
+    private static final String DESCRIPTION = "Imports feature datasets into a feature store";
 
     // command line parameters
     private static final String OPT_ACTION = "action";
@@ -95,8 +98,8 @@ public class FeatureStoreLoader {
     }
 
     private static void insert( FeatureStore fs, String datasetFile, GMLVersion gmlVersion, IDGenMode mode )
-                            throws XMLStreamException, FactoryConfigurationError, IOException, XMLParsingException,
-                            UnknownCRSException, FeatureStoreException {
+                    throws XMLStreamException, FactoryConfigurationError, IOException, XMLParsingException,
+                    UnknownCRSException, FeatureStoreException {
 
         File f = new File( datasetFile );
         URL url = f.toURI().toURL();
@@ -126,19 +129,15 @@ public class FeatureStoreLoader {
         }
     }
 
-    /**
-     * @param args
-     * @throws FeatureStoreException
-     * @throws UnknownCRSException
-     * @throws IOException
-     * @throws FactoryConfigurationError
-     * @throws XMLStreamException
-     * @throws XMLParsingException
-     * @throws ResourceInitException
-     */
-    public static void main( String[] args )
-                            throws FeatureStoreException, XMLParsingException, XMLStreamException,
-                            FactoryConfigurationError, IOException, UnknownCRSException, ResourceInitException {
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args )
+                    throws FeatureStoreException, XMLParsingException, XMLStreamException,
+                    FactoryConfigurationError, IOException, UnknownCRSException, ResourceInitException {
 
         // for the moment, using the CLI API there is no way to respond to a help argument; see
         // https://issues.apache.org/jira/browse/CLI-179

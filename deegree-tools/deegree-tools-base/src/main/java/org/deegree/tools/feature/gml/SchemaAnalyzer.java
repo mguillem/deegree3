@@ -64,8 +64,9 @@ import org.apache.xerces.xs.XSObjectList;
 import org.apache.xerces.xs.XSParticle;
 import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.apache.xerces.xs.XSTypeDefinition;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
+import org.deegree.tools.commons.ToolboxTool;
+import org.springframework.stereotype.Component;
 import org.w3c.dom.bootstrap.DOMImplementationRegistry;
 
 /**
@@ -76,9 +77,10 @@ import org.w3c.dom.bootstrap.DOMImplementationRegistry;
  * 
  * @version $Revision:$, $Date:$
  */
-@Tool("Prints an analysis of the global element declarations in an XML schema and their content models.")
-public class SchemaAnalyzer {
+@Component
+public class SchemaAnalyzer implements ToolboxTool {
 
+    private static final String DESCRIPTION = "Prints an analysis of the global element declarations in an XML schema and their content models.";
     // command line parameters
     private static final String OPT_INPUT_FILE = "inputfile";
 
@@ -410,15 +412,13 @@ public class SchemaAnalyzer {
         }
     }
 
-    /**
-     * @param args
-     * @throws IllegalAccessException
-     * @throws InstantiationException
-     * @throws ClassNotFoundException
-     * @throws ClassCastException
-     * @throws IOException
-     */
-    public static void main( String[] args )
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args )
                             throws ClassCastException, ClassNotFoundException, InstantiationException,
                             IllegalAccessException, IOException {
 

@@ -52,13 +52,14 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.cs.CRSCodeType;
 import org.deegree.cs.coordinatesystems.ICRS;
 import org.deegree.cs.exceptions.UnknownCRSException;
 import org.deegree.cs.persistence.CRSManager;
 import org.deegree.cs.persistence.CRSStore;
+import org.deegree.tools.commons.ToolboxTool;
+import org.springframework.stereotype.Component;
 
 /**
  * A utility program to inform the callee about the availability (-isAvailable param) of a certain crs or to retrieve
@@ -69,8 +70,10 @@ import org.deegree.cs.persistence.CRSStore;
  * 
  * @version $Revision: 10745 $, $Date: 2008-03-27 17:29:52 +0100 (Do, 27 Mrz 2008) $
  */
-@Tool("Retrieve information about the availability|definition of a certain crs in deegree")
-public class CRSInfo {
+@Component
+public class CRSInfo implements ToolboxTool {
+
+    private static final String DESCRIPTION = "Retrieve information about the availability|definition of a certain crs in deegree";
 
     /*
      * Command line options
@@ -166,16 +169,22 @@ public class CRSInfo {
         return allCRSs;
     }
 
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
     /**
      * @param args
-     *            following parameters are supported:
-     *            <ul>
-     *            <li>[-isAvailable srsName]</li>
-     *            <li>[-file outputfile]</li>
-     *            <li>[-verify]</li>
-     *            </ul>
+     *                 following parameters are supported:
+     *                 <ul>
+     *                 <li>[-isAvailable srsName]</li>
+     *                 <li>[-file outputfile]</li>
+     *                 <li>[-verify]</li>
+     *                 </ul>
      */
-    public static void main( String[] args ) {
+    @Override
+    public void execute( String[] args ) {
 
         CommandLineParser parser = new PosixParser();
 

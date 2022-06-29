@@ -36,6 +36,10 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>jakarta.xml.ws</groupId>
+      <artifactId>jakarta.xml.ws-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>javax.media</groupId>
       <artifactId>jai-core</artifactId>
     </dependency>

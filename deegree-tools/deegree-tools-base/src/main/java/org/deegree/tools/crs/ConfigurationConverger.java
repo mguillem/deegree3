@@ -38,7 +38,7 @@
 
 package org.deegree.tools.crs;
 
-import static org.deegree.commons.tools.CommandUtils.OPT_VERBOSE;
+import static org.deegree.tools.commons.CommandUtils.OPT_VERBOSE;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -54,8 +54,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.cs.coordinatesystems.ICRS;
 import org.deegree.cs.exceptions.TransformationException;
 import org.deegree.cs.exceptions.UnknownCRSException;
@@ -64,6 +63,8 @@ import org.deegree.cs.persistence.deegree.d3.DeegreeCRSStore;
 import org.deegree.cs.persistence.gml.GMLCRSStore;
 import org.deegree.cs.persistence.proj4.PROJ4CRSStore;
 import org.deegree.cs.transformations.TransformationFactory.DSTransform;
+import org.deegree.tools.commons.ToolboxTool;
+import org.springframework.stereotype.Component;
 
 /**
  * The <code>ConfigurationConverger</code> class TODO add class documentation here.
@@ -73,8 +74,10 @@ import org.deegree.cs.transformations.TransformationFactory.DSTransform;
  * @version $Revision$, $Date$
  * 
  */
-@Tool("Export the CoordinateSystems from a given Input format to a given Output format and place the result into an output File.")
-public class ConfigurationConverger {
+@Component
+public class ConfigurationConverger implements ToolboxTool {
+
+    private static final String DESCRIPTION = "Export the CoordinateSystems from a given Input format to a given Output format and place the result into an output File.";
 
     private static final String OPT_IN_FILE = "input";
 
@@ -113,6 +116,11 @@ public class ConfigurationConverger {
 
     }
 
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
     /**
      * Export the CoordinateSystems from a given Input format to a given Output format and place the result into an
      * output File. If the input format is Proj4, an input File will be provided. If the -verify option is provided,
@@ -122,8 +130,8 @@ public class ConfigurationConverger {
      * @param args
      * @throws Exception
      */
-    public static void main( String[] args )
-                            throws Exception {
+    @Override
+    public void execute( String[] args ) {
         CommandLineParser parser = new PosixParser();
 
         Options options = initOptions();

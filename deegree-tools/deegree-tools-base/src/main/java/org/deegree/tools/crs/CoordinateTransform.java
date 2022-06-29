@@ -35,7 +35,7 @@
 
 package org.deegree.tools.crs;
 
-import static org.deegree.commons.tools.CommandUtils.OPT_VERBOSE;
+import static org.deegree.tools.commons.CommandUtils.OPT_VERBOSE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.BufferedReader;
@@ -51,15 +51,16 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.cs.CoordinateTransformer;
 import org.deegree.cs.components.IUnit;
 import org.deegree.cs.coordinatesystems.ICRS;
 import org.deegree.cs.exceptions.TransformationException;
 import org.deegree.cs.exceptions.UnknownCRSException;
 import org.deegree.cs.persistence.CRSManager;
+import org.deegree.tools.commons.ToolboxTool;
 import org.slf4j.Logger;
+import org.springframework.stereotype.Component;
 
 /**
  * 
@@ -71,8 +72,10 @@ import org.slf4j.Logger;
  * @version $Revision$, $Date$
  * 
  */
-@Tool("Convert a point or a list of points from one SRS to another.")
-public class CoordinateTransform {
+@Component
+public class CoordinateTransform implements ToolboxTool {
+
+    private static final String DESCRIPTION = "Convert a point or a list of points from one SRS to another.";
 
     private static final String OPT_S_SRS = "s_srs";
 
@@ -148,12 +151,18 @@ public class CoordinateTransform {
 
     }
 
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
     /**
      * a starter method to transform a given point or a serie of points read from a file.
-     * 
+     *
      * @param args
      */
-    public static void main( String[] args ) {
+    @Override
+    public void execute( String[] args ) {
         CommandLineParser parser = new PosixParser();
 
         Options options = initOptions();

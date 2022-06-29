@@ -19,7 +19,7 @@
   <dependencies>
     <dependency>
       <groupId>org.deegree</groupId>
-      <artifactId>deegree-core-commons</artifactId>
+      <artifactId>deegree-tools-commons</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -31,6 +31,12 @@
       <groupId>org.deegree</groupId>
       <artifactId>deegree-layers-feature</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.deegree</groupId>
+      <artifactId>deegree-tools-commons</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
 

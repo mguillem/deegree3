@@ -46,24 +46,24 @@ import java.sql.SQLException;
 import java.util.HashSet;
 
 import javax.xml.stream.FactoryConfigurationError;
-import javax.xml.stream.XMLStreamException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.db.ConnectionProvider;
 import org.deegree.db.ConnectionProviderProvider;
 import org.deegree.db.ConnectionProviderUtils;
 import org.deegree.style.se.parser.PostgreSQLReader;
 import org.deegree.style.se.unevaluated.Style;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.tools.i18n.Messages;
 import org.deegree.workspace.Workspace;
 import org.deegree.workspace.standard.DefaultWorkspace;
 import org.slf4j.Logger;
+import org.springframework.stereotype.Component;
 
 /**
  * <code>StyleChecker</code>
@@ -73,9 +73,11 @@ import org.slf4j.Logger;
  * 
  * @version $Revision$, $Date$
  */
-@Tool(value = "This tool can be used to check and remove faulty styles in a WMS style database (PostgreSQL).")
-public class StyleChecker {
+@Component
+public class StyleChecker implements ToolboxTool {
     private static final Logger LOG = getLogger( StyleChecker.class );
+
+    private static final String DESCRIPTION = "This tool can be used to check and remove faulty styles in a WMS style database (PostgreSQL).";
 
     private static HashSet<Integer> faultyStyles = new HashSet<Integer>();
 
@@ -216,14 +218,14 @@ public class StyleChecker {
         }
     }
 
-    /**
-     * @param args
-     * @throws XMLStreamException
-     * @throws FactoryConfigurationError
-     * @throws IOException
-     */
-    public static void main( String[] args )
-                            throws XMLStreamException, FactoryConfigurationError, IOException {
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args )
+                            throws FactoryConfigurationError, IOException {
         Options options = initOptions();
 
         // for the moment, using the CLI API there is no way to respond to a help argument; see

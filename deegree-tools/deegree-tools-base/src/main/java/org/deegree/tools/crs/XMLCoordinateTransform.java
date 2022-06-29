@@ -35,31 +35,12 @@
 
 package org.deegree.tools.crs;
 
-import static org.deegree.commons.tools.CommandUtils.OPT_VERBOSE;
-import static org.slf4j.LoggerFactory.getLogger;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-
-import javax.xml.stream.FactoryConfigurationError;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
 import org.deegree.commons.xml.stax.IndentingXMLStreamWriter;
 import org.deegree.cs.coordinatesystems.ICRS;
 import org.deegree.cs.exceptions.TransformationException;
@@ -68,7 +49,26 @@ import org.deegree.cs.persistence.CRSManager;
 import org.deegree.cs.transformations.Transformation;
 import org.deegree.gml.GMLVersion;
 import org.deegree.gml.utils.XMLTransformer;
+import org.deegree.tools.commons.CommandUtils;
+import org.deegree.tools.commons.ToolboxTool;
 import org.slf4j.Logger;
+import org.springframework.stereotype.Component;
+
+import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+
+import static org.deegree.tools.commons.CommandUtils.OPT_VERBOSE;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Tool for converting the GML geometries inside an XML document from one SRS to another.
@@ -78,10 +78,12 @@ import org.slf4j.Logger;
  * 
  * @version $Revision$, $Date$
  */
-@Tool("Converts the GML geometries inside an XML document from one SRS to another.")
-public class XMLCoordinateTransform {
+@Component
+public class XMLCoordinateTransform implements ToolboxTool {
 
     private static final Logger LOG = getLogger( XMLCoordinateTransform.class );
+
+    private static final String DESCRIPTION = "Converts the GML geometries inside an XML document from one SRS to another.";
 
     private static final String OPT_S_SRS = "source_srs";
 
@@ -95,12 +97,16 @@ public class XMLCoordinateTransform {
 
     private static final String OPT_OUTPUT = "output";
 
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
     /**
      * a starter method to transform a given point or a serie of points read from a file.
      * 
      * @param args
      */
-    public static void main( String[] args ) {
+    public void execute( String[] args ) {
         CommandLineParser parser = new PosixParser();
 
         Options options = initOptions();

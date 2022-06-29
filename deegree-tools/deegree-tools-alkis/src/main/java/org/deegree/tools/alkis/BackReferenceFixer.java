@@ -35,31 +35,13 @@
  ----------------------------------------------------------------------------*/
 package org.deegree.tools.alkis;
 
-import static org.slf4j.LoggerFactory.getLogger;
-
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamReader;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.io.IOUtils;
-import org.deegree.commons.annotations.Tool;
 import org.deegree.commons.tom.gml.property.Property;
 import org.deegree.commons.tom.gml.property.PropertyType;
-import org.deegree.commons.tools.CommandUtils;
 import org.deegree.commons.xml.stax.IndentingXMLStreamWriter;
 import org.deegree.feature.Feature;
 import org.deegree.feature.property.GenericProperty;
@@ -73,7 +55,22 @@ import org.deegree.gml.reference.FeatureReference;
 import org.deegree.gml.reference.GmlDocumentIdContext;
 import org.deegree.gml.reference.GmlXlinkOptions;
 import org.deegree.gml.schema.GMLAppSchemaReader;
-import org.slf4j.Logger;
+import org.deegree.tools.commons.CommandUtils;
+import org.deegree.tools.commons.ToolboxTool;
+import org.springframework.stereotype.Component;
+
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 
 /**
  * 
@@ -82,10 +79,10 @@ import org.slf4j.Logger;
  * 
  * @version $Revision$, $Date$
  */
-@Tool(value = "adds inversDientZurDarstellungVon properties for GeoInfoDok 6.0.1 files")
-public class BackReferenceFixer {
+@Component
+public class BackReferenceFixer implements ToolboxTool {
 
-    private static final Logger LOG = getLogger( BackReferenceFixer.class );
+    private static final String DESCRIPTION = "adds inversDientZurDarstellungVon properties for GeoInfoDok 6.0.1 files";
 
     private static final String ns601 = "http://www.adv-online.de/namespaces/adv/gid/6.0";
 
@@ -109,7 +106,13 @@ public class BackReferenceFixer {
         return opts;
     }
 
-    public static void main( String[] args ) {
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args ) {
         Options opts = initOptions();
         FileInputStream fis = null;
         FileOutputStream fos = null;

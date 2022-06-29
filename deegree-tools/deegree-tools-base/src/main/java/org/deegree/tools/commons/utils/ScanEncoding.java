@@ -43,8 +43,9 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.deegree.commons.annotations.Tool;
+import org.deegree.tools.commons.ToolboxTool;
 import org.slf4j.Logger;
+import org.springframework.stereotype.Component;
 
 /**
  * <code>ScanEncoding</code>
@@ -54,10 +55,25 @@ import org.slf4j.Logger;
  * 
  * @version $Revision$, $Date$
  */
-@Tool(value = "scans the argument files and tries to guess their encoding, treats dbf files specially")
-public class ScanEncoding {
+@Component
+public class ScanEncoding implements ToolboxTool {
 
     private static final Logger LOG = getLogger( ScanEncoding.class );
+
+    private static final String DESCRIPTION = "scans the argument files and tries to guess their encoding, treats dbf files specially";
+
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args )
+                    throws Exception {
+        for ( String s : args ) {
+            printSummary( s );
+        }
+    }
 
     private static void printSummary( String s )
                             throws IOException {
@@ -78,16 +94,5 @@ public class ScanEncoding {
         }
 
         LOG.info( "Encoding for '" + s + "': " + guess( in ) );
-    }
-
-    /**
-     * @param args
-     * @throws IOException
-     */
-    public static void main( String[] args )
-                            throws IOException {
-        for ( String s : args ) {
-            printSummary( s );
-        }
     }
 }

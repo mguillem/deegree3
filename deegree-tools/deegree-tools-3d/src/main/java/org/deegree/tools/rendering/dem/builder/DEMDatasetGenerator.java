@@ -37,7 +37,7 @@
 package org.deegree.tools.rendering.dem.builder;
 
 import static java.lang.System.currentTimeMillis;
-import static org.deegree.commons.tools.CommandUtils.OPT_VERBOSE;
+import static org.deegree.tools.commons.CommandUtils.OPT_VERBOSE;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,8 +56,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.commons.utils.math.MathUtils;
 import org.deegree.coverage.AbstractCoverage;
 import org.deegree.coverage.raster.AbstractRaster;
@@ -78,8 +77,10 @@ import org.deegree.coverage.raster.utils.Rasters;
 import org.deegree.coverage.tools.RasterOptionsParser;
 import org.deegree.geometry.Envelope;
 import org.deegree.rendering.r3d.multiresolution.MultiresolutionMesh;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.tools.i18n.Messages;
 import org.deegree.tools.rendering.dem.builder.dag.DAGBuilder;
+import org.springframework.stereotype.Component;
 
 /**
  * Tool for generating the binary files for {@link MultiresolutionMesh} instances (MRIndex- and PatchData-BLOBs) from
@@ -93,11 +94,13 @@ import org.deegree.tools.rendering.dem.builder.dag.DAGBuilder;
  * 
  * @version $Revision: $, $Date: $
  */
-@Tool("Generates DEM multiresolution datasets from rasters, suitable for the WPVS.")
-public class DEMDatasetGenerator {
+@Component
+public class DEMDatasetGenerator implements ToolboxTool {
 
     // private static final Logger LOG = LoggerFactory.getLogger(
     // DEMDatasetGenerator.class );
+
+    private static final String DESCRIPTION = "Generates DEM multiresolution datasets from rasters, suitable for the WPVS.";
 
     /*
      * Command line options
@@ -654,6 +657,11 @@ public class DEMDatasetGenerator {
         }
     }
 
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
     /**
      * Generates a {@link MultiresolutionMesh} instance (MRIndex- and PatchData-BLOBs) from a file that contains binary
      * short values (a regular heightfield).
@@ -663,8 +671,9 @@ public class DEMDatasetGenerator {
      * @param args
      * @throws IOException
      */
-    public static void main( String[] args )
-                            throws IOException {
+    @Override
+    public void execute( String[] args )
+                    throws Exception {
 
         CommandLineParser parser = new PosixParser();
 

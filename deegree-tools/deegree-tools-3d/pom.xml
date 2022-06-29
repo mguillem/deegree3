@@ -47,6 +47,11 @@
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
+      <artifactId>deegree-tools-commons</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.deegree</groupId>
       <artifactId>deegree-services-wpvs</artifactId>
       <version>${project.version}</version>
     </dependency>

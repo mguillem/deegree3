@@ -62,16 +62,14 @@ import javax.media.opengl.glu.GLU;
 import javax.swing.JFrame;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
-import javax.xml.bind.JAXBException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
 import org.deegree.commons.ows.exception.OWSException;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.commons.utils.Pair;
 import org.deegree.commons.utils.SunInfo;
 import org.deegree.commons.utils.math.Vectors3f;
@@ -104,6 +102,7 @@ import org.deegree.services.wpvs.controller.WPVSController;
 import org.deegree.services.wpvs.controller.getview.GetView;
 import org.deegree.services.wpvs.controller.getview.GetViewKVPAdapter;
 import org.deegree.services.wpvs.rendering.jogl.ConfiguredOpenGLInitValues;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.workspace.ResourceInitException;
 import org.deegree.workspace.ResourceLocation;
 import org.deegree.workspace.Workspace;
@@ -113,6 +112,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sun.opengl.util.GLUT;
 import com.sun.opengl.util.texture.Texture;
+import org.springframework.stereotype.Component;
 
 /**
  * Reads in a configuration document for the {@link WPVSController} and lets the user navigate interactively through the
@@ -123,10 +123,12 @@ import com.sun.opengl.util.texture.Texture;
  * 
  * @version $Revision: $, $Date: $
  */
-@Tool("Reads in a configuration document for the deegree WPVS and allows the user to interactively navigate through the scene.")
-public class InteractiveWPVS extends GLCanvas implements GLEventListener, KeyListener {
+@Component
+public class InteractiveWPVS extends GLCanvas implements GLEventListener, KeyListener, ToolboxTool {
 
     private static final Logger LOG = LoggerFactory.getLogger( InteractiveWPVS.class );
+
+    private static final String DESCRIPTION = "Reads in a configuration document for the deegree WPVS and allows the user to interactively navigate through the scene.";
 
     private static final String OPT_WPVS_CONFIG_FILE = "wpvsconfig";
 
@@ -297,6 +299,12 @@ public class InteractiveWPVS extends GLCanvas implements GLEventListener, KeyLis
         this.copyrightID = this.perspectiveViewService.getCopyrightKey();
         initModels();
     }
+
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
 
     private void initSkyImage( SkyImages skyImages ) {
         if ( skyImages != null ) {
@@ -840,15 +848,11 @@ public class InteractiveWPVS extends GLCanvas implements GLEventListener, KeyLis
 
     /**
      * @param args
-     * @throws IOException
-     * @throws UnsupportedOperationException
-     * @throws JAXBException
-     * @throws OWSException
-     * @throws ServiceInitException
+     * @throws Exception
      */
-    public static void main( String[] args )
-                            throws IOException, UnsupportedOperationException, JAXBException, OWSException,
-                            ServiceInitException {
+    @Override
+    public void execute( String[] args )
+                    throws Exception {
 
         Options options = initOptions();
 

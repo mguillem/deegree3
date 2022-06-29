@@ -36,23 +36,12 @@
 
 package org.deegree.tools.rendering.manager;
 
-import static org.deegree.commons.tools.CommandUtils.OPT_VERBOSE;
-import static org.deegree.db.ConnectionProviderUtils.getSyntheticProvider;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
 import org.deegree.commons.utils.ArrayUtils;
 import org.deegree.db.ConnectionProvider;
 import org.deegree.db.ConnectionProviderProvider;
@@ -64,20 +53,34 @@ import org.deegree.services.wpvs.io.BackendResult;
 import org.deegree.services.wpvs.io.DataObjectInfo;
 import org.deegree.services.wpvs.io.ModelBackend;
 import org.deegree.services.wpvs.io.ModelBackend.Type;
+import org.deegree.tools.commons.CommandUtils;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.workspace.ResourceLocation;
 import org.deegree.workspace.Workspace;
 import org.deegree.workspace.standard.DefaultWorkspace;
+import org.springframework.stereotype.Component;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.deegree.db.ConnectionProviderUtils.getSyntheticProvider;
+import static org.deegree.tools.commons.CommandUtils.OPT_VERBOSE;
 
 /**
  * The <code>PrototypeAssigner</code> is a tool to assign prototypes to existing buildings.
- * 
+ *
  * @author <a href="mailto:bezema@lat-lon.de">Rutger Bezema</a>
  * @author last edited by: $Author$
  * @version $Revision$, $Date$
- * 
+ *
  */
-@Tool("Interface to the WPVS backend for assigning prototypes to QualityLevel in a world object model.")
-public class PrototypeAssigner {
+@Component
+public class PrototypeAssigner implements ToolboxTool {
+
+    private static final String DESCRIPTION = "Interface to the WPVS backend for assigning prototypes to QualityLevel in a world object model.";
 
     private static final String DB_HOST = "hosturl";
 
@@ -109,12 +112,13 @@ public class PrototypeAssigner {
 
     private static Workspace workspace;
 
-    /**
-     * Creates the commandline parser and adds the options.
-     * 
-     * @param args
-     */
-    public static void main( String[] args ) {
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args ) {
         CommandLineParser parser = new PosixParser();
 
         Options options = initOptions();
@@ -335,7 +339,7 @@ public class PrototypeAssigner {
 
     /**
      * Database parameters
-     * 
+     *
      * @param options
      *            to add the database option to.
      */

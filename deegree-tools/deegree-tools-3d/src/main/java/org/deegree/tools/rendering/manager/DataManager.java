@@ -36,22 +36,12 @@
 
 package org.deegree.tools.rendering.manager;
 
-import static org.deegree.db.ConnectionProviderUtils.getSyntheticProvider;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.MissingFormatArgumentException;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
 import org.deegree.commons.utils.ArrayUtils;
 import org.deegree.db.ConnectionProvider;
 import org.deegree.db.ConnectionProviderProvider;
@@ -60,6 +50,8 @@ import org.deegree.services.wpvs.io.BackendResult;
 import org.deegree.services.wpvs.io.ModelBackend;
 import org.deegree.services.wpvs.io.ModelBackend.Type;
 import org.deegree.services.wpvs.io.file.FileBackend;
+import org.deegree.tools.commons.CommandUtils;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.tools.rendering.manager.buildings.BuildingManager;
 import org.deegree.tools.rendering.manager.buildings.PrototypeManager;
 import org.deegree.tools.rendering.manager.stage.StageManager;
@@ -67,6 +59,15 @@ import org.deegree.tools.rendering.manager.trees.TreeManager;
 import org.deegree.workspace.ResourceLocation;
 import org.deegree.workspace.Workspace;
 import org.deegree.workspace.standard.DefaultWorkspace;
+import org.springframework.stereotype.Component;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.MissingFormatArgumentException;
+
+import static org.deegree.db.ConnectionProviderUtils.getSyntheticProvider;
 
 /**
  * The <code>DataManager</code> is the user interface to the WPVS model backend. It can insert, update and delete
@@ -84,8 +85,8 @@ import org.deegree.workspace.standard.DefaultWorkspace;
  * @version $Revision$, $Date$
  * 
  */
-@Tool("The DataManager inserts, updates and deletes 3d-objects in/from the WPVS backend")
-public class DataManager {
+@Component
+public class DataManager implements ToolboxTool {
 
     /**
      * The <code>Action</code> the datamanager may perform
@@ -110,6 +111,8 @@ public class DataManager {
             return this.name().toLowerCase();
         }
     }
+
+    private static final String DESCRIPTION = "The DataManager inserts, updates and deletes 3d-objects in/from the WPVS backend.";
 
     private static final String ACTION = "action";
 
@@ -190,12 +193,19 @@ public class DataManager {
 
     private static Workspace workspace;
 
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
     /**
      * Creates the commandline parser and adds the options.
-     * 
+     *
      * @param args
      */
-    public static void main( String[] args ) {
+    @Override
+    public void execute( String[] args )
+                    throws Exception {
         CommandLineParser parser = new PosixParser();
 
         Options options = initOptions();

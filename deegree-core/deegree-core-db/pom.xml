@@ -32,6 +32,11 @@
     </dependency>
     <dependency>
       <groupId>org.deegree</groupId>
+      <artifactId>deegree-core-commons</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.deegree</groupId>
       <artifactId>deegree-sqldialect-commons</artifactId>
       <version>${project.version}</version>
     </dependency>

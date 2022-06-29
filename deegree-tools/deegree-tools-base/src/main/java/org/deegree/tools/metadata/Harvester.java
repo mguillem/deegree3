@@ -24,9 +24,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
 import org.deegree.commons.config.DeegreeWorkspace;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.commons.xml.CommonNamespaces;
 import org.deegree.commons.xml.NamespaceBindings;
 import org.deegree.commons.xml.XMLAdapter;
@@ -39,6 +38,8 @@ import org.deegree.metadata.persistence.transaction.InsertOperation;
 import org.deegree.protocol.csw.client.CSWClient;
 import org.deegree.protocol.csw.client.transaction.TransactionResponse;
 import org.deegree.protocol.ows.exception.OWSExceptionReport;
+import org.deegree.tools.commons.ToolboxTool;
+import org.springframework.stereotype.Component;
 
 /**
  * 
@@ -50,9 +51,10 @@ import org.deegree.protocol.ows.exception.OWSExceptionReport;
  * @version $Revision: $, $Date: $
  */
 
-@Tool(value = "harvest metadata records and insert them in a CSW")
-public class Harvester {
+@Component
+public class Harvester implements ToolboxTool {
 
+    private static final String DESCRIPTION = "harvest metadata records and insert them in a CSW";
     private static final NamespaceBindings NAMESPACE_CONTEXT = CommonNamespaces.getNamespaceContext();
 
     private static final String xPathFileId = "//gmd:MD_Metadata/gmd:fileIdentifier/gco:CharacterString";
@@ -227,9 +229,13 @@ public class Harvester {
         abstract boolean insertRecord( OMElement record )
                                 throws Exception;
     }
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
 
-    public static void main( String[] args )
-                            throws Exception {
+    @Override
+    public void execute( String[] args ) {
 
         if ( args.length == 0 || ( args.length > 0 && ( args[0].contains( "help" ) || args[0].contains( "?" ) ) ) ) {
             printHelp( initOptions() );

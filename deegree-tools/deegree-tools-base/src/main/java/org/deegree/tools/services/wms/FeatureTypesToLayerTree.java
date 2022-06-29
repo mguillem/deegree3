@@ -52,14 +52,14 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.deegree.commons.annotations.Tool;
-import org.deegree.commons.tools.CommandUtils;
+import org.deegree.tools.commons.CommandUtils;
 import org.deegree.commons.xml.XMLAdapter;
 import org.deegree.commons.xml.stax.IndentingXMLStreamWriter;
 import org.deegree.feature.persistence.FeatureStore;
 import org.deegree.feature.persistence.FeatureStoreProvider;
 import org.deegree.feature.types.AppSchema;
 import org.deegree.feature.types.FeatureType;
+import org.deegree.tools.commons.ToolboxTool;
 import org.deegree.tools.i18n.Messages;
 import org.deegree.workspace.ResourceInitException;
 import org.deegree.workspace.Workspace;
@@ -67,6 +67,7 @@ import org.deegree.workspace.standard.DefaultResourceIdentifier;
 import org.deegree.workspace.standard.DefaultResourceLocation;
 import org.deegree.workspace.standard.DefaultWorkspace;
 import org.slf4j.Logger;
+import org.springframework.stereotype.Component;
 
 /**
  * 
@@ -75,10 +76,12 @@ import org.slf4j.Logger;
  * 
  * @version $Revision$, $Date$
  */
-@Tool(value = "generates a WMS layer tree/configuration file from a feature type hierarchy")
-public class FeatureTypesToLayerTree {
+@Component
+public class FeatureTypesToLayerTree implements ToolboxTool {
 
     private static final Logger LOG = getLogger( FeatureTypesToLayerTree.class );
+
+    private static final String DESCRIPTION = "generates a WMS layer tree/configuration file from a feature type hierarchy";
 
     private static Options initOptions() {
         Options opts = new Options();
@@ -122,10 +125,13 @@ public class FeatureTypesToLayerTree {
         out.writeCharacters( "\n" );
     }
 
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public void execute( String[] args ){
         Options options = initOptions();
 
         // for the moment, using the CLI API there is no way to respond to a help argument; see
