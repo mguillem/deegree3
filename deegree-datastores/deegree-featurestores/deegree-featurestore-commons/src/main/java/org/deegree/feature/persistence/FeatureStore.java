@@ -41,6 +41,7 @@ import javax.xml.namespace.QName;
 import org.deegree.commons.tom.gml.GMLObject;
 import org.deegree.cs.coordinatesystems.ICRS;
 import org.deegree.commons.utils.Pair;
+import org.deegree.cs.coordinatesystems.ICRS;
 import org.deegree.feature.Feature;
 import org.deegree.feature.persistence.lock.LockManager;
 import org.deegree.feature.persistence.query.Query;

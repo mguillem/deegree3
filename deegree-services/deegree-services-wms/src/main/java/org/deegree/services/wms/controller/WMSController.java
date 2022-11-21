@@ -93,7 +93,6 @@ import org.apache.axiom.soap.SOAP11Version;
 import org.apache.axiom.soap.SOAPVersion;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.fileupload.FileItem;
-import org.deegree.commons.annotations.LoggingNotes;
 import org.deegree.commons.ows.exception.OWSException;
 import org.deegree.commons.ows.metadata.ServiceIdentification;
 import org.deegree.commons.ows.metadata.ServiceProvider;
@@ -180,7 +179,6 @@ import org.slf4j.Logger;
  * 
  * @version $Revision$, $Date$
  */
-@LoggingNotes(trace = "logs stack traces", debug = "logs sent exception messages, security information", warn = "logs problems with custom serializer classes", error = "logs unknown errors, problems with GetFeatureInfo templates")
 public class WMSController extends AbstractOWS {
 
     private static final Logger LOG = getLogger( WMSController.class );
@@ -904,18 +902,9 @@ public class WMSController extends AbstractOWS {
         boolean geometries = fi.returnGeometries();
         List<String> queryLayers = map( fi.getQueryLayers(), CollectionUtils.<LayerRef> getToStringMapper() );
 
-        RenderingInfo info = new RenderingInfo( fi.getInfoFormat(), fi.getWidth(), fi.getHeight(), false, null,
-                                                fi.getEnvelope(), 0.28, map );
         String format = fi.getInfoFormat();
-        info.setFormat( format );
-        info.setFeatureCount( fi.getFeatureCount() );
-        info.setX( fi.getX() );
-        info.setY( fi.getY() );
         LinkedList<String> headers = new LinkedList<String>();
-        Pair<FeatureCollection, LinkedList<String>> pair = new Pair<FeatureCollection, LinkedList<String>>(
-                                                                                                            service.getFeatures( fi,
-                                                                                                                                 headers ),
-                                                                                                            headers );
+        Pair<FeatureCollection, LinkedList<String>> pair = new Pair<>( service.getFeatures( fi, headers ), headers );
 
         FeatureCollection col = pair.first;
         addHeaders( response, pair.second );
