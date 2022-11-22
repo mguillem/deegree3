@@ -1,0 +1,41 @@
+#variables:
+#  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN"
+#  MAVEN_CLI_OPTS: "--batch-mode -DinstallAtEnd=true -DdeployAtEnd=true -s $CI_PROJECT_DIR/ci_settings.xml"
+
+
+update-repo-from-github-latlon-deegree3:
+  stage: build
+  before_script:
+    - mkdir -p ~/.ssh/
+    - cp $DEPLOY_PRIVATE_KEY ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+    - cp $KNOWN_HOSTS ~/.ssh/known_hosts
+    - git config --global user.email "noreply@gitlab.opencode.de"
+    - git config --global user.name "deegree GitLab CI"
+  script:
+    - echo "Fetching changes for github repo"
+    - git branch -r
+    - git checkout xplanbox-deegree3.5
+    - git remote add upstream https://github.com/mguillem/deegree3.git
+    - git fetch upstream xplanbox-deegree3.5
+    - git merge upstream/xplanbox-deegree3.5
+    - echo "Pushing..."
+    - git remote set-url origin git@gitlab.com:mguillem1/test-deegree.git
+    - git push --set-upstream origin xplanbox-deegree3.5
+    - echo "Handling tags..."
+    - git fetch upstream tag xplanbox-deegree* --no-tags
+    - git push origin --tags
+
+  rules:
+    - if: $SYNCHRONIZE == 'synchronize'
+
+gitlab-release:
+  stage: deploy
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - echo "Running the release job for $CI_COMMIT_TAG"
+#  release:
+#    tag_name: $CI_COMMIT_TAG
+#    name: 'Release $CI_COMMIT_TAG'
+#    description: 'Release created using the release-cli.'
