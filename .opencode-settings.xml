@@ -3,6 +3,11 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
 	<servers>
+        <mirror>
+            <id>deegree</id>
+            <mirrorOf>latlon</mirrorOf>
+            <url>https://repo.deegree.org/repository/public/</url>
+        </mirror>
 		<server>
 			<id>gitlab-maven</id>
 			<configuration>
