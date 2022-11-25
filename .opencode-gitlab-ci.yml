@@ -1,6 +1,6 @@
-#variables:
-#  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN"
-#  MAVEN_CLI_OPTS: "--batch-mode -DinstallAtEnd=true -DdeployAtEnd=true -s $CI_PROJECT_DIR/ci_settings.xml"
+variables:
+MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN"
+MAVEN_CLI_OPTS: "-Popencode --batch-mode -DinstallAtEnd=true -DdeployAtEnd=true -s $CI_PROJECT_DIR/.opencode-settings.xml"
 
 
 update-repo-from-github-latlon-deegree3:
@@ -10,7 +10,7 @@ update-repo-from-github-latlon-deegree3:
     - cp $DEPLOY_PRIVATE_KEY ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
     - cp $KNOWN_HOSTS ~/.ssh/known_hosts
     - git config --global user.email "noreply@gitlab.opencode.de"
-    - git config --global user.name "deegree GitLab CI"
+    - git config --global user.name "deegree OpenCoDE CI"
   script:
     - echo "Fetching changes for github repo"
     - git branch -r
@@ -28,14 +28,33 @@ update-repo-from-github-latlon-deegree3:
   rules:
     - if: $SYNCHRONIZE == 'synchronize'
 
-gitlab-release:
+maven-deploy-on-tag:
+  stage: deploy
+  image: maven:3.8.6-jdk-11
+  script:
+    - echo "Running maven deploy for tag $CI_COMMIT_TAG"
+    - mvn $MAVEN_CLI_OPTS deploy -DskipTests
+  rules:
+    - if: $CI_COMMIT_TAG
+
+gitlab-release-on-tag:
   stage: deploy
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   rules:
     - if: $CI_COMMIT_TAG
   script:
     - echo "Running the release job for $CI_COMMIT_TAG"
-#  release:
-#    tag_name: $CI_COMMIT_TAG
-#    name: 'Release $CI_COMMIT_TAG'
-#    description: 'Release created using the release-cli.'
+  release:
+    tag_name: $CI_COMMIT_TAG
+    name: 'Release $CI_COMMIT_TAG'
+    description: 'Release created using the release-cli.'
+
+# deployment from main branch: always a snapshot as synchronization is done from time to time (therefore once version is back to -SNAPSHOT)
+maven-deploy-main-branch:
+  stage: build
+  image: maven:3.8.6-jdk-11
+  script:
+    - 'echo "Running maven: $MAVEN_GOAL"'
+    - mvn $MAVEN_CLI_OPTS deploy -DskipTests
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
