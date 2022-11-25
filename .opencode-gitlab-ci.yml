@@ -1,6 +1,6 @@
 variables:
-MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN"
-MAVEN_CLI_OPTS: "-Popencode --batch-mode -DinstallAtEnd=true -DdeployAtEnd=true -s $CI_PROJECT_DIR/.opencode-settings.xml"
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN"
+  MAVEN_CLI_OPTS: "-Popencode --batch-mode -DinstallAtEnd=true -DdeployAtEnd=true -s $CI_PROJECT_DIR/.opencode-settings.xml"
 
 
 update-repo-from-github-latlon-deegree3:
