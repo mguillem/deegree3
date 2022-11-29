@@ -1,0 +1,56 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>deegree-core-cs</artifactId>
+  <name>deegree-core-cs</name>
+  <packaging>jar</packaging>
+  <description>Coordinate reference system model, coordinate transformations, CRS readers/writers and CRS persistence</description>
+
+  <properties>
+    <deegree.module.status>rework</deegree.module.status>
+  </properties>
+
+  <parent>
+    <groupId>de.latlon</groupId>
+    <artifactId>deegree-core</artifactId>
+    <version>3.5.0-SNAPSHOT</version>
+  </parent>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jvnet.jaxb2.maven2</groupId>
+        <artifactId>maven-jaxb2-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>de.latlon</groupId>
+      <artifactId>deegree-core-commons</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.latlon</groupId>
+      <artifactId>deegree-core-annotations</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.media</groupId>
+      <artifactId>jai-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>java3d</groupId>
+      <artifactId>vecmath</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jgridshift</groupId>
+      <artifactId>jgridshift</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+  </dependencies>
+</project>
+
