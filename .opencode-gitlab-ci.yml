@@ -15,9 +15,11 @@ update-repo-from-github-latlon-deegree3:
     - echo "Fetching changes for github repo"
     - git branch -r
     - git checkout xplanbox-deegree3.5
+    - git log
     - git remote add upstream https://github.com/mguillem/deegree3.git
     - git fetch upstream xplanbox-deegree3.5
     - git merge --ff upstream/xplanbox-deegree3.5
+    - git log
     - echo "Pushing..."
     - git remote set-url origin git@gitlab.com:mguillem1/test-deegree.git
     - git push --set-upstream origin xplanbox-deegree3.5
@@ -26,7 +28,7 @@ update-repo-from-github-latlon-deegree3:
     - git push origin --tags
 
   rules:
-    - if: $SYNCHRONIZE == 'synchronize'
+    - if: $CI_PIPELINE_SOURCE == 'schedule'
 
 maven-deploy-on-tag:
   stage: deploy
@@ -57,6 +59,6 @@ maven-deploy-main-branch:
     - 'echo "Running maven: $MAVEN_GOAL"'
     - mvn $MAVEN_CLI_OPTS deploy -DskipTests
   rules:
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-    - if: $SYNCHRONIZE == 'synchronize'
+    - if: $CI_PIPELINE_SOURCE == 'schedule'
       when: never
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
