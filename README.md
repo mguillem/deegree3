@@ -7,9 +7,9 @@ deegree is open source software for spatial data infrastructures and the geospat
 ## Repositories
 
 3 git repositories are involved here:
-- lat-lon fork on github: https://github.com/lat-lon/deegree3
-- lat-lon fork's clone on OpenCoDE (with only a few branches & tags): #TODO#
 - the upstream repository on github: https://github.com/deegree/deegree3/
+- lat-lon's fork on github: https://github.com/lat-lon/deegree3
+- the (partial) mirror of lat-lon's fork on OpenCoDE: see [OpenCoDE mirror](opencode.md)
 
 ## User documentation
 General project information and user documentation (e.g. "How to set up WMS and WFS?" or "How to get support?") can be found on the deegree homepage:

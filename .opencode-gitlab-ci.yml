@@ -58,4 +58,5 @@ maven-deploy-main-branch:
     - mvn $MAVEN_CLI_OPTS deploy -DskipTests
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-    - if: $SYNCHRONIZE != 'synchronize'
+    - if: $SYNCHRONIZE == 'synchronize'
+      when: never
