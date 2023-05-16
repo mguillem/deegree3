@@ -71,6 +71,7 @@ import org.deegree.commons.tom.primitive.BaseType;
 import org.deegree.commons.tom.primitive.PrimitiveType;
 import org.deegree.commons.tom.primitive.PrimitiveValue;
 import org.deegree.commons.tom.sql.ParticleConverter;
+import org.deegree.commons.tom.sql.PrimitiveParticleConverter;
 import org.deegree.commons.tom.sql.SQLValueMangler;
 import org.deegree.commons.utils.JDBCUtils;
 import org.deegree.commons.utils.Pair;
@@ -145,6 +146,10 @@ import org.deegree.workspace.Resource;
 import org.deegree.workspace.ResourceInitException;
 import org.deegree.workspace.ResourceMetadata;
 import org.deegree.workspace.Workspace;
+import org.jaxen.expr.DefaultAbsoluteLocationPath;
+import org.jaxen.expr.DefaultNameStep;
+import org.jaxen.expr.Expr;
+import org.jaxen.expr.LocationPath;
 import org.slf4j.Logger;
 
 /**
@@ -304,6 +309,10 @@ public class SQLFeatureStore implements FeatureStore {
 		String srid = geomMapping.getSrid();
 		boolean is2d = geomMapping.getDim() == CoordinateDimension.DIM_2;
 		return dialect.getGeometryConverter(column, crs, srid, is2d);
+	}
+
+	private PrimitiveParticleConverter createPrimitiveMapping(String column) {
+		return dialect.getPrimitiveConverter(column, new PrimitiveType(BaseType.STRING));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1292,6 +1301,10 @@ public class SQLFeatureStore implements FeatureStore {
 				wb = getWhereBuilderBlob(bboxFilter, conn);
 				LOG.debug("WHERE clause: " + wb.getWhere());
 			}
+			else if (query.getFilter() instanceof OperatorFilter) {
+				wb = getWhereBuilderBlob((OperatorFilter) query.getFilter(), conn);
+				LOG.debug("WHERE clause: " + wb.getWhere());
+			}
 			String alias = wb != null ? wb.getAliasManager().getRootTableAlias() : "X1";
 
 			StringBuilder sql = new StringBuilder("SELECT ");
@@ -1402,10 +1415,10 @@ public class SQLFeatureStore implements FeatureStore {
 			throw new FeatureStoreException(msg, e);
 		}
 
-		if (filter != null) {
-			LOG.debug("Applying in-memory post-filtering.");
-			result = new FilteredFeatureInputStream(result, filter);
-		}
+		// if ( filter != null ) {
+		// LOG.debug( "Applying in-memory post-filtering." );
+		// result = new FilteredFeatureInputStream( result, filter );
+		// }
 
 		if (query.getSortProperties().length > 0) {
 			LOG.debug("Applying in-memory post-sorting.");
@@ -1676,12 +1689,68 @@ public class SQLFeatureStore implements FeatureStore {
 			@Override
 			public PropertyNameMapping getMapping(ValueReference propName, TableAliasManager aliasManager)
 					throws FilterEvaluationException, UnmappableException {
-				GeometryStorageParams geometryParams = new GeometryStorageParams(blobMapping.getCRS(), undefinedSrid,
-						CoordinateDimension.DIM_2);
-				GeometryMapping bboxMapping = new GeometryMapping(null, false, new DBField(blobMapping.getBBoxColumn()),
-						GeometryType.GEOMETRY, geometryParams, null);
-				return new PropertyNameMapping(getGeometryConverter(bboxMapping), null, blobMapping.getBBoxColumn(),
-						aliasManager.getRootTableAlias());
+				String column;
+				ParticleConverter<?> converter;
+				if (isProperty(propName, "internalId")) {
+					column = blobMapping.getXPlanInternalIdColumn();
+					converter = createPrimitiveMapping(column);
+				}
+				else if (isProperty(propName, "nummer")) {
+					column = blobMapping.getXPlanIdColumn();
+					converter = createPrimitiveMapping(column);
+				}
+				else if (isProperty(propName, "name")) {
+					column = blobMapping.getXPlanNameColumn();
+					converter = createPrimitiveMapping(column);
+				}
+				else {
+					column = blobMapping.getBBoxColumn();
+					LOG.warn(
+							"Property {} is mapped to column {}. This may cause unexpected results. "
+									+ "Currently only filtering of 'internalId', 'nummer' and 'name' is supprted!",
+							propName, column);
+					GeometryStorageParams geometryParams = new GeometryStorageParams(blobMapping.getCRS(),
+							undefinedSrid, CoordinateDimension.DIM_2);
+					GeometryMapping bboxMapping = new GeometryMapping(null, false, new DBField(column),
+							GeometryType.GEOMETRY, geometryParams, null);
+					converter = getGeometryConverter(bboxMapping);
+				}
+				return new PropertyNameMapping(converter, null, column, aliasManager.getRootTableAlias());
+			}
+
+			@SuppressWarnings("deprecation")
+			private boolean isProperty(ValueReference propName, String expectedLocalPart) {
+				if (propName == null)
+					return false;
+				Expr xPath = propName.getAsXPath();
+				if (xPath instanceof DefaultAbsoluteLocationPath
+						&& !((DefaultAbsoluteLocationPath) xPath).getSteps().isEmpty()) {
+					List<?> steps = ((DefaultAbsoluteLocationPath) xPath).getSteps();
+					Object step = steps.get(steps.size() - 1);
+					if (step instanceof DefaultNameStep) {
+						String localPart = ((DefaultNameStep) step).getLocalName();
+						String prefix = ((DefaultNameStep) step).getPrefix();
+						String namespaceURI = propName.getNsContext().getNamespaceURI(prefix);
+
+						QName lastStepQName = new QName(namespaceURI, localPart);
+						return new QName("http://www.xplanung.de/xplangml/4/0", expectedLocalPart).equals(lastStepQName)
+								|| new QName("http://www.xplanung.de/xplangml/4/1", expectedLocalPart)
+									.equals(lastStepQName)
+								|| new QName("http://www.xplanung.de/xplangml/5/0", expectedLocalPart)
+									.equals(lastStepQName)
+								|| new QName("http://www.xplanung.de/xplangml/5/1", expectedLocalPart)
+									.equals(lastStepQName)
+								|| new QName("http://www.xplanung.de/xplangml/5/2", expectedLocalPart)
+									.equals(lastStepQName)
+								|| new QName("http://www.xplanung.de/xplangml/5/3", expectedLocalPart)
+									.equals(lastStepQName)
+								|| new QName("http://www.xplanung.de/xplangml/5/4", expectedLocalPart)
+									.equals(lastStepQName)
+								|| new QName("http://www.xplanung.de/xplangml/6/0", expectedLocalPart)
+									.equals(lastStepQName);
+					}
+				}
+				return false;
 			}
 
 			@Override
